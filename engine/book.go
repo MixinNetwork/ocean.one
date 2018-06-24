@@ -3,7 +3,6 @@ package engine
 import (
 	"context"
 	"log"
-	"time"
 )
 
 const (
@@ -13,8 +12,8 @@ const (
 	EventQueueSize = 8192
 )
 
-type TransactCallback func(order *Order, opponent *Order) error
-type CancelCallback func(order *Order) error
+type TransactCallback func(order *Order, opponent *Order)
+type CancelCallback func(order *Order)
 
 type OrderEvent struct {
 	Order  *Order
@@ -72,14 +71,7 @@ func (book *Book) process(ctx context.Context, order, opponent *Order) {
 	order.FilledAmount = order.FilledAmount + matchedAmount
 	opponent.RemainingAmount = opponent.RemainingAmount - matchedAmount
 	opponent.FilledAmount = opponent.FilledAmount + matchedAmount
-	for {
-		err := book.transact(order, opponent)
-		if err == nil {
-			break
-		}
-		log.Println("BOOK ITERATE CALLBACK ERROR", err)
-		time.Sleep(100 * time.Millisecond)
-	}
+	book.transact(order, opponent)
 }
 
 func (book *Book) createOrder(ctx context.Context, order *Order) {
@@ -96,8 +88,12 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 			book.process(ctx, order, opponent)
 			return order.RemainingAmount == 0
 		})
-		if order.Type == OrderTypeLimit && order.RemainingAmount > 0 {
-			book.asks.Put(order)
+		if order.RemainingAmount > 0 {
+			if order.Type == OrderTypeLimit {
+				book.asks.Put(order)
+			} else {
+				book.cancel(order)
+			}
 		}
 	} else if order.Side == PageSideBid {
 		book.asks.Iterate(func(opponent *Order) bool {
@@ -107,8 +103,12 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 			book.process(ctx, order, opponent)
 			return order.RemainingAmount == 0
 		})
-		if order.Type == OrderTypeLimit && order.RemainingAmount > 0 {
-			book.bids.Put(order)
+		if order.RemainingAmount > 0 {
+			if order.Type == OrderTypeLimit {
+				book.bids.Put(order)
+			} else {
+				book.cancel(order)
+			}
 		}
 	}
 }
@@ -118,15 +118,7 @@ func (book *Book) cancelOrder(ctx context.Context, order *Order) {
 		return
 	}
 	book.cancelIndex[order.Id] = true
-
-	for {
-		err := book.cancel(order)
-		if err == nil {
-			break
-		}
-		log.Println("BOOK CANCEL ORDER CALLBACK ERROR", err)
-		time.Sleep(100 * time.Millisecond)
-	}
+	book.cancel(order)
 
 	if order.Side == PageSideAsk {
 		book.asks.Remove(order)
