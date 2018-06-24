@@ -48,6 +48,12 @@ func NewBook(pricePrecision, amountPrecision int, transact TransactCallback, can
 }
 
 func (book *Book) AttachOrderEvent(ctx context.Context, order *Order, action string) error {
+	if order.Side != PageSideAsk && order.Side != PageSideBid {
+		log.Panicln(order, action)
+	}
+	if order.Type != OrderTypeLimit && order.Type != OrderTypeMarket {
+		log.Panicln(order, action)
+	}
 	switch action {
 	case OrderActionCreate, OrderActionCancel:
 		book.queue <- &OrderEvent{Order: order, Action: action}
@@ -84,25 +90,25 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 
 	if order.Side == PageSideAsk {
 		book.bids.Iterate(func(opponent *Order) bool {
-			if opponent.Price < order.Price {
+			if order.Type == OrderTypeLimit && opponent.Price < order.Price {
 				return true
 			}
 			book.process(ctx, order, opponent)
 			return order.RemainingAmount == 0
 		})
-		if order.RemainingAmount > 0 {
+		if order.Type == OrderTypeLimit && order.RemainingAmount > 0 {
 			book.asks.Put(order)
 		}
 	} else if order.Side == PageSideBid {
 		book.asks.Iterate(func(opponent *Order) bool {
-			if opponent.Price > order.Price {
+			if order.Type == OrderTypeLimit && opponent.Price > order.Price {
 				return true
 			}
 			book.process(ctx, order, opponent)
 			return order.RemainingAmount == 0
 		})
-		if order.RemainingAmount > 0 {
-			book.asks.Put(order)
+		if order.Type == OrderTypeLimit && order.RemainingAmount > 0 {
+			book.bids.Put(order)
 		}
 	}
 }
