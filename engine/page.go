@@ -15,6 +15,7 @@ const (
 type Entry struct {
 	Side   string
 	Price  uint64
+	Amount uint64
 	list   *arraylist.List
 	orders map[string]*Order
 }
@@ -42,6 +43,7 @@ func (page *Page) Put(order *Order) {
 		entry = &Entry{
 			Side:   order.Side,
 			Price:  order.Price,
+			Amount: 0,
 			list:   arraylist.New(),
 			orders: make(map[string]*Order),
 		}
@@ -54,6 +56,7 @@ func (page *Page) Put(order *Order) {
 	if _, found := entry.orders[order.Id]; found {
 		log.Panicln(order)
 	}
+	entry.Amount = entry.Amount + order.RemainingAmount
 	entry.orders[order.Id] = order
 	entry.list.Add(order.Id)
 }
@@ -78,12 +81,14 @@ func (page *Page) Remove(order *Order) {
 	entry.list.Remove(0)
 }
 
-func (page *Page) Iterate(hook func(*Order) bool) {
+func (page *Page) Iterate(hook func(*Order) (uint64, bool)) {
 	for it := page.points.Iterator(); it.Next(); {
 		entry := it.Key().(*Entry)
 		for eit := entry.list.Iterator(); eit.Next(); {
 			order := entry.orders[eit.Value().(string)]
-			if done := hook(order); done {
+			matchedAmount, done := hook(order)
+			entry.Amount = entry.Amount - matchedAmount
+			if done {
 				eit.End()
 				it.End()
 			}
@@ -94,9 +99,6 @@ func (page *Page) Iterate(hook func(*Order) bool) {
 func entryCompare(a, b interface{}) int {
 	entry := a.(*Entry)
 	opponent := b.(*Entry)
-	if entry.Side != opponent.Side {
-		log.Panicln(entry, opponent)
-	}
 	if entry.Price == opponent.Price {
 		log.Panicln(entry, opponent)
 	}

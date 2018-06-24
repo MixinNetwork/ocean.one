@@ -62,7 +62,7 @@ func (book *Book) AttachOrderEvent(ctx context.Context, order *Order, action str
 	return nil
 }
 
-func (book *Book) process(ctx context.Context, order, opponent *Order) {
+func (book *Book) process(ctx context.Context, order, opponent *Order) uint64 {
 	matchedAmount := order.RemainingAmount
 	if opponent.RemainingAmount < matchedAmount {
 		matchedAmount = opponent.RemainingAmount
@@ -72,6 +72,7 @@ func (book *Book) process(ctx context.Context, order, opponent *Order) {
 	opponent.RemainingAmount = opponent.RemainingAmount - matchedAmount
 	opponent.FilledAmount = opponent.FilledAmount + matchedAmount
 	book.transact(order, opponent)
+	return matchedAmount
 }
 
 func (book *Book) createOrder(ctx context.Context, order *Order) {
@@ -81,12 +82,12 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 	book.createIndex[order.Id] = true
 
 	if order.Side == PageSideAsk {
-		book.bids.Iterate(func(opponent *Order) bool {
+		book.bids.Iterate(func(opponent *Order) (uint64, bool) {
 			if order.Type == OrderTypeLimit && opponent.Price < order.Price {
-				return true
+				return 0, true
 			}
-			book.process(ctx, order, opponent)
-			return order.RemainingAmount == 0
+			matchedAmount := book.process(ctx, order, opponent)
+			return matchedAmount, order.RemainingAmount == 0
 		})
 		if order.RemainingAmount > 0 {
 			if order.Type == OrderTypeLimit {
@@ -96,12 +97,12 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 			}
 		}
 	} else if order.Side == PageSideBid {
-		book.asks.Iterate(func(opponent *Order) bool {
+		book.asks.Iterate(func(opponent *Order) (uint64, bool) {
 			if order.Type == OrderTypeLimit && opponent.Price > order.Price {
-				return true
+				return 0, true
 			}
-			book.process(ctx, order, opponent)
-			return order.RemainingAmount == 0
+			matchedAmount := book.process(ctx, order, opponent)
+			return matchedAmount, order.RemainingAmount == 0
 		})
 		if order.RemainingAmount > 0 {
 			if order.Type == OrderTypeLimit {
