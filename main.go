@@ -1,7 +1,8 @@
 package main
 
-import "ocean.one/engine"
+import "context"
 
 func main() {
-	engine.NewBook(8, 8, nil, nil)
+	ex := NewExchange()
+	ex.PollMixinNetwork(context.Background())
 }
