@@ -33,10 +33,37 @@ func (ex *Exchange) Run(ctx context.Context) {
 }
 
 func (ex *Exchange) PollOrderActions(ctx context.Context) {
+	offset, limit := time.Time{}, 500
+	for {
+		actions, err := persistence.ListPendingActions(ctx, offset, limit)
+		if err != nil {
+			log.Println("ListPendingActions", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		for _, a := range actions {
+			log.Println(a)
+			offset = a.CreatedAt
+		}
+		if len(actions) < limit {
+			time.Sleep(1 * time.Second)
+		}
+	}
 }
 
 func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
-	checkpoint, limit := persistence.ReadActionCheckpoint(ctx).UTC(), 500
+	checkpoint, limit := time.Now().UTC(), 500
+	for {
+		timestamp, err := persistence.ReadActionCheckpoint(ctx)
+		if err != nil {
+			log.Println("ReadActionCheckpoint", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		checkpoint = timestamp.UTC()
+		break
+	}
+
 	for {
 		snapshots, err := ex.requestMixinNetwork(ctx, checkpoint, limit)
 		if err != nil {
@@ -59,7 +86,6 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 		}
 		if len(snapshots) < limit {
 			time.Sleep(1 * time.Second)
-			continue
 		}
 	}
 }

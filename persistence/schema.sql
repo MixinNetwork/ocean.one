@@ -16,11 +16,12 @@ CREATE TABLE orders (
 CREATE TABLE actions (
   order_id     STRING(36) NOT NULL,
   action       STRING(36) NOT NULL,
+  state        STRING(36) NOT NULL,
   created_at   TIMESTAMP NOT NULL,
 ) PRIMARY KEY(order_id, action),
 INTERLEAVE IN PARENT orders ON DELETE CASCADE;
 
-CREATE INDEX actions_by_created ON actions(created_at);
+CREATE INDEX actions_by_state_created ON actions(state, created_at);
 
 
 CREATE TABLE trades (

@@ -2,12 +2,18 @@ package persistence
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cloud.google.com/go/spanner"
 	"github.com/MixinMessenger/go-number"
 	"github.com/MixinMessenger/ocean.one/engine"
 	"google.golang.org/api/iterator"
+)
+
+const (
+	ActionStatePending = "PENDING"
+	ActionStateDone    = "DONE"
 )
 
 type Order struct {
@@ -27,14 +33,90 @@ type Order struct {
 type Action struct {
 	OrderId   string    `spanner:"order_id"`
 	Action    string    `spanner:"action"`
+	State     string    `spanner:"state"`
 	CreatedAt time.Time `spanner:"created_at"`
+
+	Order *Order `spanner:"-"`
 }
 
-func ReadActionCheckpoint(ctx context.Context) time.Time {
-	return time.Now()
+func ReadActionCheckpoint(ctx context.Context) (time.Time, error) {
+	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{
+		SQL: "SELECT created_at FROM actions ORDER BY created_at DESC LIMIT 1",
+	})
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return time.Now(), nil
+	} else if err != nil {
+		return time.Time{}, err
+	}
+	var checkpoint time.Time
+	err = row.Columns(&checkpoint)
+	return checkpoint, err
 }
 
-func CreateOrder(ctx context.Context, userId, traceId string, orderType, side, quote, base string, amount, price number.Decimal, createdAt time.Time) error {
+func ListPendingActions(ctx context.Context, offset time.Time, limit int) ([]*Action, error) {
+	txn := Spanner(ctx).ReadOnlyTransaction()
+	defer txn.Close()
+
+	it := txn.Query(ctx, spanner.Statement{
+		SQL:    fmt.Sprintf("SELECT * FROM actions@{FORCE_INDEX=actions_by_state_created} WHERE state=@state AND created_at>=@offset ORDER BY state,created_at LIMIT %d", limit),
+		Params: map[string]interface{}{"state": ActionStatePending, "offset": offset.UTC()},
+	})
+	defer it.Stop()
+
+	orderFilters := make(map[string]bool)
+	actions, orderIds := make([]*Action, 0), make([]string, 0)
+	for {
+		row, err := it.Next()
+		if err == iterator.Done {
+			break
+		} else if err != nil {
+			return actions, err
+		}
+		var action Action
+		err = row.ToStruct(&action)
+		if err != nil {
+			return actions, err
+		}
+		actions = append(actions, &action)
+		if orderFilters[action.OrderId] {
+			continue
+		}
+		orderFilters[action.OrderId] = true
+		orderIds = append(orderIds, action.OrderId)
+	}
+
+	oit := txn.Query(ctx, spanner.Statement{
+		SQL:    "SELECT * FROM orders WHERE order_id IN UNNEST(@order_ids)",
+		Params: map[string]interface{}{"order_ids": orderIds},
+	})
+	defer oit.Stop()
+
+	orders := make(map[string]*Order)
+	for {
+		row, err := oit.Next()
+		if err == iterator.Done {
+			break
+		} else if err != nil {
+			return actions, err
+		}
+		var order Order
+		err = row.ToStruct(&order)
+		if err != nil {
+			return actions, err
+		}
+		orders[order.OrderId] = &order
+	}
+
+	for _, a := range actions {
+		a.Order = orders[a.OrderId]
+	}
+	return actions, nil
+}
+
+func CreateOrderAction(ctx context.Context, userId, traceId string, orderType, side, quote, base string, amount, price number.Decimal, createdAt time.Time) error {
 	order := Order{
 		OrderId:         traceId,
 		OrderType:       orderType,
@@ -50,6 +132,7 @@ func CreateOrder(ctx context.Context, userId, traceId string, orderType, side, q
 	action := Action{
 		OrderId:   order.OrderId,
 		Action:    engine.OrderActionCreate,
+		State:     ActionStatePending,
 		CreatedAt: createdAt,
 	}
 	_, err := Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
@@ -70,10 +153,11 @@ func CreateOrder(ctx context.Context, userId, traceId string, orderType, side, q
 	return err
 }
 
-func CancelOrder(ctx context.Context, orderId string, createdAt time.Time) error {
+func CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time) error {
 	action := Action{
 		OrderId:   orderId,
 		Action:    engine.OrderActionCancel,
+		State:     ActionStateDone,
 		CreatedAt: createdAt,
 	}
 	_, err := Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
