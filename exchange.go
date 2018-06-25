@@ -36,17 +36,24 @@ func (ex *Exchange) Run(ctx context.Context) {
 }
 
 func (ex *Exchange) PollOrderActions(ctx context.Context) {
-	offset, limit := time.Time{}, 500
+	limit := 500
 	for {
-		actions, err := persistence.ListPendingActions(ctx, offset, limit)
+		actions, err := persistence.ListPendingActions(ctx, limit)
 		if err != nil {
 			log.Println("ListPendingActions", err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
 		for _, a := range actions {
-			log.Println(a)
-			offset = a.CreatedAt
+			ex.processOrderAction(ctx, a)
+		}
+		for {
+			err = persistence.ExpireActions(ctx, actions)
+			if err == nil {
+				break
+			}
+			log.Println("ExpireActions", err)
+			time.Sleep(1 * time.Second)
 		}
 		if len(actions) < limit {
 			time.Sleep(1 * time.Second)
