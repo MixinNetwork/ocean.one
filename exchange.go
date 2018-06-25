@@ -10,7 +10,8 @@ import (
 	"time"
 
 	"github.com/MixinMessenger/bot-api-go-client"
-	"github.com/shopspring/decimal"
+	"github.com/MixinMessenger/go-number"
+	"github.com/satori/go.uuid"
 	"github.com/ugorji/go/codec"
 	"ocean.one/config"
 	"ocean.one/engine"
@@ -37,10 +38,10 @@ type Snapshot struct {
 }
 
 type OrderAction struct {
-	Side    string
-	AssetId string
-	Price   string
-	OrderId string
+	S string
+	A uuid.UUID
+	P string
+	O uuid.UUID
 }
 
 type Exchange struct {
@@ -66,43 +67,62 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 		}
 		for _, s := range snapshots {
 			log.Println(s)
+			err := ex.processSnapshot(ctx, s)
+			if err != nil {
+				log.Println("PollMixinNetwork processSnapshot ERROR", err)
+				break
+			}
 			checkpoint = s.CreatedAt
-			action := ex.validateSnapshot(ctx, s)
-			if action == nil {
-				ex.refund(ctx, s.OpponentId, s.Asset.AssetId, s.Amount)
-				continue
-			}
-			if action.OrderId != "" {
-				persistence.CancelOrder(ctx, action.OrderId)
-				continue
-			}
-			amount := decimal.RequireFromString(s.Amount)
-			price, _ := decimal.NewFromString(action.Price)
-			if !price.IsPositive() {
-				ex.refund(ctx, s.OpponentId, s.Asset.AssetId, s.Amount)
-				continue
-			}
-			var quote, base string
-			if action.Side == engine.PageSideAsk {
-				quote, base = action.AssetId, s.Asset.AssetId
-			} else if action.Side == engine.PageSideBid {
-				quote, base = s.Asset.AssetId, action.AssetId
-				amount = amount.Div(price)
-			} else {
-				ex.refund(ctx, s.OpponentId, s.Asset.AssetId, s.Amount)
-				continue
-			}
-			if !ex.validateQuoteBasePair(quote, base) {
-				ex.refund(ctx, s.OpponentId, s.Asset.AssetId, s.Amount)
-				continue
-			}
-			persistence.CreateOrder(ctx, s.OpponentId, s.TraceId, action.Side, quote, base, amount, price, s.CreatedAt)
 		}
 		if len(snapshots) < limit {
 			time.Sleep(1 * time.Second)
 			continue
 		}
 	}
+}
+
+func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
+	if s.UserId != config.ClientId {
+		return nil
+	}
+	if s.OpponentId == "" || s.TraceId == "" {
+		return nil
+	}
+	if number.FromString(s.Amount).Exhausted() {
+		return nil
+	}
+
+	action := ex.decryptOrderAction(ctx, s.Data)
+	if action == nil {
+		return ex.refund(ctx, s)
+	}
+	if action.A.String() == s.Asset.AssetId {
+		return ex.refund(ctx, s)
+	}
+	if action.O.String() != uuid.Nil.String() {
+		return persistence.CancelOrder(ctx, action.O.String())
+	}
+
+	amount := number.FromString(s.Amount).RoundFloor(8)
+	price := number.FromString(action.P).RoundFloor(8)
+	if price.Exhausted() {
+		return ex.refund(ctx, s)
+	}
+
+	var quote, base string
+	if action.S == engine.PageSideAsk {
+		quote, base = action.A.String(), s.Asset.AssetId
+	} else if action.S == engine.PageSideBid {
+		quote, base = s.Asset.AssetId, action.A.String()
+		amount = amount.Div(price)
+	} else {
+		return ex.refund(ctx, s)
+	}
+	if !ex.validateQuoteBasePair(quote, base) {
+		return ex.refund(ctx, s)
+	}
+
+	return persistence.CreateOrder(ctx, s.OpponentId, s.TraceId, action.S, quote, base, amount, price, s.CreatedAt)
 }
 
 func (ex *Exchange) validateQuoteBasePair(quote, base string) bool {
@@ -115,27 +135,8 @@ func (ex *Exchange) validateQuoteBasePair(quote, base string) bool {
 	return true
 }
 
-func (ex *Exchange) validateSnapshot(ctx context.Context, s *Snapshot) *OrderAction {
-	if s.UserId != config.ClientId {
-		return nil
-	}
-	if decimal.RequireFromString(s.Amount).IsNegative() {
-		return nil
-	}
-	if s.OpponentId == "" || s.TraceId == "" {
-		return nil
-	}
-	action := ex.decryptOrderAction(ctx, s.Data)
-	if action == nil {
-		return nil
-	}
-	if action.AssetId == s.Asset.AssetId {
-		return nil
-	}
-	return action
-}
-
-func (ex *Exchange) refund(ctx context.Context, opponentId, assetId, amount string) {
+func (ex *Exchange) refund(ctx context.Context, s *Snapshot) error {
+	return nil
 }
 
 func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) *OrderAction {
