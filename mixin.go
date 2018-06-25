@@ -1,11 +1,21 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/MixinMessenger/bot-api-go-client"
@@ -21,6 +31,12 @@ const (
 	BitcoinAssetId = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
 	USDTAssetId    = "815b0b1a-2764-3736-8faa-42d694fa620a"
 )
+
+type Error struct {
+	Status      int    `json:"status"`
+	Code        int    `json:"code"`
+	Description string `json:"description"`
+}
 
 type Snapshot struct {
 	SnapshotId string `json:"snapshot_id"`
@@ -133,16 +149,89 @@ func (ex *Exchange) requestMixinNetwork(ctx context.Context, checkpoint time.Tim
 	if err != nil {
 		return nil, err
 	}
-	var result struct {
+	var resp struct {
 		Data  []*Snapshot `json:"data"`
 		Error string      `json:"error"`
 	}
-	err = json.Unmarshal(body, &result)
+	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		return nil, err
 	}
-	if result.Error != "" {
-		return nil, errors.New(result.Error)
+	if resp.Error != "" {
+		return nil, errors.New(resp.Error)
 	}
-	return result.Data, nil
+	return resp.Data, nil
+}
+
+func (ex *Exchange) sendTransfer(ctx context.Context, recipientId, assetId string, amount number.Decimal, traceId, memo string) error {
+	if amount.Exhausted() {
+		return nil
+	}
+
+	pin := encryptPIN(ctx, config.SessionAssetPIN, config.PinToken, config.SessionId, config.SessionKey, uint64(time.Now().UnixNano()))
+	data, err := json.Marshal(map[string]interface{}{
+		"asset_id":    assetId,
+		"opponent_id": recipientId,
+		"amount":      amount.Persist(),
+		"pin":         pin,
+		"trace_id":    traceId,
+		"memo":        memo,
+	})
+	if err != nil {
+		return err
+	}
+
+	token, err := bot.SignAuthenticationToken(config.ClientId, config.SessionId, config.SessionKey, "POST", "/transfers", string(data))
+	if err != nil {
+		return err
+	}
+	body, err := bot.Request(ctx, "POST", "/transfers", data, token)
+	if err != nil {
+		return err
+	}
+
+	var resp struct {
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return err
+	}
+	if resp.Error.Code > 0 {
+		return errors.New(resp.Error.Description)
+	}
+	return nil
+}
+
+func encryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string, iterator uint64) string {
+	privBlock, _ := pem.Decode([]byte(privateKey))
+	if privBlock == nil {
+		return ""
+	}
+	priv, err := x509.ParsePKCS1PrivateKey(privBlock.Bytes)
+	if err != nil {
+		return ""
+	}
+	token, _ := base64.StdEncoding.DecodeString(pinToken)
+	keyBytes, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, priv, token, []byte(sessionId))
+	if err != nil {
+		return ""
+	}
+	pinByte := []byte(pin)
+	timeBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(timeBytes, uint64(time.Now().Unix()))
+	pinByte = append(pinByte, timeBytes...)
+	iteratorBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(iteratorBytes, iterator)
+	pinByte = append(pinByte, iteratorBytes...)
+	padding := aes.BlockSize - len(pinByte)%aes.BlockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	pinByte = append(pinByte, padtext...)
+	block, _ := aes.NewCipher(keyBytes)
+	ciphertext := make([]byte, aes.BlockSize+len(pinByte))
+	iv := ciphertext[:aes.BlockSize]
+	io.ReadFull(rand.Reader, iv)
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(ciphertext[aes.BlockSize:], pinByte)
+	return base64.StdEncoding.EncodeToString(ciphertext)
 }

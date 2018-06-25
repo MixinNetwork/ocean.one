@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"log"
 	"time"
 
@@ -71,7 +72,7 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 			continue
 		}
 		for _, t := range transfers {
-			log.Println(t)
+			ex.processTransfer(ctx, t)
 		}
 		for {
 			err = persistence.ExpireTransfers(ctx, transfers)
@@ -84,6 +85,38 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 		if len(transfers) < limit {
 			time.Sleep(1 * time.Second)
 		}
+	}
+}
+
+func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.Transfer) {
+	for {
+		data := map[string]string{"S": "CANCEL", "O": transfer.Detail}
+		if transfer.Source == persistence.TransferSourceTrade {
+			trade, err := persistence.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
+			if err != nil {
+				log.Println("ReadTransferTrade", err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			if trade == nil {
+				log.Panicln(transfer)
+			}
+			data = map[string]string{"S": "MATCH", "A": trade.AskOrderId, "B": trade.BidOrderId}
+		}
+		out := make([]byte, 140)
+		encoder := codec.NewEncoderBytes(&out, ex.codec)
+		err := encoder.Encode(data)
+		if err != nil {
+			log.Panicln(err)
+		}
+		memo := base64.StdEncoding.EncodeToString(out)
+		log.Println(data, len(data), len(out), err)
+		err = ex.sendTransfer(ctx, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
+		if err == nil {
+			break
+		}
+		log.Println("processTransfer", err)
+		time.Sleep(1 * time.Second)
 	}
 }
 

@@ -166,6 +166,31 @@ func CancelOrder(ctx context.Context, order *engine.Order, precision int32) erro
 	return err
 }
 
+func ReadTransferTrade(ctx context.Context, tradeId, assetId string) (*Trade, error) {
+	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{
+		SQL:    "SELECT * FROM trades WHERE trade_id=@trade_id",
+		Params: map[string]interface{}{"trade_id": tradeId},
+	})
+	defer it.Stop()
+
+	for {
+		row, err := it.Next()
+		if err == iterator.Done {
+			return nil, nil
+		} else if err != nil {
+			return nil, err
+		}
+		var trade Trade
+		err = row.ToStruct(&trade)
+		if err != nil {
+			return nil, err
+		}
+		if trade.FeeAssetId == assetId {
+			return &trade, nil
+		}
+	}
+}
+
 func makeOrderMutations(taker, maker *engine.Order, amount number.Decimal, precision int32) []*spanner.Mutation {
 	makerFilledPrice := number.FromString(fmt.Sprint(maker.FilledPrice)).Mul(number.New(1, -precision)).Persist()
 	takerFilledPrice := number.FromString(fmt.Sprint(taker.FilledPrice)).Mul(number.New(1, -precision)).Persist()
