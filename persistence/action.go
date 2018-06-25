@@ -61,7 +61,7 @@ func ListPendingActions(ctx context.Context, limit int) ([]*Action, error) {
 	defer txn.Close()
 
 	it := txn.Query(ctx, spanner.Statement{
-		SQL: fmt.Sprintf("SELECT * FROM actions@{FORCE_INDEX=actions_by_created} WHERE ORDER BY created_at LIMIT %d", limit),
+		SQL: fmt.Sprintf("SELECT * FROM actions@{FORCE_INDEX=actions_by_created} ORDER BY created_at LIMIT %d", limit),
 	})
 	defer it.Stop()
 

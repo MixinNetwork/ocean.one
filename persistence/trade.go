@@ -11,6 +11,7 @@ import (
 	"github.com/MixinMessenger/go-number"
 	"github.com/MixinMessenger/ocean.one/engine"
 	"github.com/satori/go.uuid"
+	"google.golang.org/api/iterator"
 )
 
 const (
@@ -48,6 +49,65 @@ type Transfer struct {
 	Amount     string    `spanner:"amount"`
 	CreatedAt  time.Time `spanner:"created_at"`
 	UserId     string    `spanner:"user_id"`
+}
+
+func ListPendingTransfers(ctx context.Context, limit int) ([]*Transfer, error) {
+	txn := Spanner(ctx).ReadOnlyTransaction()
+	defer txn.Close()
+
+	it := txn.Query(ctx, spanner.Statement{
+		SQL: fmt.Sprintf("SELECT transfer_id FROM transfers@{FORCE_INDEX=transfers_by_created} ORDER BY created_at LIMIT %d", limit),
+	})
+	defer it.Stop()
+
+	transferIds := make([]string, 0)
+	for {
+		row, err := it.Next()
+		if err == iterator.Done {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		var id string
+		err = row.Columns(&id)
+		if err != nil {
+			return nil, err
+		}
+		transferIds = append(transferIds, id)
+	}
+
+	tit := txn.Query(ctx, spanner.Statement{
+		SQL:    "SELECT * FROM transfers WHERE transfer_id IN UNNEST(@transfer_ids)",
+		Params: map[string]interface{}{"transfer_ids": transferIds},
+	})
+	defer tit.Stop()
+
+	transfers := make([]*Transfer, 0)
+	for {
+		row, err := tit.Next()
+		if err == iterator.Done {
+			return transfers, nil
+		} else if err != nil {
+			return transfers, err
+		}
+		var transfer Transfer
+		err = row.ToStruct(&transfer)
+		if err != nil {
+			return transfers, err
+		}
+		transfers = append(transfers, &transfer)
+	}
+}
+
+func ExpireTransfers(ctx context.Context, transfers []*Transfer) error {
+	var set []spanner.KeySet
+	for _, t := range transfers {
+		set = append(set, spanner.Key{t.TransferId})
+	}
+	_, err := Spanner(ctx).Apply(ctx, []*spanner.Mutation{
+		spanner.Delete("transfers", spanner.KeySets(set...)),
+	})
+	return err
 }
 
 func Transact(ctx context.Context, taker, maker *engine.Order, amount number.Decimal, precision int32) error {

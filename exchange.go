@@ -61,6 +61,32 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 	}
 }
 
+func (ex *Exchange) PollTransfers(ctx context.Context) {
+	limit := 500
+	for {
+		transfers, err := persistence.ListPendingTransfers(ctx, limit)
+		if err != nil {
+			log.Println("ListPendingTransfers", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		for _, t := range transfers {
+			log.Println(t)
+		}
+		for {
+			err = persistence.ExpireTransfers(ctx, transfers)
+			if err == nil {
+				break
+			}
+			log.Println("ExpireTransfers", err)
+			time.Sleep(1 * time.Second)
+		}
+		if len(transfers) < limit {
+			time.Sleep(1 * time.Second)
+		}
+	}
+}
+
 func (ex *Exchange) processOrderAction(ctx context.Context, action *persistence.Action) {
 	order := action.Order
 	market := order.BaseAssetId + "-" + order.QuoteAssetId
