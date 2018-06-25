@@ -4,5 +4,5 @@ import "context"
 
 func main() {
 	ex := NewExchange()
-	ex.PollMixinNetwork(context.Background())
+	ex.Run(context.Background())
 }
