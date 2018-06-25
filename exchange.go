@@ -33,6 +33,7 @@ func NewExchange() *Exchange {
 func (ex *Exchange) Run(ctx context.Context) {
 	go ex.PollMixinMessages(ctx)
 	go ex.PollMixinNetwork(ctx)
+	go ex.PollTransfers(ctx)
 	ex.PollOrderActions(ctx)
 }
 
@@ -110,7 +111,9 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 			log.Panicln(err)
 		}
 		memo := base64.StdEncoding.EncodeToString(out)
-		log.Println(data, len(data), len(out), err)
+		if len(memo) > 120 {
+			log.Panicln(transfer, memo)
+		}
 		err = ex.sendTransfer(ctx, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
 		if err == nil {
 			break

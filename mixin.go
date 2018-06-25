@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -122,7 +123,14 @@ func (ex *Exchange) validateQuoteBasePair(quote, base string) bool {
 }
 
 func (ex *Exchange) refundSnapshot(ctx context.Context, s *Snapshot) error {
-	return nil
+	h := md5.New()
+	io.WriteString(h, s.TraceId)
+	io.WriteString(h, "REFUND")
+	sum := h.Sum(nil)
+	sum[6] = (sum[6] & 0x0f) | 0x30
+	sum[8] = (sum[8] & 0x3f) | 0x80
+	traceId := uuid.FromBytesOrNil(sum).String()
+	return ex.sendTransfer(ctx, s.OpponentId, s.Asset.AssetId, number.FromString(s.Amount), traceId, "INVALID_ORDER#"+s.TraceId)
 }
 
 func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) *OrderAction {
