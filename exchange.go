@@ -26,15 +26,15 @@ func NewExchange() *Exchange {
 
 func (ex *Exchange) Run(ctx context.Context) {
 	go ex.PollMixinMessages(ctx)
-	ex.PollMixinNetwork(ctx)
+	go ex.PollMixinNetwork(ctx)
+	ex.PollOrderActions(ctx)
 }
 
-func (ex *Exchange) PollMixinMessages(ctx context.Context) {
-	bot.Loop(ctx, ex, config.ClientId, config.SessionId, config.SessionKey)
+func (ex *Exchange) PollOrderActions(ctx context.Context) {
 }
 
 func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
-	checkpoint, limit := persistence.ReadLatestAction(ctx).UTC(), 500
+	checkpoint, limit := persistence.ReadActionCheckpoint(ctx).UTC(), 500
 	for {
 		snapshots, err := ex.requestMixinNetwork(ctx, checkpoint, limit)
 		if err != nil {
@@ -56,6 +56,10 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 			continue
 		}
 	}
+}
+
+func (ex *Exchange) PollMixinMessages(ctx context.Context) {
+	bot.Loop(ctx, ex, config.ClientId, config.SessionId, config.SessionKey)
 }
 
 func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg bot.MessageView, userId string) error {

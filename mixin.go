@@ -62,7 +62,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 	if action.O.String() != uuid.Nil.String() {
-		return persistence.CancelOrder(ctx, action.O.String())
+		return persistence.CancelOrder(ctx, action.O.String(), s.CreatedAt)
 	}
 
 	amount := number.FromString(s.Amount).RoundFloor(8)
