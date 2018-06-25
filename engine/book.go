@@ -46,7 +46,7 @@ func NewBook(pricePrecision, amountPrecision int, transact TransactCallback, can
 	}
 }
 
-func (book *Book) AttachOrderEvent(ctx context.Context, order *Order, action string) error {
+func (book *Book) AttachOrderEvent(ctx context.Context, order *Order, action string) {
 	if order.Side != PageSideAsk && order.Side != PageSideBid {
 		log.Panicln(order, action)
 	}
@@ -59,7 +59,6 @@ func (book *Book) AttachOrderEvent(ctx context.Context, order *Order, action str
 	default:
 		log.Panicln(order, action)
 	}
-	return nil
 }
 
 func (book *Book) process(ctx context.Context, taker, maker *Order) uint64 {

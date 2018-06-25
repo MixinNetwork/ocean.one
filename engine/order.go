@@ -12,7 +12,4 @@ type Order struct {
 	Price           uint64
 	RemainingAmount uint64
 	FilledAmount    uint64
-	CreatedAt       uint64
-
-	UserId string
 }

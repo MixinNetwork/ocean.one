@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/MixinMessenger/bot-api-go-client"
+	"github.com/MixinMessenger/go-number"
 	"github.com/MixinMessenger/ocean.one/config"
 	"github.com/MixinMessenger/ocean.one/engine"
 	"github.com/MixinMessenger/ocean.one/persistence"
@@ -49,6 +50,29 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 			time.Sleep(1 * time.Second)
 		}
 	}
+}
+
+func (ex *Exchange) processOrderAction(ctx context.Context, action *persistence.Action) {
+	order := action.Order
+	market := order.BaseAssetId + "-" + order.QuoteAssetId
+	book := ex.books[market]
+	if book == nil {
+		book = engine.NewBook(8, 8, nil, nil)
+		go book.Run(ctx)
+		ex.books[market] = book
+	}
+	precision := number.New(1, -8)
+	price := number.FromString(order.Price).Mul(precision).Floor().Float64()
+	remainingAmount := number.FromString(order.RemainingAmount).Mul(precision).Floor().Float64()
+	filledAmount := number.FromString(order.FilledAmount).Mul(precision).Floor().Float64()
+	book.AttachOrderEvent(ctx, &engine.Order{
+		Id:              order.OrderId,
+		Side:            order.Side,
+		Type:            order.OrderType,
+		Price:           uint64(price),
+		RemainingAmount: uint64(remainingAmount),
+		FilledAmount:    uint64(filledAmount),
+	}, action.Action)
 }
 
 func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
