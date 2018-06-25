@@ -37,10 +37,11 @@ type Snapshot struct {
 }
 
 type OrderAction struct {
-	S string
-	A uuid.UUID
-	P string
-	O uuid.UUID
+	S string    // side
+	A uuid.UUID // asset
+	P string    // price
+	T string    // type
+	O uuid.UUID // order
 }
 
 func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
@@ -65,6 +66,10 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return persistence.CancelOrder(ctx, action.O.String(), s.CreatedAt)
 	}
 
+	if action.T != engine.OrderTypeLimit && action.T != engine.OrderTypeMarket {
+		return ex.refundSnapshot(ctx, s)
+	}
+
 	amount := number.FromString(s.Amount).RoundFloor(8)
 	price := number.FromString(action.P).RoundFloor(8)
 	if price.Exhausted() {
@@ -84,7 +89,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 
-	return persistence.CreateOrder(ctx, s.OpponentId, s.TraceId, action.S, quote, base, amount, price, s.CreatedAt)
+	return persistence.CreateOrder(ctx, s.OpponentId, s.TraceId, action.T, action.S, quote, base, amount, price, s.CreatedAt)
 }
 
 func (ex *Exchange) validateQuoteBasePair(quote, base string) bool {

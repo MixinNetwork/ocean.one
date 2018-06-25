@@ -12,7 +12,7 @@ const (
 	EventQueueSize = 8192
 )
 
-type TransactCallback func(order *Order, opponent *Order)
+type TransactCallback func(taker *Order, maker *Order, amount uint64)
 type CancelCallback func(order *Order)
 
 type OrderEvent struct {
@@ -62,16 +62,16 @@ func (book *Book) AttachOrderEvent(ctx context.Context, order *Order, action str
 	return nil
 }
 
-func (book *Book) process(ctx context.Context, order, opponent *Order) uint64 {
-	matchedAmount := order.RemainingAmount
-	if opponent.RemainingAmount < matchedAmount {
-		matchedAmount = opponent.RemainingAmount
+func (book *Book) process(ctx context.Context, taker, maker *Order) uint64 {
+	matchedAmount := taker.RemainingAmount
+	if maker.RemainingAmount < matchedAmount {
+		matchedAmount = maker.RemainingAmount
 	}
-	order.RemainingAmount = order.RemainingAmount - matchedAmount
-	order.FilledAmount = order.FilledAmount + matchedAmount
-	opponent.RemainingAmount = opponent.RemainingAmount - matchedAmount
-	opponent.FilledAmount = opponent.FilledAmount + matchedAmount
-	book.transact(order, opponent)
+	taker.RemainingAmount = taker.RemainingAmount - matchedAmount
+	taker.FilledAmount = taker.FilledAmount + matchedAmount
+	maker.RemainingAmount = maker.RemainingAmount - matchedAmount
+	maker.FilledAmount = maker.FilledAmount + matchedAmount
+	book.transact(taker, maker, matchedAmount)
 	return matchedAmount
 }
 

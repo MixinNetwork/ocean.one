@@ -11,7 +11,7 @@ func ReadActionCheckpoint(ctx context.Context) time.Time {
 	return time.Now()
 }
 
-func CreateOrder(ctx context.Context, userId, traceId string, side, quote, base string, amount, price number.Decimal, createdAt time.Time) error {
+func CreateOrder(ctx context.Context, userId, traceId string, orderType, side, quote, base string, amount, price number.Decimal, createdAt time.Time) error {
 	return nil
 }
 

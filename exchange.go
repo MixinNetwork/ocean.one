@@ -13,14 +13,16 @@ import (
 )
 
 type Exchange struct {
-	books map[string]*engine.Book
-	codec codec.Handle
+	books     map[string]*engine.Book
+	codec     codec.Handle
+	snapshots map[string]bool
 }
 
 func NewExchange() *Exchange {
 	return &Exchange{
-		codec: new(codec.MsgpackHandle),
-		books: make(map[string]*engine.Book),
+		codec:     new(codec.MsgpackHandle),
+		books:     make(map[string]*engine.Book),
+		snapshots: make(map[string]bool),
 	}
 }
 
@@ -43,6 +45,9 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 			continue
 		}
 		for _, s := range snapshots {
+			if ex.snapshots[s.SnapshotId] {
+				continue
+			}
 			log.Println(s)
 			err := ex.processSnapshot(ctx, s)
 			if err != nil {
@@ -50,6 +55,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 				break
 			}
 			checkpoint = s.CreatedAt
+			ex.snapshots[s.SnapshotId] = true
 		}
 		if len(snapshots) < limit {
 			time.Sleep(1 * time.Second)
