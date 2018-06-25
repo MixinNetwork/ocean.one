@@ -17,6 +17,11 @@ import (
 	"ocean.one/persistence"
 )
 
+const (
+	BitcoinAssetId = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
+	USDTAssetId    = "815b0b1a-2764-3736-8faa-42d694fa620a"
+)
+
 type Snapshot struct {
 	SnapshotId string `json:"snapshot_id"`
 	Amount     string `json:"amount"`
@@ -34,6 +39,7 @@ type Snapshot struct {
 type OrderAction struct {
 	Side    string
 	AssetId string
+	Price   string
 	OrderId string
 }
 
@@ -70,21 +76,43 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 				persistence.CancelOrder(ctx, action.OrderId)
 				continue
 			}
-			quote, base := s.Asset.AssetId, action.AssetId
+			amount := decimal.RequireFromString(s.Amount)
+			price, _ := decimal.NewFromString(action.Price)
+			if !price.IsPositive() {
+				ex.refund(ctx, s.OpponentId, s.Asset.AssetId, s.Amount)
+				continue
+			}
+			var quote, base string
 			if action.Side == engine.PageSideAsk {
-				quote, base = base, quote
+				quote, base = action.AssetId, s.Asset.AssetId
 			} else if action.Side == engine.PageSideBid {
+				quote, base = s.Asset.AssetId, action.AssetId
+				amount = amount.Div(price)
 			} else {
 				ex.refund(ctx, s.OpponentId, s.Asset.AssetId, s.Amount)
 				continue
 			}
-			persistence.CreateOrder(ctx, s.OpponentId, s.TraceId, quote, base, action.Side, s.Amount, s.CreatedAt)
+			if !ex.validateQuoteBasePair(quote, base) {
+				ex.refund(ctx, s.OpponentId, s.Asset.AssetId, s.Amount)
+				continue
+			}
+			persistence.CreateOrder(ctx, s.OpponentId, s.TraceId, action.Side, quote, base, amount, price, s.CreatedAt)
 		}
 		if len(snapshots) < limit {
 			time.Sleep(1 * time.Second)
 			continue
 		}
 	}
+}
+
+func (ex *Exchange) validateQuoteBasePair(quote, base string) bool {
+	if quote != BitcoinAssetId && quote != USDTAssetId {
+		return false
+	}
+	if quote == BitcoinAssetId && base == USDTAssetId {
+		return false
+	}
+	return true
 }
 
 func (ex *Exchange) validateSnapshot(ctx context.Context, s *Snapshot) *OrderAction {
