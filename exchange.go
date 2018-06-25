@@ -11,11 +11,11 @@ import (
 
 	"github.com/MixinMessenger/bot-api-go-client"
 	"github.com/MixinMessenger/go-number"
+	"github.com/MixinMessenger/ocean.one/config"
+	"github.com/MixinMessenger/ocean.one/engine"
+	"github.com/MixinMessenger/ocean.one/persistence"
 	"github.com/satori/go.uuid"
 	"github.com/ugorji/go/codec"
-	"ocean.one/config"
-	"ocean.one/engine"
-	"ocean.one/persistence"
 )
 
 const (
