@@ -13,6 +13,8 @@ import (
 	"github.com/ugorji/go/codec"
 )
 
+const EnginePrecision = 8
+
 type Exchange struct {
 	books     map[string]*engine.Book
 	codec     codec.Handle
@@ -57,21 +59,44 @@ func (ex *Exchange) processOrderAction(ctx context.Context, action *persistence.
 	market := order.BaseAssetId + "-" + order.QuoteAssetId
 	book := ex.books[market]
 	if book == nil {
-		book = engine.NewBook(8, 8, nil, nil)
+		book = engine.NewBook(func(taker, maker *engine.Order, amount number.Decimal) {
+			for {
+				err := persistence.Transact(ctx, taker, maker, amount, EnginePrecision)
+				if err == nil {
+					break
+				}
+				log.Println("Engine Transact CALLBACK", err)
+				time.Sleep(1 * time.Second)
+			}
+		}, func(order *engine.Order) {
+			for {
+				err := persistence.CancelOrder(ctx, order, EnginePrecision)
+				if err == nil {
+					break
+				}
+				log.Println("Engine Cancel CALLBACK", err)
+				time.Sleep(1 * time.Second)
+			}
+		})
 		go book.Run(ctx)
 		ex.books[market] = book
 	}
-	precision := number.New(1, -8)
+	precision := number.New(1, -EnginePrecision)
 	price := number.FromString(order.Price).Mul(precision).Floor().Float64()
-	remainingAmount := number.FromString(order.RemainingAmount).Mul(precision).Floor().Float64()
-	filledAmount := number.FromString(order.FilledAmount).Mul(precision).Floor().Float64()
+	filledPrice := number.FromString(order.FilledPrice).Mul(precision).Floor().Float64()
+	remainingAmount := number.FromString(order.RemainingAmount)
+	filledAmount := number.FromString(order.FilledAmount)
 	book.AttachOrderEvent(ctx, &engine.Order{
 		Id:              order.OrderId,
 		Side:            order.Side,
 		Type:            order.OrderType,
 		Price:           uint64(price),
-		RemainingAmount: uint64(remainingAmount),
-		FilledAmount:    uint64(filledAmount),
+		FilledPrice:     uint64(filledPrice),
+		RemainingAmount: remainingAmount,
+		FilledAmount:    filledAmount,
+		Quote:           order.QuoteAssetId,
+		Base:            order.BaseAssetId,
+		UserId:          order.UserId,
 	}, action.Action)
 }
 

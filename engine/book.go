@@ -3,6 +3,8 @@ package engine
 import (
 	"context"
 	"log"
+
+	"github.com/MixinMessenger/go-number"
 )
 
 const (
@@ -12,7 +14,7 @@ const (
 	EventQueueSize = 8192
 )
 
-type TransactCallback func(taker *Order, maker *Order, amount uint64)
+type TransactCallback func(taker, maker *Order, amount number.Decimal)
 type CancelCallback func(order *Order)
 
 type OrderEvent struct {
@@ -21,28 +23,24 @@ type OrderEvent struct {
 }
 
 type Book struct {
-	PricePrecision  int
-	AmountPrecision int
-	queue           chan *OrderEvent
-	createIndex     map[string]bool
-	cancelIndex     map[string]bool
-	transact        TransactCallback
-	cancel          CancelCallback
-	asks            *Page
-	bids            *Page
+	queue       chan *OrderEvent
+	createIndex map[string]bool
+	cancelIndex map[string]bool
+	transact    TransactCallback
+	cancel      CancelCallback
+	asks        *Page
+	bids        *Page
 }
 
-func NewBook(pricePrecision, amountPrecision int, transact TransactCallback, cancel CancelCallback) *Book {
+func NewBook(transact TransactCallback, cancel CancelCallback) *Book {
 	return &Book{
-		PricePrecision:  pricePrecision,
-		AmountPrecision: amountPrecision,
-		queue:           make(chan *OrderEvent, EventQueueSize),
-		createIndex:     make(map[string]bool),
-		cancelIndex:     make(map[string]bool),
-		transact:        transact,
-		cancel:          cancel,
-		asks:            NewPage(PageSideAsk),
-		bids:            NewPage(PageSideBid),
+		queue:       make(chan *OrderEvent, EventQueueSize),
+		createIndex: make(map[string]bool),
+		cancelIndex: make(map[string]bool),
+		transact:    transact,
+		cancel:      cancel,
+		asks:        NewPage(PageSideAsk),
+		bids:        NewPage(PageSideBid),
 	}
 }
 
@@ -61,15 +59,21 @@ func (book *Book) AttachOrderEvent(ctx context.Context, order *Order, action str
 	}
 }
 
-func (book *Book) process(ctx context.Context, taker, maker *Order) uint64 {
+func (book *Book) process(ctx context.Context, taker, maker *Order) number.Decimal {
 	matchedAmount := taker.RemainingAmount
-	if maker.RemainingAmount < matchedAmount {
+	if maker.RemainingAmount.Cmp(matchedAmount) < 0 {
 		matchedAmount = maker.RemainingAmount
 	}
-	taker.RemainingAmount = taker.RemainingAmount - matchedAmount
-	taker.FilledAmount = taker.FilledAmount + matchedAmount
-	maker.RemainingAmount = maker.RemainingAmount - matchedAmount
-	maker.FilledAmount = maker.FilledAmount + matchedAmount
+	taker.RemainingAmount = taker.RemainingAmount.Sub(matchedAmount)
+	taker.FilledAmount = taker.FilledAmount.Add(matchedAmount)
+	filledTotal := float64(taker.FilledPrice) * taker.FilledAmount.Sub(matchedAmount).Float64()
+	filledTotal = filledTotal + float64(maker.Price)*matchedAmount.Float64()
+	taker.FilledPrice = uint64(filledTotal / taker.FilledAmount.Float64())
+	maker.RemainingAmount = maker.RemainingAmount.Sub(matchedAmount)
+	maker.FilledAmount = maker.FilledAmount.Add(matchedAmount)
+	filledTotal = float64(maker.FilledPrice) * maker.FilledAmount.Sub(matchedAmount).Float64()
+	filledTotal = filledTotal + float64(maker.Price)*matchedAmount.Float64()
+	maker.FilledPrice = uint64(filledTotal / maker.FilledAmount.Float64())
 	book.transact(taker, maker, matchedAmount)
 	return matchedAmount
 }
@@ -81,14 +85,14 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 	book.createIndex[order.Id] = true
 
 	if order.Side == PageSideAsk {
-		book.bids.Iterate(func(opponent *Order) (uint64, bool) {
+		book.bids.Iterate(func(opponent *Order) (number.Decimal, bool) {
 			if order.Type == OrderTypeLimit && opponent.Price < order.Price {
-				return 0, true
+				return number.Zero(), true
 			}
 			matchedAmount := book.process(ctx, order, opponent)
-			return matchedAmount, order.RemainingAmount == 0
+			return matchedAmount, order.RemainingAmount.Sign() == 0
 		})
-		if order.RemainingAmount > 0 {
+		if order.RemainingAmount.Sign() > 0 {
 			if order.Type == OrderTypeLimit {
 				book.asks.Put(order)
 			} else {
@@ -96,14 +100,14 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 			}
 		}
 	} else if order.Side == PageSideBid {
-		book.asks.Iterate(func(opponent *Order) (uint64, bool) {
+		book.asks.Iterate(func(opponent *Order) (number.Decimal, bool) {
 			if order.Type == OrderTypeLimit && opponent.Price > order.Price {
-				return 0, true
+				return number.Zero(), true
 			}
 			matchedAmount := book.process(ctx, order, opponent)
-			return matchedAmount, order.RemainingAmount == 0
+			return matchedAmount, order.RemainingAmount.Sign() == 0
 		})
-		if order.RemainingAmount > 0 {
+		if order.RemainingAmount.Sign() > 0 {
 			if order.Type == OrderTypeLimit {
 				book.bids.Put(order)
 			} else {

@@ -3,6 +3,7 @@ package engine
 import (
 	"log"
 
+	"github.com/MixinMessenger/go-number"
 	"github.com/emirpasic/gods/lists/arraylist"
 	"github.com/emirpasic/gods/trees/redblacktree"
 )
@@ -15,7 +16,7 @@ const (
 type Entry struct {
 	Side   string
 	Price  uint64
-	Amount uint64
+	Amount number.Decimal
 	list   *arraylist.List
 	orders map[string]*Order
 }
@@ -43,7 +44,7 @@ func (page *Page) Put(order *Order) {
 		entry = &Entry{
 			Side:   order.Side,
 			Price:  order.Price,
-			Amount: 0,
+			Amount: number.Zero(),
 			list:   arraylist.New(),
 			orders: make(map[string]*Order),
 		}
@@ -56,7 +57,7 @@ func (page *Page) Put(order *Order) {
 	if _, found := entry.orders[order.Id]; found {
 		log.Panicln(order)
 	}
-	entry.Amount = entry.Amount + order.RemainingAmount
+	entry.Amount = entry.Amount.Add(order.RemainingAmount)
 	entry.orders[order.Id] = order
 	entry.list.Add(order.Id)
 }
@@ -81,13 +82,13 @@ func (page *Page) Remove(order *Order) {
 	entry.list.Remove(0)
 }
 
-func (page *Page) Iterate(hook func(*Order) (uint64, bool)) {
+func (page *Page) Iterate(hook func(*Order) (number.Decimal, bool)) {
 	for it := page.points.Iterator(); it.Next(); {
 		entry := it.Key().(*Entry)
 		for eit := entry.list.Iterator(); eit.Next(); {
 			order := entry.orders[eit.Value().(string)]
 			matchedAmount, done := hook(order)
-			entry.Amount = entry.Amount - matchedAmount
+			entry.Amount = entry.Amount.Sub(matchedAmount)
 			if done {
 				eit.End()
 				it.End()

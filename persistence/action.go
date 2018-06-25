@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	ActionStatePending = "PENDING"
-	ActionStateDone    = "DONE"
+	OrderStatePending = "PENDING"
+	OrderStateDone    = "DONE"
 )
 
 type Order struct {
@@ -27,13 +27,13 @@ type Order struct {
 	RemainingAmount string    `spanner:"remaining_amount"`
 	FilledAmount    string    `spanner:"filled_amount"`
 	CreatedAt       time.Time `spanner:"created_at"`
+	State           string    `spanner:"state"`
 	UserId          string    `spanner:"user_id"`
 }
 
 type Action struct {
 	OrderId   string    `spanner:"order_id"`
 	Action    string    `spanner:"action"`
-	State     string    `spanner:"state"`
 	CreatedAt time.Time `spanner:"created_at"`
 
 	Order *Order `spanner:"-"`
@@ -61,8 +61,8 @@ func ListPendingActions(ctx context.Context, offset time.Time, limit int) ([]*Ac
 	defer txn.Close()
 
 	it := txn.Query(ctx, spanner.Statement{
-		SQL:    fmt.Sprintf("SELECT * FROM actions@{FORCE_INDEX=actions_by_state_created} WHERE state=@state AND created_at>=@offset ORDER BY state,created_at LIMIT %d", limit),
-		Params: map[string]interface{}{"state": ActionStatePending, "offset": offset.UTC()},
+		SQL:    fmt.Sprintf("SELECT * FROM actions@{FORCE_INDEX=actions_by_created} WHERE created_at>=@offset ORDER BY created_at LIMIT %d", limit),
+		Params: map[string]interface{}{"offset": offset.UTC()},
 	})
 	defer it.Stop()
 
@@ -127,17 +127,17 @@ func CreateOrderAction(ctx context.Context, userId, traceId string, orderType, s
 		RemainingAmount: amount.Persist(),
 		FilledAmount:    number.Zero().Persist(),
 		CreatedAt:       createdAt,
+		State:           OrderStatePending,
 		UserId:          userId,
 	}
 	action := Action{
 		OrderId:   order.OrderId,
 		Action:    engine.OrderActionCreate,
-		State:     ActionStatePending,
 		CreatedAt: createdAt,
 	}
 	_, err := Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		exist, err := checkAction(ctx, txn, action.OrderId, action.Action)
-		if err != nil || exist {
+		state, err := checkOrderState(ctx, txn, action.OrderId)
+		if err != nil || state != "" {
 			return err
 		}
 		orderMutation, err := spanner.InsertStruct("orders", order)
@@ -157,7 +157,6 @@ func CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time)
 	action := Action{
 		OrderId:   orderId,
 		Action:    engine.OrderActionCancel,
-		State:     ActionStateDone,
 		CreatedAt: createdAt,
 	}
 	_, err := Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
@@ -165,8 +164,8 @@ func CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time)
 		if err != nil || exist {
 			return err
 		}
-		exist, err = checkOrder(ctx, txn, action.OrderId)
-		if err != nil || !exist {
+		state, err := checkOrderState(ctx, txn, action.OrderId)
+		if err != nil || state != OrderStatePending {
 			return err
 		}
 		actionMutation, err := spanner.InsertStruct("actions", action)
@@ -191,15 +190,17 @@ func checkAction(ctx context.Context, txn *spanner.ReadWriteTransaction, orderId
 	return true, nil
 }
 
-func checkOrder(ctx context.Context, txn *spanner.ReadWriteTransaction, orderId string) (bool, error) {
-	it := txn.Read(ctx, "orders", spanner.Key{orderId}, []string{"created_at"})
+func checkOrderState(ctx context.Context, txn *spanner.ReadWriteTransaction, orderId string) (string, error) {
+	it := txn.Read(ctx, "orders", spanner.Key{orderId}, []string{"state"})
 	defer it.Stop()
 
-	_, err := it.Next()
+	row, err := it.Next()
 	if err == iterator.Done {
-		return false, nil
+		return "", nil
 	} else if err != nil {
-		return false, err
+		return "", err
 	}
-	return true, nil
+	var state string
+	err = row.Columns(&state)
+	return state, err
 }

@@ -1,5 +1,7 @@
 package engine
 
+import "github.com/MixinMessenger/go-number"
+
 const (
 	OrderTypeLimit  = "LIMIT"
 	OrderTypeMarket = "MARKET"
@@ -10,6 +12,11 @@ type Order struct {
 	Side            string
 	Type            string
 	Price           uint64
-	RemainingAmount uint64
-	FilledAmount    uint64
+	FilledPrice     uint64
+	RemainingAmount number.Decimal
+	FilledAmount    number.Decimal
+
+	Quote  string
+	Base   string
+	UserId string
 }
