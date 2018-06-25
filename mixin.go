@@ -75,6 +75,9 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 	if price.Exhausted() {
 		return ex.refundSnapshot(ctx, s)
 	}
+	if price.Mul(amount).Exhausted() {
+		return ex.refundSnapshot(ctx, s)
+	}
 
 	var quote, base string
 	if action.S == engine.PageSideAsk {

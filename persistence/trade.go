@@ -2,7 +2,9 @@ package persistence
 
 import (
 	"context"
+	"crypto/md5"
 	"fmt"
+	"io"
 	"time"
 
 	"cloud.google.com/go/spanner"
@@ -12,11 +14,13 @@ import (
 )
 
 const (
+	MakerFeeRate = "0.00000"
+	TakerFeeRate = "0.00001"
+
 	TradeLiquidityTaker = "TAKER"
 	TradeLiquidityMaker = "MAKER"
 
-	TradeStatePending = "PENDING"
-	TradeStateDone    = "DONE"
+	TransferSourceTrade = "TRADE"
 )
 
 type Trade struct {
@@ -30,12 +34,58 @@ type Trade struct {
 	Price        string    `spanner:"price"`
 	Amount       string    `spanner:"amount"`
 	CreatedAt    time.Time `spanner:"created_at"`
-	State        string    `spanner:"state"`
 	UserId       string    `spanner:"user_id"`
+	FeeAssetId   string    `spanner:"fee_asset_id"`
+	FeeAmount    string    `spanner:"fee_amount"`
+}
+
+type Transfer struct {
+	TransferId string    `spanner:"transfer_id"`
+	Source     string    `spanner:"source"`
+	Detail     string    `spanner:"detail"`
+	AssetId    string    `spanner:"asset_id"`
+	Amount     string    `spanner:"amount"`
+	CreatedAt  time.Time `spanner:"created_at"`
+	UserId     string    `spanner:"user_id"`
 }
 
 func Transact(ctx context.Context, taker, maker *engine.Order, amount number.Decimal, precision int32) error {
-	makerPrice := number.FromString(fmt.Sprint(maker.Price)).Mul(number.New(1, -precision)).Persist()
+	askTrade, bidTrade := makeTrades(taker, maker, amount, precision)
+	askTransfer, bidTransfer := handleFees(askTrade, bidTrade)
+
+	askTradeMutation, err := spanner.InsertStruct("trades", askTrade)
+	if err != nil {
+		return err
+	}
+	bidTradeMutation, err := spanner.InsertStruct("trades", bidTrade)
+	if err != nil {
+		return err
+	}
+
+	askTransferMutation, err := spanner.InsertStruct("transfers", askTransfer)
+	if err != nil {
+		return err
+	}
+	bidTransferMutation, err := spanner.InsertStruct("transfers", bidTransfer)
+	if err != nil {
+		return err
+	}
+
+	mutations := makeOrderMutations(taker, maker, amount, precision)
+	mutations = append(mutations, askTradeMutation, bidTradeMutation)
+	mutations = append(mutations, askTransferMutation, bidTransferMutation)
+	_, err = Spanner(ctx).Apply(ctx, mutations)
+	return err
+}
+
+func CancelOrder(ctx context.Context, order *engine.Order, precision int) error {
+	_, err := Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+		return nil
+	})
+	return err
+}
+
+func makeOrderMutations(taker, maker *engine.Order, amount number.Decimal, precision int32) []*spanner.Mutation {
 	makerFilledPrice := number.FromString(fmt.Sprint(maker.FilledPrice)).Mul(number.New(1, -precision)).Persist()
 	takerFilledPrice := number.FromString(fmt.Sprint(taker.FilledPrice)).Mul(number.New(1, -precision)).Persist()
 
@@ -51,15 +101,30 @@ func Transact(ctx context.Context, taker, maker *engine.Order, amount number.Dec
 		makerOrderCols = append(makerOrderCols, "state")
 		makerOrderVals = append(makerOrderVals, OrderStateDone)
 	}
-
-	tradeId, err := uuid.NewV4()
-	if err != nil {
-		return err
+	mutations := []*spanner.Mutation{
+		spanner.Update("orders", takerOrderCols, takerOrderVals),
+		spanner.Update("orders", makerOrderCols, makerOrderVals),
 	}
+
+	if taker.RemainingAmount.Sign() == 0 {
+		mutations = append(mutations, spanner.Delete("actions", spanner.Key{taker.Id, engine.OrderActionCreate}))
+		mutations = append(mutations, spanner.Delete("actions", spanner.Key{taker.Id, engine.OrderActionCancel}))
+	}
+	if maker.RemainingAmount.Sign() == 0 {
+		mutations = append(mutations, spanner.Delete("actions", spanner.Key{maker.Id, engine.OrderActionCreate}))
+		mutations = append(mutations, spanner.Delete("actions", spanner.Key{maker.Id, engine.OrderActionCancel}))
+	}
+	return mutations
+}
+
+func makeTrades(taker, maker *engine.Order, amount number.Decimal, precision int32) (*Trade, *Trade) {
+	tradeId, _ := uuid.NewV4()
 	askOrderId, bidOrderId := taker.Id, maker.Id
 	if taker.Side == engine.PageSideBid {
 		askOrderId, bidOrderId = maker.Id, taker.Id
 	}
+	price := number.FromString(fmt.Sprint(maker.Price)).Mul(number.New(1, -precision))
+
 	takerTrade := &Trade{
 		TradeId:      tradeId.String(),
 		Liquidity:    TradeLiquidityTaker,
@@ -68,10 +133,9 @@ func Transact(ctx context.Context, taker, maker *engine.Order, amount number.Dec
 		QuoteAssetId: taker.Quote,
 		BaseAssetId:  taker.Base,
 		Side:         taker.Side,
-		Price:        makerPrice,
+		Price:        price.Persist(),
 		Amount:       amount.Persist(),
 		CreatedAt:    time.Now(),
-		State:        TradeStatePending,
 		UserId:       taker.UserId,
 	}
 	makerTrade := &Trade{
@@ -82,43 +146,60 @@ func Transact(ctx context.Context, taker, maker *engine.Order, amount number.Dec
 		QuoteAssetId: maker.Quote,
 		BaseAssetId:  maker.Base,
 		Side:         maker.Side,
-		Price:        makerPrice,
+		Price:        price.Persist(),
 		Amount:       amount.Persist(),
 		CreatedAt:    time.Now(),
-		State:        TradeStatePending,
 		UserId:       maker.UserId,
 	}
-	_, err = Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		mutations := []*spanner.Mutation{
-			spanner.Update("orders", takerOrderCols, takerOrderVals),
-			spanner.Update("orders", makerOrderCols, makerOrderVals),
-		}
-		if taker.RemainingAmount.Sign() == 0 {
-			mutations = append(mutations, spanner.Delete("actions", spanner.Key{taker.Id, engine.OrderActionCreate}))
-			mutations = append(mutations, spanner.Delete("actions", spanner.Key{taker.Id, engine.OrderActionCancel}))
-		}
-		if maker.RemainingAmount.Sign() == 0 {
-			mutations = append(mutations, spanner.Delete("actions", spanner.Key{maker.Id, engine.OrderActionCreate}))
-			mutations = append(mutations, spanner.Delete("actions", spanner.Key{maker.Id, engine.OrderActionCancel}))
-		}
-		takerTradeMutation, err := spanner.InsertStruct("trades", takerTrade)
-		if err != nil {
-			return err
-		}
-		mutations = append(mutations, takerTradeMutation)
-		makerTradeMutation, err := spanner.InsertStruct("trades", makerTrade)
-		if err != nil {
-			return err
-		}
-		mutations = append(mutations, makerTradeMutation)
-		return txn.BufferWrite(mutations)
-	})
-	return err
+
+	askTrade, bidTrade := takerTrade, makerTrade
+	if askTrade.Side == engine.PageSideBid {
+		askTrade, bidTrade = makerTrade, takerTrade
+	}
+	return askTrade, bidTrade
 }
 
-func CancelOrder(ctx context.Context, order *engine.Order, precision int) error {
-	_, err := Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		return nil
-	})
-	return err
+func handleFees(ask, bid *Trade) (*Transfer, *Transfer) {
+	total := number.FromString(ask.Amount).Mul(number.FromString(ask.Price))
+	askFee := total.Mul(number.FromString(TakerFeeRate))
+	bidFee := number.FromString(bid.Amount).Mul(number.FromString(MakerFeeRate))
+	if ask.Liquidity == TradeLiquidityMaker {
+		askFee = total.Mul(number.FromString(MakerFeeRate))
+		bidFee = number.FromString(bid.Amount).Mul(number.FromString(TakerFeeRate))
+	}
+
+	ask.FeeAssetId = ask.QuoteAssetId
+	ask.FeeAmount = askFee.Persist()
+	bid.FeeAssetId = bid.BaseAssetId
+	bid.FeeAmount = bidFee.Persist()
+
+	askTransfer := &Transfer{
+		TransferId: getSettlementId(ask.TradeId, ask.Liquidity),
+		Source:     TransferSourceTrade,
+		Detail:     ask.TradeId,
+		AssetId:    ask.FeeAssetId,
+		Amount:     total.Sub(askFee).Persist(),
+		CreatedAt:  time.Now(),
+		UserId:     ask.UserId,
+	}
+	bidTransfer := &Transfer{
+		TransferId: getSettlementId(bid.TradeId, bid.Liquidity),
+		Source:     TransferSourceTrade,
+		Detail:     bid.TradeId,
+		AssetId:    bid.FeeAssetId,
+		Amount:     number.FromString(bid.Amount).Sub(bidFee).Persist(),
+		CreatedAt:  time.Now(),
+		UserId:     bid.UserId,
+	}
+	return askTransfer, bidTransfer
+}
+
+func getSettlementId(id, modifier string) string {
+	h := md5.New()
+	io.WriteString(h, id)
+	io.WriteString(h, modifier)
+	sum := h.Sum(nil)
+	sum[6] = (sum[6] & 0x0f) | 0x30
+	sum[8] = (sum[8] & 0x3f) | 0x80
+	return uuid.FromBytesOrNil(sum).String()
 }

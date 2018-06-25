@@ -35,8 +35,20 @@ CREATE TABLE trades (
   price             STRING(128) NOT NULL,
   amount            STRING(128) NOT NULL,
   created_at        TIMESTAMP NOT NULL,
-  state             STRING(36) NOT NULL,
   user_id           STRING(36) NOT NULL,
+  fee_asset_id      STRING(36) NOT NULL,
+  fee_amount        STRING(128) NOT NULL,
 ) PRIMARY KEY(trade_id, liquidity);
 
-CREATE INDEX trades_by_state_created ON trades(state, created_at);
+
+CREATE TABLE transfers (
+  transfer_id       STRING(36) NOT NULL,
+  source            STRING(36) NOT NULL,
+  detail            STRING(36) NOT NULL,
+  asset_id          STRING(36) NOT NULL,
+  amount            STRING(128) NOT NULL,
+  created_at        TIMESTAMP NOT NULL,
+  user_id           STRING(36) NOT NULL,
+) PRIMARY KEY(transfer_id);
+
+CREATE INDEX transfers_by_created ON transfers(created_at);
