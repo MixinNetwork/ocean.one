@@ -21,6 +21,7 @@ const (
 	TradeLiquidityMaker = "MAKER"
 
 	TransferSourceTrade = "TRADE"
+	TransferSourceOrder = "ORDER"
 )
 
 type Trade struct {
@@ -78,10 +79,30 @@ func Transact(ctx context.Context, taker, maker *engine.Order, amount number.Dec
 	return err
 }
 
-func CancelOrder(ctx context.Context, order *engine.Order, precision int) error {
-	_, err := Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		return nil
-	})
+func CancelOrder(ctx context.Context, order *engine.Order, precision int32) error {
+	filledPrice := number.FromString(fmt.Sprint(order.FilledPrice)).Mul(number.New(1, -precision)).Persist()
+	orderCols := []string{"order_id", "filled_amount", "remaining_amount", "filled_price", "state"}
+	orderVals := []interface{}{order.Id, order.FilledAmount.Persist(), order.RemainingAmount.Persist(), filledPrice, OrderStateDone}
+	mutations := []*spanner.Mutation{spanner.Update("orders", orderCols, orderVals)}
+
+	transfer := &Transfer{
+		TransferId: getSettlementId(order.Id, engine.OrderActionCancel),
+		Source:     TransferSourceOrder,
+		Detail:     order.Id,
+		AssetId:    order.Quote,
+		Amount:     order.RemainingAmount.Persist(),
+		CreatedAt:  time.Now(),
+		UserId:     order.UserId,
+	}
+	if order.Side == engine.PageSideAsk {
+		transfer.AssetId = order.Base
+	}
+	transferMutation, err := spanner.InsertStruct("transfers", transfer)
+	if err != nil {
+		return err
+	}
+	mutations = append(mutations, transferMutation)
+	_, err = Spanner(ctx).Apply(ctx, mutations)
 	return err
 }
 
