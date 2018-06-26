@@ -20,13 +20,15 @@ type Exchange struct {
 	books     map[string]*engine.Book
 	codec     codec.Handle
 	snapshots map[string]bool
+	persist   persistence.Persist
 }
 
-func NewExchange() *Exchange {
+func NewExchange(persist persistence.Persist) *Exchange {
 	return &Exchange{
 		codec:     new(codec.MsgpackHandle),
 		books:     make(map[string]*engine.Book),
 		snapshots: make(map[string]bool),
+		persist:   persist,
 	}
 }
 
@@ -40,7 +42,7 @@ func (ex *Exchange) Run(ctx context.Context) {
 func (ex *Exchange) PollOrderActions(ctx context.Context) {
 	limit := 500
 	for {
-		actions, err := persistence.ListPendingActions(ctx, limit)
+		actions, err := ex.persist.ListPendingActions(ctx, limit)
 		if err != nil {
 			log.Println("ListPendingActions", err)
 			time.Sleep(1 * time.Second)
@@ -50,7 +52,7 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 			ex.processOrderAction(ctx, a)
 		}
 		for {
-			err = persistence.ExpireActions(ctx, actions)
+			err = ex.persist.ExpireActions(ctx, actions)
 			if err == nil {
 				break
 			}
@@ -66,7 +68,7 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 func (ex *Exchange) PollTransfers(ctx context.Context) {
 	limit := 500
 	for {
-		transfers, err := persistence.ListPendingTransfers(ctx, limit)
+		transfers, err := ex.persist.ListPendingTransfers(ctx, limit)
 		if err != nil {
 			log.Println("ListPendingTransfers", err)
 			time.Sleep(1 * time.Second)
@@ -76,7 +78,7 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 			ex.processTransfer(ctx, t)
 		}
 		for {
-			err = persistence.ExpireTransfers(ctx, transfers)
+			err = ex.persist.ExpireTransfers(ctx, transfers)
 			if err == nil {
 				break
 			}
@@ -93,7 +95,7 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 	for {
 		data := map[string]string{"S": "CANCEL", "O": transfer.Detail}
 		if transfer.Source == persistence.TransferSourceTrade {
-			trade, err := persistence.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
+			trade, err := ex.persist.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
 			if err != nil {
 				log.Println("ReadTransferTrade", err)
 				time.Sleep(1 * time.Second)
@@ -130,7 +132,7 @@ func (ex *Exchange) processOrderAction(ctx context.Context, action *persistence.
 	if book == nil {
 		book = engine.NewBook(func(taker, maker *engine.Order, amount number.Decimal) {
 			for {
-				err := persistence.Transact(ctx, taker, maker, amount, EnginePrecision)
+				err := ex.persist.Transact(ctx, taker, maker, amount, EnginePrecision)
 				if err == nil {
 					break
 				}
@@ -139,7 +141,7 @@ func (ex *Exchange) processOrderAction(ctx context.Context, action *persistence.
 			}
 		}, func(order *engine.Order) {
 			for {
-				err := persistence.CancelOrder(ctx, order, EnginePrecision)
+				err := ex.persist.CancelOrder(ctx, order, EnginePrecision)
 				if err == nil {
 					break
 				}
@@ -172,7 +174,7 @@ func (ex *Exchange) processOrderAction(ctx context.Context, action *persistence.
 func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 	checkpoint, limit := time.Now().UTC(), 500
 	for {
-		timestamp, err := persistence.ReadActionCheckpoint(ctx)
+		timestamp, err := ex.persist.ReadActionCheckpoint(ctx)
 		if err != nil {
 			log.Println("ReadActionCheckpoint", err)
 			time.Sleep(1 * time.Second)

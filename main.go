@@ -1,13 +1,12 @@
 package main
 
 import (
-	"context"
-	"log"
-	"time"
-
 	"cloud.google.com/go/spanner"
+	"context"
 	"github.com/MixinMessenger/ocean.one/config"
 	"github.com/MixinMessenger/ocean.one/persistence"
+	"log"
+	"time"
 )
 
 func main() {
@@ -21,6 +20,5 @@ func main() {
 		log.Panicln(err)
 	}
 
-	ctx = persistence.SetupSpanner(ctx, client)
-	NewExchange().Run(ctx)
+	NewExchange(persistence.CreateSpanner(client)).Run(ctx)
 }

@@ -23,7 +23,6 @@ import (
 	"github.com/MixinMessenger/go-number"
 	"github.com/MixinMessenger/ocean.one/config"
 	"github.com/MixinMessenger/ocean.one/engine"
-	"github.com/MixinMessenger/ocean.one/persistence"
 	"github.com/satori/go.uuid"
 	"github.com/ugorji/go/codec"
 )
@@ -80,7 +79,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 	if action.O.String() != uuid.Nil.String() {
-		return persistence.CancelOrderAction(ctx, action.O.String(), s.CreatedAt)
+		return ex.persist.CancelOrderAction(ctx, action.O.String(), s.CreatedAt)
 	}
 
 	if action.T != engine.OrderTypeLimit && action.T != engine.OrderTypeMarket {
@@ -109,7 +108,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 
-	return persistence.CreateOrderAction(ctx, s.OpponentId, s.TraceId, action.T, action.S, quote, base, amount, price, s.CreatedAt)
+	return ex.persist.CreateOrderAction(ctx, s.OpponentId, s.TraceId, action.T, action.S, quote, base, amount, price, s.CreatedAt)
 }
 
 func (ex *Exchange) validateQuoteBasePair(quote, base string) bool {
