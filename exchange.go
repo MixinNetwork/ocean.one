@@ -10,6 +10,7 @@ import (
 	"github.com/MixinMessenger/go-number"
 	"github.com/MixinMessenger/ocean.one/config"
 	"github.com/MixinMessenger/ocean.one/engine"
+	"github.com/MixinMessenger/ocean.one/mixin"
 	"github.com/MixinMessenger/ocean.one/persistence"
 	"github.com/ugorji/go/codec"
 )
@@ -17,18 +18,21 @@ import (
 const EnginePrecision = 8
 
 type Exchange struct {
-	books     map[string]*engine.Book
-	codec     codec.Handle
-	snapshots map[string]bool
-	persist   persistence.Persist
+	books       map[string]*engine.Book
+	codec       codec.Handle
+	snapshots   map[string]bool
+	persist     persistence.Persist
+	mixinClient *mixin.Client
 }
 
-func NewExchange(persist persistence.Persist) *Exchange {
+func NewExchange(persist persistence.Persist, mixinClient *mixin.Client) *Exchange {
 	return &Exchange{
 		codec:     new(codec.MsgpackHandle),
 		books:     make(map[string]*engine.Book),
 		snapshots: make(map[string]bool),
-		persist:   persist,
+
+		persist:     persist,
+		mixinClient: mixinClient,
 	}
 }
 
