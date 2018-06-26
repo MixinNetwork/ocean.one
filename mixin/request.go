@@ -7,17 +7,13 @@ import (
 	"net/http"
 )
 
-var httpClient *http.Client
+var httpClient *http.Client = &http.Client{}
 
 func getMixinUrl(uri string) string {
 	return "https://api.mixin.one" + uri
 }
 
 func (client *Client) SendRequest(ctx context.Context, method, uri string, payload []byte) ([]byte, error) {
-	if httpClient == nil {
-		httpClient = &http.Client{}
-	}
-
 	accessToken, err := client.signAuthenticationToken(method, uri, string(payload))
 	if err != nil {
 		return nil, err
