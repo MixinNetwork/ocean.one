@@ -56,12 +56,13 @@ func ReadActionCheckpoint(ctx context.Context) (time.Time, error) {
 	return checkpoint, err
 }
 
-func ListPendingActions(ctx context.Context, limit int) ([]*Action, error) {
+func ListPendingActions(ctx context.Context, checkpoint time.Time, limit int) ([]*Action, error) {
 	txn := Spanner(ctx).ReadOnlyTransaction()
 	defer txn.Close()
 
 	it := txn.Query(ctx, spanner.Statement{
-		SQL: fmt.Sprintf("SELECT * FROM actions@{FORCE_INDEX=actions_by_created} ORDER BY created_at LIMIT %d", limit),
+		SQL:    fmt.Sprintf("SELECT * FROM actions@{FORCE_INDEX=actions_by_created} WHERE created_at>=@checkpoint ORDER BY created_at LIMIT %d", limit),
+		Params: map[string]interface{}{"checkpoint": checkpoint},
 	})
 	defer it.Stop()
 
@@ -113,17 +114,6 @@ func ListPendingActions(ctx context.Context, limit int) ([]*Action, error) {
 		a.Order = orders[a.OrderId]
 	}
 	return actions, nil
-}
-
-func ExpireActions(ctx context.Context, actions []*Action) error {
-	var set []spanner.KeySet
-	for _, a := range actions {
-		set = append(set, spanner.Key{a.OrderId, a.Action})
-	}
-	_, err := Spanner(ctx).Apply(ctx, []*spanner.Mutation{
-		spanner.Delete("actions", spanner.KeySets(set...)),
-	})
-	return err
 }
 
 func CreateOrderAction(ctx context.Context, userId, traceId string, orderType, side, quote, base string, amount, price number.Decimal, createdAt time.Time) error {

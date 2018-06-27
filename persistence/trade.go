@@ -143,7 +143,11 @@ func CancelOrder(ctx context.Context, order *engine.Order, precision int32) erro
 	filledPrice := number.FromString(fmt.Sprint(order.FilledPrice)).Mul(number.New(1, -precision)).Persist()
 	orderCols := []string{"order_id", "filled_amount", "remaining_amount", "filled_price", "state"}
 	orderVals := []interface{}{order.Id, order.FilledAmount.Persist(), order.RemainingAmount.Persist(), filledPrice, OrderStateDone}
-	mutations := []*spanner.Mutation{spanner.Update("orders", orderCols, orderVals)}
+	mutations := []*spanner.Mutation{
+		spanner.Update("orders", orderCols, orderVals),
+		spanner.Delete("actions", spanner.Key{order.Id, engine.OrderActionCreate}),
+		spanner.Delete("actions", spanner.Key{order.Id, engine.OrderActionCancel}),
+	}
 
 	transfer := &Transfer{
 		TransferId: getSettlementId(order.Id, engine.OrderActionCancel),
