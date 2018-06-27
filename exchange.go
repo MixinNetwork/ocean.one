@@ -16,7 +16,6 @@ import (
 
 const (
 	EnginePrecision                 = 8
-	CheckpointPendingActions        = "exchange-checkpoint-pending-actions"
 	CheckpointMixinNetworkSnapshots = "exchange-checkpoint-mixin-network-snapshots"
 )
 
@@ -42,14 +41,8 @@ func (ex *Exchange) Run(ctx context.Context) {
 }
 
 func (ex *Exchange) PollOrderActions(ctx context.Context) {
-	const limit = 500
+	checkpoint, limit := time.Time{}, 500
 	for {
-		checkpoint, err := persistence.ReadPropertyAsTime(ctx, CheckpointPendingActions)
-		if err != nil {
-			log.Println("ReadPropertyAsTime CheckpointPendingActions", err)
-			time.Sleep(1 * time.Second)
-			continue
-		}
 		actions, err := persistence.ListPendingActions(ctx, checkpoint, limit)
 		if err != nil {
 			log.Println("ListPendingActions", err)
@@ -62,10 +55,6 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 		}
 		if len(actions) < limit {
 			time.Sleep(1 * time.Second)
-		}
-		err = persistence.WriteTimeProperty(ctx, CheckpointPendingActions, checkpoint)
-		if err != nil {
-			log.Println("WriteTimeProperty CheckpointPendingActions", err)
 		}
 	}
 }
