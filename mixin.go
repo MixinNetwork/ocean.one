@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"time"
 
 	"github.com/MixinMessenger/bot-api-go-client"
@@ -59,6 +60,17 @@ type OrderAction struct {
 	P string    // price
 	T string    // type
 	O uuid.UUID // order
+}
+
+func (ex *Exchange) ensureProcessSnapshot(ctx context.Context, s *Snapshot) {
+	for {
+		err := ex.processSnapshot(ctx, s)
+		if err == nil {
+			break
+		}
+		log.Println("ensureProcessSnapshot", err)
+		time.Sleep(1 * time.Second)
+	}
 }
 
 func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {

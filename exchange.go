@@ -14,7 +14,11 @@ import (
 	"github.com/ugorji/go/codec"
 )
 
-const EnginePrecision = 8
+const (
+	EnginePrecision                 = 8
+	CheckpointPendingActions        = "exchange-checkpoint-pending-actions"
+	CheckpointMixinNetworkSnapshots = "exchange-checkpoint-mixin-network-snapshots"
+)
 
 type Exchange struct {
 	books     map[string]*engine.Book
@@ -38,8 +42,14 @@ func (ex *Exchange) Run(ctx context.Context) {
 }
 
 func (ex *Exchange) PollOrderActions(ctx context.Context) {
-	checkpoint, limit := time.Now().UTC(), 500
+	const limit = 500
 	for {
+		checkpoint, err := persistence.ReadPropertyAsTime(ctx, CheckpointPendingActions)
+		if err != nil {
+			log.Println("ReadPropertyAsTime CheckpointPendingActions", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
 		actions, err := persistence.ListPendingActions(ctx, checkpoint, limit)
 		if err != nil {
 			log.Println("ListPendingActions", err)
@@ -47,11 +57,15 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 			continue
 		}
 		for _, a := range actions {
-			ex.processOrderAction(ctx, a)
+			ex.ensureProcessOrderAction(ctx, a)
 			checkpoint = a.CreatedAt
 		}
 		if len(actions) < limit {
 			time.Sleep(1 * time.Second)
+		}
+		err = persistence.WriteTimeProperty(ctx, CheckpointPendingActions, checkpoint)
+		if err != nil {
+			log.Println("WriteTimeProperty CheckpointPendingActions", err)
 		}
 	}
 }
@@ -66,7 +80,7 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 			continue
 		}
 		for _, t := range transfers {
-			ex.processTransfer(ctx, t)
+			ex.ensureProcessTransfer(ctx, t)
 		}
 		for {
 			err = persistence.ExpireTransfers(ctx, transfers)
@@ -82,7 +96,7 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 	}
 }
 
-func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.Transfer) {
+func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persistence.Transfer) {
 	for {
 		data := map[string]string{"S": "CANCEL", "O": transfer.Detail}
 		if transfer.Source == persistence.TransferSourceTrade {
@@ -116,7 +130,7 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 	}
 }
 
-func (ex *Exchange) processOrderAction(ctx context.Context, action *persistence.Action) {
+func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persistence.Action) {
 	order := action.Order
 	market := order.BaseAssetId + "-" + order.QuoteAssetId
 	book := ex.books[market]
@@ -163,19 +177,14 @@ func (ex *Exchange) processOrderAction(ctx context.Context, action *persistence.
 }
 
 func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
-	checkpoint, limit := time.Now().UTC(), 500
+	const limit = 500
 	for {
-		timestamp, err := persistence.ReadActionCheckpoint(ctx)
+		checkpoint, err := persistence.ReadPropertyAsTime(ctx, CheckpointMixinNetworkSnapshots)
 		if err != nil {
-			log.Println("ReadActionCheckpoint", err)
+			log.Println("ReadPropertyAsTime CheckpointMixinNetworkSnapshots", err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		checkpoint = timestamp.UTC()
-		break
-	}
-
-	for {
 		snapshots, err := ex.requestMixinNetwork(ctx, checkpoint, limit)
 		if err != nil {
 			log.Println("PollMixinNetwork ERROR", err)
@@ -186,17 +195,16 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 			if ex.snapshots[s.SnapshotId] {
 				continue
 			}
-			log.Println(s)
-			err := ex.processSnapshot(ctx, s)
-			if err != nil {
-				log.Println("PollMixinNetwork processSnapshot ERROR", err)
-				break
-			}
+			ex.ensureProcessSnapshot(ctx, s)
 			checkpoint = s.CreatedAt
 			ex.snapshots[s.SnapshotId] = true
 		}
 		if len(snapshots) < limit {
 			time.Sleep(1 * time.Second)
+		}
+		err = persistence.WriteTimeProperty(ctx, CheckpointMixinNetworkSnapshots, checkpoint)
+		if err != nil {
+			log.Println("WriteTimeProperty CheckpointMixinNetworkSnapshots", err)
 		}
 	}
 }

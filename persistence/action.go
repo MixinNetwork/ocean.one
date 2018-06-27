@@ -39,23 +39,6 @@ type Action struct {
 	Order *Order `spanner:"-"`
 }
 
-func ReadActionCheckpoint(ctx context.Context) (time.Time, error) {
-	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{
-		SQL: "SELECT created_at FROM actions ORDER BY created_at DESC LIMIT 1",
-	})
-	defer it.Stop()
-
-	row, err := it.Next()
-	if err == iterator.Done {
-		return time.Now(), nil
-	} else if err != nil {
-		return time.Time{}, err
-	}
-	var checkpoint time.Time
-	err = row.Columns(&checkpoint)
-	return checkpoint, err
-}
-
 func ListPendingActions(ctx context.Context, checkpoint time.Time, limit int) ([]*Action, error) {
 	txn := Spanner(ctx).ReadOnlyTransaction()
 	defer txn.Close()
