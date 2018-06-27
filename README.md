@@ -1,2 +1,2 @@
 # ocean.one
-Ocean ONE is a decentralized exchange built on Mixin Network 
+Ocean ONE is a decentralized exchange built on Mixin Network.

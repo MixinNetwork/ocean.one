@@ -185,6 +185,9 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 			time.Sleep(1 * time.Second)
 			continue
 		}
+		if checkpoint.IsZero() {
+			checkpoint = time.Now().UTC()
+		}
 		snapshots, err := ex.requestMixinNetwork(ctx, checkpoint, limit)
 		if err != nil {
 			log.Println("PollMixinNetwork ERROR", err)
