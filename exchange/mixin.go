@@ -75,8 +75,8 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 
-	amount := number.FromString(s.Amount).RoundFloor(8)
-	price := number.FromString(action.P).RoundFloor(8)
+	amount := number.FromString(s.Amount).RoundFloor(EnginePrecision)
+	price := number.FromString(action.P).RoundFloor(EnginePrecision)
 	if price.Exhausted() {
 		return ex.refundSnapshot(ctx, s)
 	}
