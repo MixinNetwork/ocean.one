@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/MixinMessenger/bot-api-go-client"
@@ -11,6 +13,7 @@ import (
 	"github.com/MixinMessenger/ocean.one/config"
 	"github.com/MixinMessenger/ocean.one/engine"
 	"github.com/MixinMessenger/ocean.one/persistence"
+	"github.com/satori/go.uuid"
 	"github.com/ugorji/go/codec"
 )
 
@@ -107,7 +110,7 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 			log.Panicln(err)
 		}
 		memo := base64.StdEncoding.EncodeToString(out)
-		if len(memo) > 120 {
+		if len(memo) > 140 {
 			log.Panicln(transfer, memo)
 		}
 		err = ex.sendTransfer(ctx, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
@@ -207,5 +210,44 @@ func (ex *Exchange) PollMixinMessages(ctx context.Context) {
 
 func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg bot.MessageView, userId string) error {
 	log.Println(msg, userId)
+	if msg.Category != "PLAIN_TEXT" {
+		return nil
+	}
+	data, _ := base64.StdEncoding.DecodeString(msg.Data)
+	action := strings.Split(string(data), ":")
+	if len(action) != 2 {
+		return nil
+	}
+	amount := number.FromString(action[1])
+	if amount.Exhausted() {
+		return nil
+	}
+	memo := &OrderAction{
+		T: engine.OrderTypeLimit,
+		P: amount.Persist(),
+	}
+	var asset string
+	switch action[0] {
+	case "XIN":
+		memo.S = engine.PageSideAsk
+		memo.A, _ = uuid.FromString(BitcoinAssetId)
+		asset = "c94ac88f-4671-3976-b60a-09064f1811e8"
+	case "BTC":
+		memo.S = engine.PageSideBid
+		memo.A, _ = uuid.FromString("c94ac88f-4671-3976-b60a-09064f1811e8")
+		asset = BitcoinAssetId
+	default:
+		return nil
+	}
+	out := make([]byte, 140)
+	handle := new(codec.MsgpackHandle)
+	encoder := codec.NewEncoderBytes(&out, handle)
+	encoder.Encode(memo)
+	bot.SendPlainText(ctx, mc, bot.MessageView{
+		ConversationId: msg.ConversationId,
+		UserId:         msg.UserId,
+		MessageId:      bot.NewV4().String(),
+		Category:       "PLAIN_TEXT",
+	}, fmt.Sprintf("mixin://pay?recipient=%s&asset=%s&amount=%s&trace=%s&memo=%s", config.ClientId, asset, amount.Persist(), bot.NewV4().String(), base64.StdEncoding.EncodeToString(out)))
 	return nil
 }
