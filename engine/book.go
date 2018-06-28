@@ -85,13 +85,20 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 	book.createIndex[order.Id] = true
 
 	if order.Side == PageSideAsk {
+		opponents := make([]*Order, 0)
 		book.bids.Iterate(func(opponent *Order) (number.Decimal, bool) {
 			if order.Type == OrderTypeLimit && opponent.Price < order.Price {
 				return number.Zero(), true
 			}
 			matchedAmount := book.process(ctx, order, opponent)
+			opponents = append(opponents, opponent)
 			return matchedAmount, order.RemainingAmount.Sign() == 0
 		})
+		for _, o := range opponents {
+			if o.RemainingAmount.Sign() == 0 {
+				book.bids.Remove(o)
+			}
+		}
 		if order.RemainingAmount.Sign() > 0 {
 			if order.Type == OrderTypeLimit {
 				book.asks.Put(order)
@@ -100,13 +107,20 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 			}
 		}
 	} else if order.Side == PageSideBid {
+		opponents := make([]*Order, 0)
 		book.asks.Iterate(func(opponent *Order) (number.Decimal, bool) {
 			if order.Type == OrderTypeLimit && opponent.Price > order.Price {
 				return number.Zero(), true
 			}
 			matchedAmount := book.process(ctx, order, opponent)
+			opponents = append(opponents, opponent)
 			return matchedAmount, order.RemainingAmount.Sign() == 0
 		})
+		for _, o := range opponents {
+			if o.RemainingAmount.Sign() == 0 {
+				book.asks.Remove(o)
+			}
+		}
 		if order.RemainingAmount.Sign() > 0 {
 			if order.Type == OrderTypeLimit {
 				book.bids.Put(order)

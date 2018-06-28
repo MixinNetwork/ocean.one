@@ -79,6 +79,7 @@ func (page *Page) Remove(order *Order) {
 		log.Panicln(order, id)
 	}
 	delete(entry.orders, order.Id)
+	entry.Amount = entry.Amount.Sub(order.RemainingAmount)
 	entry.list.Remove(0)
 }
 
