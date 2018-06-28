@@ -13,18 +13,18 @@ To sell 0.7 XIN with price 0.1 BTC/XIN, send a 0.7 XIN transfer to Ocean ONE wit
 
 ```golang
 type OrderAction struct {
-	S string    // side
-	A uuid.UUID // asset
-	P string    // price
-	T string    // type
-	O uuid.UUID // order
+  S string    // side
+  A uuid.UUID // asset
+  P string    // price
+  T string    // type
+  O uuid.UUID // order
 }
 
 memo = base64.StdEncoding.EncodeToString(msgpack(OrderAction{
-	T: "LIMIT",
-	P: "0.1",
-	S: "ASK",
-	A: "c6d0c728-2624-429b-8e0d-d9d19b6592fa",
+  T: "L",
+  P: "0.1",
+  S: "A",
+  A: uuid.FromString("c6d0c728-2624-429b-8e0d-d9d19b6592fa"),
 }))
 ```
 
@@ -32,10 +32,10 @@ To buy some XIN with price 0.1 BTC/XIN, send the desired amount of BTC transfer 
 
 ```golang
 memo = base64.StdEncoding.EncodeToString(msgpack(OrderAction{
-	T: "LIMIT",
-	P: "0.1",
-	S: "BID",
-	A: "c94ac88f-4671-3976-b60a-09064f1811e8",
+  T: "L",
+  P: "0.1",
+  S: "B",
+  A: uuid.FromString("c94ac88f-4671-3976-b60a-09064f1811e8"),
 }))
 ```
 
@@ -48,7 +48,7 @@ Send any amount of any asset to Ocean ONE with base64 encoded MessagePack data a
 
 ```golang
 memo = base64.StdEncoding.EncodeToString(msgpack(OrderAction{
-	O: "2497b2bb-4d67-49bf-b2bc-211b0543d7ac",
+  O: uuid.FromString("2497b2bb-4d67-49bf-b2bc-211b0543d7ac"),
 }))
 ```
 
