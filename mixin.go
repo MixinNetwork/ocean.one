@@ -160,6 +160,18 @@ func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) *OrderA
 	if err != nil {
 		return nil
 	}
+	switch action.T {
+	case "L":
+		action.T = engine.OrderTypeLimit
+	case "M":
+		action.T = engine.OrderTypeMarket
+	}
+	switch action.S {
+	case "A":
+		action.S = engine.PageSideAsk
+	case "B":
+		action.S = engine.PageSideBid
+	}
 	return &action
 }
 
