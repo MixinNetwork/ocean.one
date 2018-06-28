@@ -18,6 +18,7 @@ import (
 )
 
 const (
+	PollInterval                    = 100 * time.Millisecond
 	EnginePrecision                 = 8
 	CheckpointMixinNetworkSnapshots = "exchange-checkpoint-mixin-network-snapshots"
 )
@@ -49,7 +50,7 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 		actions, err := persistence.ListPendingActions(ctx, checkpoint, limit)
 		if err != nil {
 			log.Println("ListPendingActions", err)
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 			continue
 		}
 		for _, a := range actions {
@@ -57,7 +58,7 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 			checkpoint = a.CreatedAt
 		}
 		if len(actions) < limit {
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 		}
 	}
 }
@@ -68,7 +69,7 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 		transfers, err := persistence.ListPendingTransfers(ctx, limit)
 		if err != nil {
 			log.Println("ListPendingTransfers", err)
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 			continue
 		}
 		for _, t := range transfers {
@@ -80,10 +81,10 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 				break
 			}
 			log.Println("ExpireTransfers", err)
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 		}
 		if len(transfers) < limit {
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 		}
 	}
 }
@@ -95,7 +96,7 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 			trade, err := persistence.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
 			if err != nil {
 				log.Println("ReadTransferTrade", err)
-				time.Sleep(1 * time.Second)
+				time.Sleep(PollInterval)
 				continue
 			}
 			if trade == nil {
@@ -118,7 +119,7 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 			break
 		}
 		log.Println("processTransfer", err)
-		time.Sleep(1 * time.Second)
+		time.Sleep(PollInterval)
 	}
 }
 
@@ -134,7 +135,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 					break
 				}
 				log.Println("Engine Transact CALLBACK", err)
-				time.Sleep(1 * time.Second)
+				time.Sleep(PollInterval)
 			}
 		}, func(order *engine.Order) {
 			for {
@@ -143,7 +144,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 					break
 				}
 				log.Println("Engine Cancel CALLBACK", err)
-				time.Sleep(1 * time.Second)
+				time.Sleep(PollInterval)
 			}
 		})
 		go book.Run(ctx)
@@ -174,7 +175,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 		checkpoint, err := persistence.ReadPropertyAsTime(ctx, CheckpointMixinNetworkSnapshots)
 		if err != nil {
 			log.Println("ReadPropertyAsTime CheckpointMixinNetworkSnapshots", err)
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 			continue
 		}
 		if checkpoint.IsZero() {
@@ -183,7 +184,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 		snapshots, err := ex.requestMixinNetwork(ctx, checkpoint, limit)
 		if err != nil {
 			log.Println("PollMixinNetwork ERROR", err)
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 			continue
 		}
 		for _, s := range snapshots {
@@ -195,7 +196,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 			ex.snapshots[s.SnapshotId] = true
 		}
 		if len(snapshots) < limit {
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 		}
 		err = persistence.WriteTimeProperty(ctx, CheckpointMixinNetworkSnapshots, checkpoint)
 		if err != nil {

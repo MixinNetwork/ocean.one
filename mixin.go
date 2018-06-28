@@ -69,7 +69,7 @@ func (ex *Exchange) ensureProcessSnapshot(ctx context.Context, s *Snapshot) {
 			break
 		}
 		log.Println("ensureProcessSnapshot", err)
-		time.Sleep(1 * time.Second)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
