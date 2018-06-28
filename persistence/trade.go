@@ -21,8 +21,8 @@ const (
 	TradeLiquidityTaker = "TAKER"
 	TradeLiquidityMaker = "MAKER"
 
-	TransferSourceTrade = "TRADE"
-	TransferSourceOrder = "ORDER"
+	TransferSourceTradeConfirmed = "TRADE_CONFIRMED"
+	TransferSourceOrderCancelled = "ORDER_CANCELLED"
 )
 
 type Trade struct {
@@ -151,7 +151,7 @@ func CancelOrder(ctx context.Context, order *engine.Order, precision int32) erro
 
 	transfer := &Transfer{
 		TransferId: getSettlementId(order.Id, engine.OrderActionCancel),
-		Source:     TransferSourceOrder,
+		Source:     TransferSourceOrderCancelled,
 		Detail:     order.Id,
 		AssetId:    order.Quote,
 		Amount:     order.RemainingAmount.Persist(),
@@ -285,7 +285,7 @@ func handleFees(ask, bid *Trade) (*Transfer, *Transfer) {
 
 	askTransfer := &Transfer{
 		TransferId: getSettlementId(ask.TradeId, ask.Liquidity),
-		Source:     TransferSourceTrade,
+		Source:     TransferSourceTradeConfirmed,
 		Detail:     ask.TradeId,
 		AssetId:    ask.FeeAssetId,
 		Amount:     total.Sub(askFee).Persist(),
@@ -294,7 +294,7 @@ func handleFees(ask, bid *Trade) (*Transfer, *Transfer) {
 	}
 	bidTransfer := &Transfer{
 		TransferId: getSettlementId(bid.TradeId, bid.Liquidity),
-		Source:     TransferSourceTrade,
+		Source:     TransferSourceTradeConfirmed,
 		Detail:     bid.TradeId,
 		AssetId:    bid.FeeAssetId,
 		Amount:     number.FromString(bid.Amount).Sub(bidFee).Persist(),
