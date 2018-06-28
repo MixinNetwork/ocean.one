@@ -88,7 +88,7 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persistence.Transfer) {
 	for {
 		data := map[string]string{"S": "CANCEL", "O": transfer.Detail}
-		if transfer.Source == persistence.TransferSourceTrade {
+		if transfer.Source == persistence.TransferSourceTradeConfirmed {
 			trade, err := persistence.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
 			if err != nil {
 				log.Println("ReadTransferTrade", err)
