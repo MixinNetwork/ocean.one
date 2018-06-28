@@ -3,7 +3,9 @@ package exchange
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/MixinMessenger/bot-api-go-client"
@@ -12,10 +14,12 @@ import (
 	"github.com/MixinMessenger/ocean.one/engine"
 	"github.com/MixinMessenger/ocean.one/mixin"
 	"github.com/MixinMessenger/ocean.one/persistence"
+	"github.com/satori/go.uuid"
 	"github.com/ugorji/go/codec"
 )
 
 const (
+	PollInterval                    = 100 * time.Millisecond
 	EnginePrecision                 = 8
 	CheckpointMixinNetworkSnapshots = "exchange-checkpoint-mixin-network-snapshots"
 )
@@ -52,7 +56,7 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 		actions, err := ex.persist.ListPendingActions(ctx, checkpoint, limit)
 		if err != nil {
 			log.Println("ListPendingActions", err)
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 			continue
 		}
 		for _, a := range actions {
@@ -60,7 +64,7 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 			checkpoint = a.CreatedAt
 		}
 		if len(actions) < limit {
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 		}
 	}
 }
@@ -71,7 +75,7 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 		transfers, err := ex.persist.ListPendingTransfers(ctx, limit)
 		if err != nil {
 			log.Println("ListPendingTransfers", err)
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 			continue
 		}
 		for _, t := range transfers {
@@ -83,10 +87,10 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 				break
 			}
 			log.Println("ExpireTransfers", err)
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 		}
 		if len(transfers) < limit {
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 		}
 	}
 }
@@ -94,11 +98,11 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persistence.Transfer) {
 	for {
 		data := map[string]string{"S": "CANCEL", "O": transfer.Detail}
-		if transfer.Source == persistence.TransferSourceTrade {
+		if transfer.Source == persistence.TransferSourceTradeConfirmed {
 			trade, err := ex.persist.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
 			if err != nil {
 				log.Println("ReadTransferTrade", err)
-				time.Sleep(1 * time.Second)
+				time.Sleep(PollInterval)
 				continue
 			}
 			if trade == nil {
@@ -113,7 +117,7 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 			log.Panicln(err)
 		}
 		memo := base64.StdEncoding.EncodeToString(out)
-		if len(memo) > 120 {
+		if len(memo) > 140 {
 			log.Panicln(transfer, memo)
 		}
 		err = ex.sendTransfer(ctx, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
@@ -121,7 +125,7 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 			break
 		}
 		log.Println("processTransfer", err)
-		time.Sleep(1 * time.Second)
+		time.Sleep(PollInterval)
 	}
 }
 
@@ -137,7 +141,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 					break
 				}
 				log.Println("Engine Transact CALLBACK", err)
-				time.Sleep(1 * time.Second)
+				time.Sleep(PollInterval)
 			}
 		}, func(order *engine.Order) {
 			for {
@@ -146,7 +150,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 					break
 				}
 				log.Println("Engine Cancel CALLBACK", err)
-				time.Sleep(1 * time.Second)
+				time.Sleep(PollInterval)
 			}
 		})
 		go book.Run(ctx)
@@ -177,7 +181,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 		checkpoint, err := ex.persist.ReadPropertyAsTime(ctx, CheckpointMixinNetworkSnapshots)
 		if err != nil {
 			log.Println("ReadPropertyAsTime CheckpointMixinNetworkSnapshots", err)
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 			continue
 		}
 		if checkpoint.IsZero() {
@@ -186,7 +190,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 		snapshots, err := ex.requestMixinNetwork(ctx, checkpoint, limit)
 		if err != nil {
 			log.Println("PollMixinNetwork ERROR", err)
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 			continue
 		}
 		for _, s := range snapshots {
@@ -198,7 +202,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 			ex.snapshots[s.SnapshotId] = true
 		}
 		if len(snapshots) < limit {
-			time.Sleep(1 * time.Second)
+			time.Sleep(PollInterval)
 		}
 		err = ex.persist.WriteTimeProperty(ctx, CheckpointMixinNetworkSnapshots, checkpoint)
 		if err != nil {
@@ -213,5 +217,44 @@ func (ex *Exchange) PollMixinMessages(ctx context.Context) {
 
 func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg bot.MessageView, userId string) error {
 	log.Println(msg, userId)
+	if msg.Category != "PLAIN_TEXT" {
+		return nil
+	}
+	data, _ := base64.StdEncoding.DecodeString(msg.Data)
+	action := strings.Split(string(data), ":")
+	if len(action) != 2 {
+		return nil
+	}
+	amount := number.FromString(action[1])
+	if amount.Exhausted() {
+		return nil
+	}
+	memo := &OrderAction{
+		T: engine.OrderTypeLimit,
+		P: amount.Persist(),
+	}
+	var asset string
+	switch action[0] {
+	case "XIN":
+		memo.S = engine.PageSideAsk
+		memo.A, _ = uuid.FromString(BitcoinAssetId)
+		asset = "c94ac88f-4671-3976-b60a-09064f1811e8"
+	case "BTC":
+		memo.S = engine.PageSideBid
+		memo.A, _ = uuid.FromString("c94ac88f-4671-3976-b60a-09064f1811e8")
+		asset = BitcoinAssetId
+	default:
+		return nil
+	}
+	out := make([]byte, 140)
+	handle := new(codec.MsgpackHandle)
+	encoder := codec.NewEncoderBytes(&out, handle)
+	encoder.Encode(memo)
+	bot.SendPlainText(ctx, mc, bot.MessageView{
+		ConversationId: msg.ConversationId,
+		UserId:         msg.UserId,
+		MessageId:      bot.NewV4().String(),
+		Category:       "PLAIN_TEXT",
+	}, fmt.Sprintf("mixin://pay?recipient=%s&asset=%s&amount=%s&trace=%s&memo=%s", config.ClientId, asset, amount.Persist(), bot.NewV4().String(), base64.StdEncoding.EncodeToString(out)))
 	return nil
 }

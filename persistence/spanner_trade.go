@@ -103,7 +103,7 @@ func (persist *Spanner) Transact(ctx context.Context, taker, maker *engine.Order
 }
 
 func (persist *Spanner) CancelOrder(ctx context.Context, order *engine.Order, precision int32) error {
-	filledPrice := number.FromString(fmt.Sprint(order.FilledPrice)).Mul(number.New(1, -precision)).Persist()
+	filledPrice := number.FromString(fmt.Sprint(order.FilledPrice)).Mul(number.New(1, precision)).Persist()
 	orderCols := []string{"order_id", "filled_amount", "remaining_amount", "filled_price", "state"}
 	orderVals := []interface{}{order.Id, order.FilledAmount.Persist(), order.RemainingAmount.Persist(), filledPrice, OrderStateDone}
 	mutations := []*spanner.Mutation{
@@ -114,7 +114,7 @@ func (persist *Spanner) CancelOrder(ctx context.Context, order *engine.Order, pr
 
 	transfer := &Transfer{
 		TransferId: getSettlementId(order.Id, engine.OrderActionCancel),
-		Source:     TransferSourceOrder,
+		Source:     TransferSourceOrderCancelled,
 		Detail:     order.Id,
 		AssetId:    order.Quote,
 		Amount:     order.RemainingAmount.Persist(),
@@ -159,8 +159,8 @@ func (persist *Spanner) ReadTransferTrade(ctx context.Context, tradeId, assetId 
 }
 
 func makeOrderMutations(taker, maker *engine.Order, amount number.Decimal, precision int32) []*spanner.Mutation {
-	makerFilledPrice := number.FromString(fmt.Sprint(maker.FilledPrice)).Mul(number.New(1, -precision)).Persist()
-	takerFilledPrice := number.FromString(fmt.Sprint(taker.FilledPrice)).Mul(number.New(1, -precision)).Persist()
+	makerFilledPrice := number.FromString(fmt.Sprint(maker.FilledPrice)).Mul(number.New(1, precision)).Persist()
+	takerFilledPrice := number.FromString(fmt.Sprint(taker.FilledPrice)).Mul(number.New(1, precision)).Persist()
 
 	takerOrderCols := []string{"order_id", "filled_amount", "remaining_amount", "filled_price"}
 	takerOrderVals := []interface{}{taker.Id, taker.FilledAmount.Persist(), taker.RemainingAmount.Persist(), takerFilledPrice}
@@ -196,7 +196,7 @@ func makeTrades(taker, maker *engine.Order, amount number.Decimal, precision int
 	if taker.Side == engine.PageSideBid {
 		askOrderId, bidOrderId = maker.Id, taker.Id
 	}
-	price := number.FromString(fmt.Sprint(maker.Price)).Mul(number.New(1, -precision))
+	price := number.FromString(fmt.Sprint(maker.Price)).Mul(number.New(1, precision))
 
 	takerTrade := &Trade{
 		TradeId:      tradeId.String(),
@@ -248,7 +248,7 @@ func handleFees(ask, bid *Trade) (*Transfer, *Transfer) {
 
 	askTransfer := &Transfer{
 		TransferId: getSettlementId(ask.TradeId, ask.Liquidity),
-		Source:     TransferSourceTrade,
+		Source:     TransferSourceTradeConfirmed,
 		Detail:     ask.TradeId,
 		AssetId:    ask.FeeAssetId,
 		Amount:     total.Sub(askFee).Persist(),
@@ -257,7 +257,7 @@ func handleFees(ask, bid *Trade) (*Transfer, *Transfer) {
 	}
 	bidTransfer := &Transfer{
 		TransferId: getSettlementId(bid.TradeId, bid.Liquidity),
-		Source:     TransferSourceTrade,
+		Source:     TransferSourceTradeConfirmed,
 		Detail:     bid.TradeId,
 		AssetId:    bid.FeeAssetId,
 		Amount:     number.FromString(bid.Amount).Sub(bidFee).Persist(),

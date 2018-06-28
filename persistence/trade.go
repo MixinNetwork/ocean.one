@@ -11,8 +11,8 @@ const (
 	TradeLiquidityTaker = "TAKER"
 	TradeLiquidityMaker = "MAKER"
 
-	TransferSourceTrade = "TRADE"
-	TransferSourceOrder = "ORDER"
+	TransferSourceTradeConfirmed = "TRADE_CONFIRMED"
+	TransferSourceOrderCancelled = "ORDER_CANCELLED"
 )
 
 type Trade struct {
