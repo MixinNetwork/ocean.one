@@ -1,30 +1,18 @@
-package main
+package exchange
 
 import (
-	"bytes"
 	"context"
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/md5"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/sha256"
-	"crypto/x509"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"time"
 
-	"github.com/MixinMessenger/bot-api-go-client"
 	"github.com/MixinMessenger/go-number"
-	"github.com/MixinMessenger/ocean.one/config"
 	"github.com/MixinMessenger/ocean.one/engine"
-	"github.com/MixinMessenger/ocean.one/persistence"
 	"github.com/satori/go.uuid"
 	"github.com/ugorji/go/codec"
 )
@@ -74,7 +62,7 @@ func (ex *Exchange) ensureProcessSnapshot(ctx context.Context, s *Snapshot) {
 }
 
 func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
-	if s.UserId != config.ClientId {
+	if s.UserId != ex.mixinClient.ClientId {
 		return nil
 	}
 	if s.OpponentId == "" || s.TraceId == "" {
@@ -92,15 +80,15 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 	if action.O.String() != uuid.Nil.String() {
-		return persistence.CancelOrderAction(ctx, action.O.String(), s.CreatedAt)
+		return ex.persist.CancelOrderAction(ctx, action.O.String(), s.CreatedAt)
 	}
 
 	if action.T != engine.OrderTypeLimit && action.T != engine.OrderTypeMarket {
 		return ex.refundSnapshot(ctx, s)
 	}
 
-	amount := number.FromString(s.Amount).RoundFloor(8)
-	price := number.FromString(action.P).RoundFloor(8)
+	amount := number.FromString(s.Amount).RoundFloor(EnginePrecision)
+	price := number.FromString(action.P).RoundFloor(EnginePrecision)
 	if price.Exhausted() {
 		return ex.refundSnapshot(ctx, s)
 	}
@@ -121,7 +109,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 
-	return persistence.CreateOrderAction(ctx, s.OpponentId, s.TraceId, action.T, action.S, quote, base, amount, price, s.CreatedAt)
+	return ex.persist.CreateOrderAction(ctx, s.OpponentId, s.TraceId, action.T, action.S, quote, base, amount, price, s.CreatedAt)
 }
 
 func (ex *Exchange) validateQuoteBasePair(quote, base string) bool {
@@ -165,11 +153,7 @@ func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) *OrderA
 
 func (ex *Exchange) requestMixinNetwork(ctx context.Context, checkpoint time.Time, limit int) ([]*Snapshot, error) {
 	uri := fmt.Sprintf("/network/snapshots?offset=%s&order=ASC&limit=%d", checkpoint.Format(time.RFC3339Nano), limit)
-	token, err := bot.SignAuthenticationToken(config.ClientId, config.SessionId, config.SessionKey, "GET", uri, "")
-	if err != nil {
-		return nil, err
-	}
-	body, err := bot.Request(ctx, "GET", uri, nil, token)
+	body, err := ex.mixinClient.SendRequest(ctx, "GET", uri, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +176,7 @@ func (ex *Exchange) sendTransfer(ctx context.Context, recipientId, assetId strin
 		return nil
 	}
 
-	pin := encryptPIN(ctx, config.SessionAssetPIN, config.PinToken, config.SessionId, config.SessionKey, uint64(time.Now().UnixNano()))
+	pin := ex.mixinClient.EncryptPin()
 	data, err := json.Marshal(map[string]interface{}{
 		"asset_id":    assetId,
 		"opponent_id": recipientId,
@@ -205,11 +189,7 @@ func (ex *Exchange) sendTransfer(ctx context.Context, recipientId, assetId strin
 		return err
 	}
 
-	token, err := bot.SignAuthenticationToken(config.ClientId, config.SessionId, config.SessionKey, "POST", "/transfers", string(data))
-	if err != nil {
-		return err
-	}
-	body, err := bot.Request(ctx, "POST", "/transfers", data, token)
+	body, err := ex.mixinClient.SendRequest(ctx, "POST", "/transfers", data)
 	if err != nil {
 		return err
 	}
@@ -225,37 +205,4 @@ func (ex *Exchange) sendTransfer(ctx context.Context, recipientId, assetId strin
 		return errors.New(resp.Error.Description)
 	}
 	return nil
-}
-
-func encryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string, iterator uint64) string {
-	privBlock, _ := pem.Decode([]byte(privateKey))
-	if privBlock == nil {
-		return ""
-	}
-	priv, err := x509.ParsePKCS1PrivateKey(privBlock.Bytes)
-	if err != nil {
-		return ""
-	}
-	token, _ := base64.StdEncoding.DecodeString(pinToken)
-	keyBytes, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, priv, token, []byte(sessionId))
-	if err != nil {
-		return ""
-	}
-	pinByte := []byte(pin)
-	timeBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(timeBytes, uint64(time.Now().Unix()))
-	pinByte = append(pinByte, timeBytes...)
-	iteratorBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(iteratorBytes, iterator)
-	pinByte = append(pinByte, iteratorBytes...)
-	padding := aes.BlockSize - len(pinByte)%aes.BlockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	pinByte = append(pinByte, padtext...)
-	block, _ := aes.NewCipher(keyBytes)
-	ciphertext := make([]byte, aes.BlockSize+len(pinByte))
-	iv := ciphertext[:aes.BlockSize]
-	io.ReadFull(rand.Reader, iv)
-	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(ciphertext[aes.BlockSize:], pinByte)
-	return base64.StdEncoding.EncodeToString(ciphertext)
 }

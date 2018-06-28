@@ -1,4 +1,4 @@
-package main
+package exchange
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"github.com/MixinMessenger/go-number"
 	"github.com/MixinMessenger/ocean.one/config"
 	"github.com/MixinMessenger/ocean.one/engine"
+	"github.com/MixinMessenger/ocean.one/mixin"
 	"github.com/MixinMessenger/ocean.one/persistence"
 	"github.com/satori/go.uuid"
 	"github.com/ugorji/go/codec"
@@ -24,16 +25,21 @@ const (
 )
 
 type Exchange struct {
-	books     map[string]*engine.Book
-	codec     codec.Handle
-	snapshots map[string]bool
+	books       map[string]*engine.Book
+	codec       codec.Handle
+	snapshots   map[string]bool
+	persist     persistence.Persist
+	mixinClient *mixin.Client
 }
 
-func NewExchange() *Exchange {
+func NewExchange(persist persistence.Persist, mixinClient *mixin.Client) *Exchange {
 	return &Exchange{
 		codec:     new(codec.MsgpackHandle),
 		books:     make(map[string]*engine.Book),
 		snapshots: make(map[string]bool),
+
+		persist:     persist,
+		mixinClient: mixinClient,
 	}
 }
 
@@ -47,7 +53,7 @@ func (ex *Exchange) Run(ctx context.Context) {
 func (ex *Exchange) PollOrderActions(ctx context.Context) {
 	checkpoint, limit := time.Time{}, 500
 	for {
-		actions, err := persistence.ListPendingActions(ctx, checkpoint, limit)
+		actions, err := ex.persist.ListPendingActions(ctx, checkpoint, limit)
 		if err != nil {
 			log.Println("ListPendingActions", err)
 			time.Sleep(PollInterval)
@@ -66,7 +72,7 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 func (ex *Exchange) PollTransfers(ctx context.Context) {
 	limit := 500
 	for {
-		transfers, err := persistence.ListPendingTransfers(ctx, limit)
+		transfers, err := ex.persist.ListPendingTransfers(ctx, limit)
 		if err != nil {
 			log.Println("ListPendingTransfers", err)
 			time.Sleep(PollInterval)
@@ -76,7 +82,7 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 			ex.ensureProcessTransfer(ctx, t)
 		}
 		for {
-			err = persistence.ExpireTransfers(ctx, transfers)
+			err = ex.persist.ExpireTransfers(ctx, transfers)
 			if err == nil {
 				break
 			}
@@ -93,7 +99,7 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 	for {
 		data := map[string]string{"S": "CANCEL", "O": transfer.Detail}
 		if transfer.Source == persistence.TransferSourceTradeConfirmed {
-			trade, err := persistence.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
+			trade, err := ex.persist.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
 			if err != nil {
 				log.Println("ReadTransferTrade", err)
 				time.Sleep(PollInterval)
@@ -130,7 +136,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 	if book == nil {
 		book = engine.NewBook(func(taker, maker *engine.Order, amount number.Decimal) {
 			for {
-				err := persistence.Transact(ctx, taker, maker, amount, EnginePrecision)
+				err := ex.persist.Transact(ctx, taker, maker, amount, EnginePrecision)
 				if err == nil {
 					break
 				}
@@ -139,7 +145,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 			}
 		}, func(order *engine.Order) {
 			for {
-				err := persistence.CancelOrder(ctx, order, EnginePrecision)
+				err := ex.persist.CancelOrder(ctx, order, EnginePrecision)
 				if err == nil {
 					break
 				}
@@ -172,7 +178,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 	const limit = 500
 	for {
-		checkpoint, err := persistence.ReadPropertyAsTime(ctx, CheckpointMixinNetworkSnapshots)
+		checkpoint, err := ex.persist.ReadPropertyAsTime(ctx, CheckpointMixinNetworkSnapshots)
 		if err != nil {
 			log.Println("ReadPropertyAsTime CheckpointMixinNetworkSnapshots", err)
 			time.Sleep(PollInterval)
@@ -198,7 +204,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 		if len(snapshots) < limit {
 			time.Sleep(PollInterval)
 		}
-		err = persistence.WriteTimeProperty(ctx, CheckpointMixinNetworkSnapshots, checkpoint)
+		err = ex.persist.WriteTimeProperty(ctx, CheckpointMixinNetworkSnapshots, checkpoint)
 		if err != nil {
 			log.Println("WriteTimeProperty CheckpointMixinNetworkSnapshots", err)
 		}
