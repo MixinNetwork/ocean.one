@@ -9,9 +9,12 @@ import (
 )
 
 type Persist interface {
-	ReadActionCheckpoint(ctx context.Context) (time.Time, error)
-	ListPendingActions(ctx context.Context, limit int) ([]*Action, error)
-	ExpireActions(ctx context.Context, actions []*Action) error
+	ReadProperty(ctx context.Context, key string) (string, error)
+	WriteProperty(ctx context.Context, key, value string) error
+	ReadPropertyAsTime(ctx context.Context, key string) (time.Time, error)
+	WriteTimeProperty(ctx context.Context, key string, value time.Time) error
+
+	ListPendingActions(ctx context.Context, checkpoint time.Time, limit int) ([]*Action, error)
 	CreateOrderAction(ctx context.Context, userId, traceId string, orderType, side, quote, base string, amount, price number.Decimal, createdAt time.Time) error
 	CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time) error
 

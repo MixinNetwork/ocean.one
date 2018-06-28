@@ -11,29 +11,13 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-func (persist *Spanner) ReadActionCheckpoint(ctx context.Context) (time.Time, error) {
-	it := persist.spanner.Single().Query(ctx, spanner.Statement{
-		SQL: "SELECT created_at FROM actions ORDER BY created_at DESC LIMIT 1",
-	})
-	defer it.Stop()
-
-	row, err := it.Next()
-	if err == iterator.Done {
-		return time.Now(), nil
-	} else if err != nil {
-		return time.Time{}, err
-	}
-	var checkpoint time.Time
-	err = row.Columns(&checkpoint)
-	return checkpoint, err
-}
-
-func (persist *Spanner) ListPendingActions(ctx context.Context, limit int) ([]*Action, error) {
+func (persist *Spanner) ListPendingActions(ctx context.Context, checkpoint time.Time, limit int) ([]*Action, error) {
 	txn := persist.spanner.ReadOnlyTransaction()
 	defer txn.Close()
 
 	it := txn.Query(ctx, spanner.Statement{
-		SQL: fmt.Sprintf("SELECT * FROM actions@{FORCE_INDEX=actions_by_created} ORDER BY created_at LIMIT %d", limit),
+		SQL:    fmt.Sprintf("SELECT * FROM actions@{FORCE_INDEX=actions_by_created} WHERE created_at>=@checkpoint ORDER BY created_at LIMIT %d", limit),
+		Params: map[string]interface{}{"checkpoint": checkpoint},
 	})
 	defer it.Stop()
 
@@ -85,17 +69,6 @@ func (persist *Spanner) ListPendingActions(ctx context.Context, limit int) ([]*A
 		a.Order = orders[a.OrderId]
 	}
 	return actions, nil
-}
-
-func (persist *Spanner) ExpireActions(ctx context.Context, actions []*Action) error {
-	var set []spanner.KeySet
-	for _, a := range actions {
-		set = append(set, spanner.Key{a.OrderId, a.Action})
-	}
-	_, err := persist.spanner.Apply(ctx, []*spanner.Mutation{
-		spanner.Delete("actions", spanner.KeySets(set...)),
-	})
-	return err
 }
 
 func (persist *Spanner) CreateOrderAction(ctx context.Context, userId, traceId string, orderType, side, quote, base string, amount, price number.Decimal, createdAt time.Time) error {

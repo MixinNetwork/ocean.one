@@ -1,3 +1,10 @@
+CREATE TABLE properties (
+	key         STRING(512) NOT NULL,
+	value       STRING(8192) NOT NULL,
+	updated_at  TIMESTAMP NOT NULL,
+) PRIMARY KEY(key);
+
+
 CREATE TABLE orders (
   order_id          STRING(36) NOT NULL,
   order_type        STRING(36) NOT NULL,
