@@ -28,6 +28,9 @@ type Page struct {
 }
 
 func NewPage(side string) *Page {
+	if side != PageSideBid && side != PageSideAsk {
+		return nil
+	}
 	return &Page{
 		Side:    side,
 		points:  redblacktree.NewWith(entryCompare),
@@ -73,14 +76,13 @@ func (page *Page) Remove(order *Order) {
 	if _, found := entry.orders[order.Id]; !found {
 		log.Panicln(order)
 	}
-	if id, found := entry.list.Get(0); !found {
+	index := entry.list.IndexOf(order.Id)
+	if index < 0 {
 		log.Panicln(order)
-	} else if id.(string) != order.Id {
-		log.Panicln(order, id)
 	}
 	delete(entry.orders, order.Id)
 	entry.Amount = entry.Amount.Sub(order.RemainingAmount)
-	entry.list.Remove(0)
+	entry.list.Remove(index)
 }
 
 func (page *Page) Iterate(hook func(*Order) (number.Decimal, bool)) {
@@ -96,6 +98,22 @@ func (page *Page) Iterate(hook func(*Order) (number.Decimal, bool)) {
 			}
 		}
 	}
+}
+
+func (page *Page) List(count int) []*Entry {
+	entries := make([]*Entry, 0)
+	for it := page.points.Iterator(); it.Next(); {
+		entry := it.Key().(*Entry)
+		entries = append(entries, &Entry{
+			Side:   entry.Side,
+			Price:  entry.Price,
+			Amount: entry.Amount,
+		})
+		if count = count - 1; count == 0 {
+			it.End()
+		}
+	}
+	return entries
 }
 
 func entryCompare(a, b interface{}) int {
