@@ -132,7 +132,7 @@ func Transact(ctx context.Context, taker, maker *engine.Order, amount number.Dec
 		return err
 	}
 
-	mutations := makeOrderMutations(taker, maker, amount, precision)
+	mutations := makeOrderMutations(taker, maker, precision)
 	mutations = append(mutations, askTradeMutation, bidTradeMutation)
 	mutations = append(mutations, askTransferMutation, bidTransferMutation)
 	_, err = Spanner(ctx).Apply(ctx, mutations)
@@ -195,7 +195,7 @@ func ReadTransferTrade(ctx context.Context, tradeId, assetId string) (*Trade, er
 	}
 }
 
-func makeOrderMutations(taker, maker *engine.Order, amount number.Decimal, precision int32) []*spanner.Mutation {
+func makeOrderMutations(taker, maker *engine.Order, precision int32) []*spanner.Mutation {
 	makerFilledPrice := number.FromString(fmt.Sprint(maker.FilledPrice)).Mul(number.New(1, precision)).Persist()
 	takerFilledPrice := number.FromString(fmt.Sprint(taker.FilledPrice)).Mul(number.New(1, precision)).Persist()
 

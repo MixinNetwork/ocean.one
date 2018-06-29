@@ -67,14 +67,14 @@ func (page *Page) Put(order *Order) {
 
 func (page *Page) Remove(order *Order) {
 	if page.Side != order.Side {
-		log.Panicln(page, order)
+		return
 	}
 	entry, found := page.entries[order.Price]
 	if !found {
-		log.Panicln(page, order)
+		return
 	}
 	if _, found := entry.orders[order.Id]; !found {
-		log.Panicln(order)
+		return
 	}
 	index := entry.list.IndexOf(order.Id)
 	if index < 0 {
