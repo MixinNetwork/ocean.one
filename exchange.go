@@ -89,9 +89,16 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 	}
 }
 
+type TransferAction struct {
+	S string    // source
+	O uuid.UUID // cancelled order
+	A uuid.UUID // matched ask order
+	B uuid.UUID // matched bid order
+}
+
 func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persistence.Transfer) {
 	for {
-		data := map[string]string{"S": "CANCEL", "O": transfer.Detail}
+		data := TransferAction{S: "CANCEL", O: uuid.FromStringOrNil(transfer.Detail)}
 		if transfer.Source == persistence.TransferSourceTradeConfirmed {
 			trade, err := persistence.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
 			if err != nil {
@@ -102,7 +109,7 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 			if trade == nil {
 				log.Panicln(transfer)
 			}
-			data = map[string]string{"S": "MATCH", "A": trade.AskOrderId, "B": trade.BidOrderId}
+			data = TransferAction{S: "MATCH", A: uuid.FromStringOrNil(trade.AskOrderId), B: uuid.FromStringOrNil(trade.BidOrderId)}
 		}
 		out := make([]byte, 140)
 		encoder := codec.NewEncoderBytes(&out, ex.codec)
