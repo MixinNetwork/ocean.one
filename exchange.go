@@ -206,7 +206,13 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 }
 
 func (ex *Exchange) PollMixinMessages(ctx context.Context) {
-	bot.Loop(ctx, ex, config.ClientId, config.SessionId, config.SessionKey)
+	for {
+		err := bot.Loop(ctx, ex, config.ClientId, config.SessionId, config.SessionKey)
+		if err != nil {
+			log.Println("PollMixinMessages", err)
+			time.Sleep(1 * time.Second)
+		}
+	}
 }
 
 func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg bot.MessageView, userId string) error {
