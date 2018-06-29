@@ -95,9 +95,16 @@ func (ex *Exchange) PollTransfers(ctx context.Context) {
 	}
 }
 
+type TransferAction struct {
+	S string    // source
+	O uuid.UUID // cancelled order
+	A uuid.UUID // matched ask order
+	B uuid.UUID // matched bid order
+}
+
 func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persistence.Transfer) {
 	for {
-		data := map[string]string{"S": "CANCEL", "O": transfer.Detail}
+		data := TransferAction{S: "CANCEL", O: uuid.FromStringOrNil(transfer.Detail)}
 		if transfer.Source == persistence.TransferSourceTradeConfirmed {
 			trade, err := ex.persist.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
 			if err != nil {
@@ -108,7 +115,7 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 			if trade == nil {
 				log.Panicln(transfer)
 			}
-			data = map[string]string{"S": "MATCH", "A": trade.AskOrderId, "B": trade.BidOrderId}
+			data = TransferAction{S: "MATCH", A: uuid.FromStringOrNil(trade.AskOrderId), B: uuid.FromStringOrNil(trade.BidOrderId)}
 		}
 		out := make([]byte, 140)
 		encoder := codec.NewEncoderBytes(&out, ex.codec)
@@ -212,7 +219,13 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 }
 
 func (ex *Exchange) PollMixinMessages(ctx context.Context) {
-	bot.Loop(ctx, ex, config.ClientId, config.SessionId, config.SessionKey)
+	for {
+		err := bot.Loop(ctx, ex, config.ClientId, config.SessionId, config.SessionKey)
+		if err != nil {
+			log.Println("PollMixinMessages", err)
+			time.Sleep(1 * time.Second)
+		}
+	}
 }
 
 func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg bot.MessageView, userId string) error {
@@ -230,17 +243,17 @@ func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg b
 		return nil
 	}
 	memo := &OrderAction{
-		T: engine.OrderTypeLimit,
+		T: "L",
 		P: amount.Persist(),
 	}
 	var asset string
 	switch action[0] {
 	case "XIN":
-		memo.S = engine.PageSideAsk
+		memo.S = "A"
 		memo.A, _ = uuid.FromString(BitcoinAssetId)
 		asset = "c94ac88f-4671-3976-b60a-09064f1811e8"
 	case "BTC":
-		memo.S = engine.PageSideBid
+		memo.S = "B"
 		memo.A, _ = uuid.FromString("c94ac88f-4671-3976-b60a-09064f1811e8")
 		asset = BitcoinAssetId
 	default:

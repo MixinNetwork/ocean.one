@@ -79,6 +79,7 @@ func (persist *Spanner) CreateOrderAction(ctx context.Context, userId, traceId s
 		QuoteAssetId:    quote,
 		BaseAssetId:     base,
 		Price:           price.Persist(),
+		FilledPrice:     number.Zero().Persist(),
 		RemainingAmount: amount.Persist(),
 		FilledAmount:    number.Zero().Persist(),
 		CreatedAt:       createdAt,
