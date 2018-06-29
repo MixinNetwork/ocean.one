@@ -230,17 +230,17 @@ func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg b
 		return nil
 	}
 	memo := &OrderAction{
-		T: engine.OrderTypeLimit,
+		T: "L",
 		P: amount.Persist(),
 	}
 	var asset string
 	switch action[0] {
 	case "XIN":
-		memo.S = engine.PageSideAsk
+		memo.S = "A"
 		memo.A, _ = uuid.FromString(BitcoinAssetId)
 		asset = "c94ac88f-4671-3976-b60a-09064f1811e8"
 	case "BTC":
-		memo.S = engine.PageSideBid
+		memo.S = "B"
 		memo.A, _ = uuid.FromString("c94ac88f-4671-3976-b60a-09064f1811e8")
 		asset = BitcoinAssetId
 	default:
