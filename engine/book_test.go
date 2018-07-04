@@ -26,7 +26,7 @@ func TestBook(t *testing.T) {
 
 	matched := make([]*DummyTrade, 0)
 	cancelled := make([]*Order, 0)
-	book := NewBook(func(taker, maker *Order, amount number.Decimal) {
+	book := NewBook(ctx, "market", func(taker, maker *Order, amount number.Decimal) {
 		matched = append(matched, &DummyTrade{
 			Amount:           amount,
 			TakerId:          taker.Id,

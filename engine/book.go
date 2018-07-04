@@ -2,9 +2,12 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/MixinMessenger/go-number"
+	"github.com/MixinMessenger/ocean.one/cache"
 )
 
 const (
@@ -23,24 +26,28 @@ type OrderEvent struct {
 }
 
 type Book struct {
-	queue       chan *OrderEvent
+	market      string
+	events      chan *OrderEvent
 	createIndex map[string]bool
 	cancelIndex map[string]bool
 	transact    TransactCallback
 	cancel      CancelCallback
 	asks        *Page
 	bids        *Page
+	queue       *cache.Queue
 }
 
-func NewBook(transact TransactCallback, cancel CancelCallback) *Book {
+func NewBook(ctx context.Context, market string, transact TransactCallback, cancel CancelCallback) *Book {
 	return &Book{
-		queue:       make(chan *OrderEvent, EventQueueSize),
+		market:      market,
+		events:      make(chan *OrderEvent, EventQueueSize),
 		createIndex: make(map[string]bool),
 		cancelIndex: make(map[string]bool),
 		transact:    transact,
 		cancel:      cancel,
 		asks:        NewPage(PageSideAsk),
 		bids:        NewPage(PageSideBid),
+		queue:       cache.NewQueue(ctx),
 	}
 }
 
@@ -53,7 +60,7 @@ func (book *Book) AttachOrderEvent(ctx context.Context, order *Order, action str
 	}
 	switch action {
 	case OrderActionCreate, OrderActionCancel:
-		book.queue <- &OrderEvent{Order: order, Action: action}
+		book.events <- &OrderEvent{Order: order, Action: action}
 	default:
 		log.Panicln(order, action)
 	}
@@ -91,6 +98,7 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 				return number.Zero(), true
 			}
 			matchedAmount := book.process(ctx, order, opponent)
+			book.cacheOrderEvent(ctx, "ORDER_MATCH", opponent.Side, opponent.Price, matchedAmount)
 			opponents = append(opponents, opponent)
 			return matchedAmount, order.RemainingAmount.Sign() == 0
 		})
@@ -102,6 +110,7 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 		if order.RemainingAmount.Sign() > 0 {
 			if order.Type == OrderTypeLimit {
 				book.asks.Put(order)
+				book.cacheOrderEvent(ctx, "ORDER_OPEN", order.Side, order.Price, order.RemainingAmount)
 			} else {
 				book.cancel(order)
 			}
@@ -113,6 +122,7 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 				return number.Zero(), true
 			}
 			matchedAmount := book.process(ctx, order, opponent)
+			book.cacheOrderEvent(ctx, "ORDER_MATCH", opponent.Side, opponent.Price, matchedAmount)
 			opponents = append(opponents, opponent)
 			return matchedAmount, order.RemainingAmount.Sign() == 0
 		})
@@ -124,6 +134,7 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 		if order.RemainingAmount.Sign() > 0 {
 			if order.Type == OrderTypeLimit {
 				book.bids.Put(order)
+				book.cacheOrderEvent(ctx, "ORDER_OPEN", order.Side, order.Price, order.RemainingAmount)
 			} else {
 				book.cancel(order)
 			}
@@ -137,6 +148,7 @@ func (book *Book) cancelOrder(ctx context.Context, order *Order) {
 	}
 	book.cancelIndex[order.Id] = true
 	book.cancel(order)
+	book.cacheOrderEvent(ctx, "ORDER_CANCEL", order.Side, order.Price, order.RemainingAmount)
 
 	if order.Side == PageSideAsk {
 		book.asks.Remove(order)
@@ -148,9 +160,16 @@ func (book *Book) cancelOrder(ctx context.Context, order *Order) {
 }
 
 func (book *Book) Run(ctx context.Context) {
+	go book.queue.Loop(ctx)
+
+	topCacheTicker := time.NewTicker(time.Millisecond * 700)
+	defer topCacheTicker.Stop()
+	fullCacheTicker := time.NewTicker(time.Second * 30)
+	defer fullCacheTicker.Stop()
+
 	for {
 		select {
-		case event := <-book.queue:
+		case event := <-book.events:
 			if event.Action == OrderActionCreate {
 				book.createOrder(ctx, event.Order)
 			} else if event.Action == OrderActionCancel {
@@ -158,6 +177,29 @@ func (book *Book) Run(ctx context.Context) {
 			} else {
 				log.Panicln(event)
 			}
+		case <-topCacheTicker.C:
+			book.cacheList(ctx, 50)
+		case <-fullCacheTicker.C:
+			book.cacheList(ctx, 0)
 		}
 	}
+}
+
+func (book *Book) cacheList(ctx context.Context, limit int) {
+	data := map[string]interface{}{
+		"event": fmt.Sprintf("BOOK_T%d", limit),
+		"asks":  book.asks.List(limit),
+		"bids":  book.bids.List(limit),
+	}
+	book.queue.AttachEvent(ctx, book.market, data)
+}
+
+func (book *Book) cacheOrderEvent(ctx context.Context, event, side string, price uint64, amount number.Decimal) {
+	data := map[string]interface{}{
+		"event":  event,
+		"side":   side,
+		"price":  price,
+		"amount": amount.Persist(),
+	}
+	book.queue.AttachEvent(ctx, book.market, data)
 }

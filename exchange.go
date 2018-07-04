@@ -135,7 +135,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 	market := order.BaseAssetId + "-" + order.QuoteAssetId
 	book := ex.books[market]
 	if book == nil {
-		book = engine.NewBook(func(taker, maker *engine.Order, amount number.Decimal) {
+		book = engine.NewBook(ctx, market, func(taker, maker *engine.Order, amount number.Decimal) {
 			for {
 				err := persistence.Transact(ctx, taker, maker, amount, EnginePrecision)
 				if err == nil {
