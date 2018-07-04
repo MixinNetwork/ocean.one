@@ -47,7 +47,7 @@ func NewBook(ctx context.Context, market string, transact TransactCallback, canc
 		cancel:      cancel,
 		asks:        NewPage(PageSideAsk),
 		bids:        NewPage(PageSideBid),
-		queue:       cache.NewQueue(ctx),
+		queue:       cache.NewQueue(ctx, market),
 	}
 }
 
@@ -98,7 +98,7 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 				return number.Zero(), true
 			}
 			matchedAmount := book.process(ctx, order, opponent)
-			book.cacheOrderEvent(ctx, "ORDER_MATCH", opponent.Side, opponent.Price, matchedAmount)
+			book.cacheOrderEvent(ctx, cache.EventTypeOrderMatch, opponent.Side, opponent.Price, matchedAmount)
 			opponents = append(opponents, opponent)
 			return matchedAmount, order.RemainingAmount.Sign() == 0
 		})
@@ -110,7 +110,7 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 		if order.RemainingAmount.Sign() > 0 {
 			if order.Type == OrderTypeLimit {
 				book.asks.Put(order)
-				book.cacheOrderEvent(ctx, "ORDER_OPEN", order.Side, order.Price, order.RemainingAmount)
+				book.cacheOrderEvent(ctx, cache.EventTypeOrderOpen, order.Side, order.Price, order.RemainingAmount)
 			} else {
 				book.cancel(order)
 			}
@@ -122,7 +122,7 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 				return number.Zero(), true
 			}
 			matchedAmount := book.process(ctx, order, opponent)
-			book.cacheOrderEvent(ctx, "ORDER_MATCH", opponent.Side, opponent.Price, matchedAmount)
+			book.cacheOrderEvent(ctx, cache.EventTypeOrderMatch, opponent.Side, opponent.Price, matchedAmount)
 			opponents = append(opponents, opponent)
 			return matchedAmount, order.RemainingAmount.Sign() == 0
 		})
@@ -134,7 +134,7 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 		if order.RemainingAmount.Sign() > 0 {
 			if order.Type == OrderTypeLimit {
 				book.bids.Put(order)
-				book.cacheOrderEvent(ctx, "ORDER_OPEN", order.Side, order.Price, order.RemainingAmount)
+				book.cacheOrderEvent(ctx, cache.EventTypeOrderOpen, order.Side, order.Price, order.RemainingAmount)
 			} else {
 				book.cancel(order)
 			}
@@ -148,7 +148,7 @@ func (book *Book) cancelOrder(ctx context.Context, order *Order) {
 	}
 	book.cancelIndex[order.Id] = true
 	book.cancel(order)
-	book.cacheOrderEvent(ctx, "ORDER_CANCEL", order.Side, order.Price, order.RemainingAmount)
+	book.cacheOrderEvent(ctx, cache.EventTypeOrderCancel, order.Side, order.Price, order.RemainingAmount)
 
 	if order.Side == PageSideAsk {
 		book.asks.Remove(order)
@@ -186,20 +186,19 @@ func (book *Book) Run(ctx context.Context) {
 }
 
 func (book *Book) cacheList(ctx context.Context, limit int) {
+	event := fmt.Sprintf("BOOK-T%d", limit)
 	data := map[string]interface{}{
-		"event": fmt.Sprintf("BOOK_T%d", limit),
-		"asks":  book.asks.List(limit),
-		"bids":  book.bids.List(limit),
+		"asks": book.asks.List(limit),
+		"bids": book.bids.List(limit),
 	}
-	book.queue.AttachEvent(ctx, book.market, data)
+	book.queue.AttachEvent(ctx, event, data)
 }
 
 func (book *Book) cacheOrderEvent(ctx context.Context, event, side string, price uint64, amount number.Decimal) {
 	data := map[string]interface{}{
-		"event":  event,
 		"side":   side,
 		"price":  price,
 		"amount": amount.Persist(),
 	}
-	book.queue.AttachEvent(ctx, book.market, data)
+	book.queue.AttachEvent(ctx, event, data)
 }
