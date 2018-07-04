@@ -14,8 +14,11 @@ const (
 )
 
 type Event struct {
-	typ  string
-	data map[string]interface{}
+	market string                 `json:"market"`
+	typ    string                 `json:"event"`
+	seq    int64                  `json:"sequence"`
+	data   map[string]interface{} `json:"data"`
+	time   time.Time              `json:"timestamp"`
 }
 
 type Queue struct {
@@ -27,7 +30,8 @@ type Queue struct {
 func NewQueue(ctx context.Context, market string) *Queue {
 	return &Queue{
 		market:   market,
-		sequence: int64(0),
+		sequence: time.Now().Unix(),
+		events:   make(chan *Event, 8192),
 	}
 }
 
@@ -45,33 +49,49 @@ func (queue *Queue) Loop(ctx context.Context) {
 }
 
 func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
-	e.data["event"] = e.typ
-	e.data["sequence"] = queue.sequence
-	queue.sequence = queue.sequence + 1
+	queue.sequence += 1
+	e.seq = queue.sequence
 
 	switch e.typ {
 	case EventTypeOrderOpen, EventTypeOrderMatch, EventTypeOrderCancel:
 		key := fmt.Sprintf("%s-ORDER-EVENTS", queue.market)
-		_, err := Redis(ctx).RPush(key, e.data).Result()
+		_, err := Redis(ctx).RPush(key, e).Result()
+		if err != nil {
+			return err
+		}
+		_, err = Redis(ctx).Publish("ORDER-EVENTS", e).Result()
 		return err
-	default:
+	case "BOOK-T0":
 		key := fmt.Sprintf("%s-%s", queue.market, e.typ)
-		_, err := Redis(ctx).Set(key, e.data, 0).Result()
+		_, err := Redis(ctx).Set(key, e, 0).Result()
 		if err != nil {
 			return err
 		}
 		key = fmt.Sprintf("%s-ORDER-EVENTS", queue.market)
-		_, err = Redis(ctx).RPush(key, map[string]interface{}{
+		_, err = Redis(ctx).Del(key).Result()
+		if err != nil {
+			return err
+		}
+		data := map[string]interface{}{
 			"event":    "HEARTBEAT",
-			"sequence": e.data["sequence"],
-		}).Result()
+			"sequence": e.seq,
+		}
+		_, err = Redis(ctx).RPush(key, data).Result()
+		if err != nil {
+			return err
+		}
+		_, err = Redis(ctx).Publish("ORDER-EVENTS", data).Result()
 		return err
 	}
+
+	return fmt.Errorf("unsupported queue type %s", e.typ)
 }
 
 func (queue *Queue) AttachEvent(ctx context.Context, typ string, data map[string]interface{}) {
 	queue.events <- &Event{
-		typ:  typ,
-		data: data,
+		market: queue.market,
+		typ:    typ,
+		data:   data,
+		time:   time.Now().UTC(),
 	}
 }

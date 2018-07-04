@@ -1,0 +1,257 @@
+package cache
+
+import (
+	"compress/gzip"
+	"context"
+	"encoding/json"
+	"errors"
+	"io"
+	"log"
+	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/satori/go.uuid"
+)
+
+const (
+	readWait       = 10 * time.Second
+	writeWait      = 10 * time.Second
+	pingPeriod     = 5 * time.Second
+	maxMessageSize = 1024
+)
+
+type BlazeMessage struct {
+	Id     string                 `json:"id"`
+	Action string                 `json:"action"`
+	Params map[string]interface{} `json:"params,omitempty"`
+	Data   interface{}            `json:"data,omitempty"`
+	Error  string                 `json:"error,omitempty"`
+}
+
+type Client struct {
+	hub            *Hub
+	conn           *websocket.Conn
+	cid            string
+	receive        chan *BlazeMessage
+	hubChannel     chan *EventResponse
+	clientResponse chan []byte
+	hubResponse    chan []byte
+	cancel         context.CancelFunc
+}
+
+func NewClient(ctx context.Context, hub *Hub, conn *websocket.Conn, id string, cancel context.CancelFunc) (*Client, error) {
+	client := &Client{
+		hub:            hub,
+		conn:           conn,
+		cid:            id,
+		receive:        make(chan *BlazeMessage, 64),
+		hubChannel:     make(chan *EventResponse, 81920),
+		hubResponse:    make(chan []byte, 1024),
+		clientResponse: make(chan []byte, 64),
+		cancel:         cancel,
+	}
+	return client, nil
+}
+
+func (client *Client) WritePump(ctx context.Context) error {
+	defer client.conn.Close()
+	go client.loopHubChannel(ctx)
+
+	pingTicker := time.NewTicker(pingPeriod)
+	defer pingTicker.Stop()
+
+	for {
+		select {
+		case msg := <-client.clientResponse:
+			err := writeGzipToConn(ctx, client.conn, msg)
+			if err != nil {
+				return err
+			}
+		case msg := <-client.hubResponse:
+			err := writeGzipToConn(ctx, client.conn, msg)
+			if err != nil {
+				return err
+			}
+		case <-pingTicker.C:
+			err := client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				return err
+			}
+			err = client.conn.WriteMessage(websocket.PingMessage, []byte{})
+			if err != nil {
+				return err
+			}
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+}
+
+func (client *Client) loopHubChannel(ctx context.Context) error {
+	defer client.conn.Close()
+
+	for {
+		select {
+		case msg := <-client.hubChannel:
+			switch msg.Source {
+			case "LIST_PENDING_EVENTS":
+				time.Sleep(500 * time.Millisecond)
+				err := client.sendPendingEvents(ctx)
+				if err != nil {
+					return err
+				}
+			case "EMIT_EVENT":
+				data, err := json.Marshal(msg)
+				if err != nil {
+					return err
+				}
+				err = client.pipeHubResponse(ctx, data)
+				if err != nil {
+					return err
+				}
+			}
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+}
+
+func (client *Client) sendPendingEvents(ctx context.Context) error {
+	return nil
+}
+
+func writeGzipToConn(ctx context.Context, conn *websocket.Conn, msg []byte) error {
+	err := conn.SetWriteDeadline(time.Now().Add(writeWait))
+	if err != nil {
+		return err
+	}
+	wsWriter, err := conn.NextWriter(websocket.BinaryMessage)
+	if err != nil {
+		return err
+	}
+	gzWriter, err := gzip.NewWriterLevel(wsWriter, 3)
+	if err != nil {
+		return err
+	}
+	if _, err := gzWriter.Write(msg); err != nil {
+		return err
+	}
+
+	if err := gzWriter.Close(); err != nil {
+		return err
+	}
+	if err := wsWriter.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (client *Client) ReadPump(ctx context.Context) error {
+	defer client.conn.Close()
+	go client.loopReceiveMessage(ctx)
+
+	client.conn.SetReadLimit(maxMessageSize)
+	client.conn.SetReadDeadline(time.Now().Add(readWait))
+	client.conn.SetPongHandler(func(string) error {
+		return client.conn.SetReadDeadline(time.Now().Add(readWait))
+	})
+
+	for {
+		err := client.conn.SetReadDeadline(time.Now().Add(readWait))
+		if err != nil {
+			return err
+		}
+		messageType, wsReader, err := client.conn.NextReader()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
+				return err
+			}
+			log.Printf("EXPECTED CLOSE %s %s\n", client.cid, err.Error())
+			return nil
+		}
+		if messageType != websocket.BinaryMessage {
+			err = client.replyError(ctx, "ERROR", uuid.Nil.String(), "bad data")
+		} else {
+			err = client.parseMessage(ctx, wsReader)
+		}
+		if err != nil {
+			return err
+		}
+	}
+}
+
+func (client *Client) loopReceiveMessage(ctx context.Context) error {
+	defer client.conn.Close()
+
+	for {
+		select {
+		case msg := <-client.receive:
+			client.handleMessage(ctx, msg)
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+}
+
+func (client *Client) handleMessage(ctx context.Context, msg *BlazeMessage) {
+	switch msg.Action {
+	case "SUBSCRIBE_BOOK":
+	case "UNSUBSCRIBE_BOOK":
+	case "SUBSCRIBE_TICKER":
+	case "UNSUBSCRIBE_TICKER":
+	}
+}
+
+func (client *Client) parseMessage(ctx context.Context, wsReader io.Reader) error {
+	var message BlazeMessage
+	gzReader, err := gzip.NewReader(wsReader)
+	if err != nil {
+		return client.replyError(ctx, "ERROR", uuid.Nil.String(), "bad data")
+	}
+	defer gzReader.Close()
+	if err = json.NewDecoder(gzReader).Decode(&message); err != nil {
+		return client.replyError(ctx, "ERROR", uuid.Nil.String(), "bad data")
+	}
+
+	select {
+	case client.receive <- &message:
+	case <-time.After(writeWait):
+		return errors.New("timeout to pipe receive message")
+	}
+	return nil
+}
+
+func (client *Client) replyError(ctx context.Context, action, id, e string) error {
+	msg, err := json.Marshal(BlazeMessage{Action: action, Id: id, Error: e})
+	if err != nil {
+		return err
+	}
+	return client.pipeClientResponse(ctx, msg)
+}
+
+func (client *Client) pipeClientResponse(ctx context.Context, msg []byte) error {
+	select {
+	case client.clientResponse <- msg:
+	case <-time.After(writeWait):
+		return errors.New("timeout to pipe client response")
+	}
+	return nil
+}
+
+func (client *Client) pipeHubResponse(ctx context.Context, msg []byte) error {
+	select {
+	case client.hubResponse <- msg:
+	case <-time.After(writeWait):
+		return errors.New("timeout to pipe hub response")
+	}
+	return nil
+}
+
+func (client *Client) pipeHubChannel(ctx context.Context, msg *EventResponse) error {
+	select {
+	case client.hubChannel <- msg:
+	case <-time.After(writeWait):
+		return errors.New("timeout to pipe hub channel")
+	}
+	return nil
+}
