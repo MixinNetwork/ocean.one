@@ -6,6 +6,9 @@ import (
 	"time"
 
 	"github.com/MixinMessenger/go-number"
+	"github.com/MixinMessenger/ocean.one/cache"
+	"github.com/MixinMessenger/ocean.one/config"
+	"github.com/go-redis/redis"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,6 +25,7 @@ type DummyTrade struct {
 
 func TestBook(t *testing.T) {
 	ctx := context.Background()
+	ctx = testSetupRedis(ctx)
 	assert := assert.New(t)
 
 	matched := make([]*DummyTrade, 0)
@@ -222,4 +226,18 @@ func TestBook(t *testing.T) {
 	assert.Equal(ao2_1.Id, m5.MakerId)
 	assert.Equal("0", m5.MakerAmount.Persist())
 	assert.Equal(uint64(200), m5.MakerFilledPrice)
+}
+
+func testSetupRedis(ctx context.Context) context.Context {
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:         config.RedisAddress,
+		DB:           config.RedisDatabase,
+		ReadTimeout:  3 * time.Second,
+		WriteTimeout: 3 * time.Second,
+		PoolTimeout:  4 * time.Second,
+		IdleTimeout:  60 * time.Second,
+		PoolSize:     1024,
+	})
+
+	return cache.SetupRedis(ctx, redisClient)
 }

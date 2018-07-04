@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -51,19 +52,23 @@ func (queue *Queue) Loop(ctx context.Context) {
 func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
 	queue.sequence += 1
 	e.seq = queue.sequence
+	data, err := json.Marshal(e)
+	if err != nil {
+		log.Panicln(err)
+	}
 
 	switch e.typ {
 	case EventTypeOrderOpen, EventTypeOrderMatch, EventTypeOrderCancel:
 		key := fmt.Sprintf("%s-ORDER-EVENTS", queue.market)
-		_, err := Redis(ctx).RPush(key, e).Result()
+		_, err := Redis(ctx).RPush(key, data).Result()
 		if err != nil {
 			return err
 		}
-		_, err = Redis(ctx).Publish("ORDER-EVENTS", e).Result()
+		_, err = Redis(ctx).Publish("ORDER-EVENTS", data).Result()
 		return err
 	case "BOOK-T0":
 		key := fmt.Sprintf("%s-%s", queue.market, e.typ)
-		_, err := Redis(ctx).Set(key, e, 0).Result()
+		_, err := Redis(ctx).Set(key, data, 0).Result()
 		if err != nil {
 			return err
 		}
@@ -72,10 +77,10 @@ func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
 		if err != nil {
 			return err
 		}
-		data := map[string]interface{}{
+		data, _ = json.Marshal(map[string]interface{}{
 			"event":    "HEARTBEAT",
 			"sequence": e.seq,
-		}
+		})
 		_, err = Redis(ctx).RPush(key, data).Result()
 		if err != nil {
 			return err
