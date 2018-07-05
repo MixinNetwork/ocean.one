@@ -57,12 +57,10 @@ func (hub *Hub) Run(ctx context.Context) error {
 			}
 		case client := <-hub.unregister:
 			if member, found := members[client.cid]; found {
-				for channel, _ := range member.channels {
-					if clients, found := channels[channel]; found {
-						delete(clients, client.cid)
-					}
-				}
 				delete(members, client.cid)
+				for channel, _ := range member.channels {
+					delete(channels[channel], client.cid)
+				}
 				client.cancel()
 			}
 		case sub := <-hub.subscribe:
@@ -70,10 +68,14 @@ func (hub *Hub) Run(ctx context.Context) error {
 				channels[sub.channel] = make(map[string]time.Time)
 			}
 			if member, found := members[sub.cid]; found {
+				if _, found := member.channels[sub.channel]; found {
+					continue
+				}
 				channels[sub.channel][sub.cid] = time.Now()
 				member.channels[sub.channel] = time.Now()
 				err := member.client.pipeHubChannel(ctx, &EventResponse{
-					Source: "LIST_PENDING_EVENTS",
+					Channel: sub.channel,
+					Source:  "LIST_PENDING_EVENTS",
 				})
 				if err != nil {
 					log.Println("hub subscribe", err)

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"time"
@@ -96,7 +97,7 @@ func (client *Client) loopHubChannel(ctx context.Context) error {
 			switch msg.Source {
 			case "LIST_PENDING_EVENTS":
 				time.Sleep(500 * time.Millisecond)
-				err := client.sendPendingEvents(ctx)
+				err := client.sendPendingEvents(ctx, msg.Channel)
 				if err != nil {
 					return err
 				}
@@ -116,7 +117,21 @@ func (client *Client) loopHubChannel(ctx context.Context) error {
 	}
 }
 
-func (client *Client) sendPendingEvents(ctx context.Context) error {
+func (client *Client) sendPendingEvents(ctx context.Context, channel string) error {
+	events, err := ListPendingEvents(ctx, channel)
+	if err != nil {
+		return err
+	}
+	for _, e := range events {
+		data, err := json.Marshal(e)
+		if err != nil {
+			return err
+		}
+		err = client.pipeHubResponse(ctx, data)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -186,20 +201,31 @@ func (client *Client) loopReceiveMessage(ctx context.Context) error {
 	for {
 		select {
 		case msg := <-client.receive:
-			client.handleMessage(ctx, msg)
+			err := client.handleMessage(ctx, msg)
+			if err == nil {
+				continue
+			}
+			err = client.replyError(ctx, msg.Action, msg.Id, err.Error())
+			if err != nil {
+				return err
+			}
 		case <-ctx.Done():
 			return ctx.Err()
 		}
 	}
 }
 
-func (client *Client) handleMessage(ctx context.Context, msg *BlazeMessage) {
+func (client *Client) handleMessage(ctx context.Context, msg *BlazeMessage) error {
+	market := fmt.Sprint(msg.Params["market"])
 	switch msg.Action {
 	case "SUBSCRIBE_BOOK":
+		return client.hub.SubscribePendingEvents(ctx, market, client.cid)
 	case "UNSUBSCRIBE_BOOK":
+		return client.hub.UnsubscribePendingEvents(ctx, market, client.cid)
 	case "SUBSCRIBE_TICKER":
 	case "UNSUBSCRIBE_TICKER":
 	}
+	return nil
 }
 
 func (client *Client) parseMessage(ctx context.Context, wsReader io.Reader) error {

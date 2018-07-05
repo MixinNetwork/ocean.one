@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/go-redis/redis"
 )
 
 const (
@@ -26,6 +28,23 @@ type Queue struct {
 	market   string
 	sequence int64
 	events   chan *Event
+}
+
+func ListPendingEvents(ctx context.Context, key string) ([]*Event, error) {
+	var events []*Event
+	slice, err := Redis(ctx).LRange(key, 0, -1).Result()
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range slice {
+		var e Event
+		err = json.Unmarshal([]byte(s), &e)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, &e)
+	}
+	return events, nil
 }
 
 func NewQueue(ctx context.Context, market string) *Queue {
@@ -50,46 +69,42 @@ func (queue *Queue) Loop(ctx context.Context) {
 }
 
 func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
-	queue.sequence += 1
 	e.seq = queue.sequence
+	queue.sequence = queue.sequence + 1
 	data, err := json.Marshal(e)
 	if err != nil {
 		log.Panicln(err)
 	}
 
+	key := queue.market + "-ORDER-EVENTS"
 	switch e.typ {
 	case EventTypeOrderOpen, EventTypeOrderMatch, EventTypeOrderCancel:
-		key := fmt.Sprintf("%s-ORDER-EVENTS", queue.market)
 		_, err := Redis(ctx).RPush(key, data).Result()
 		if err != nil {
 			return err
 		}
-		_, err = Redis(ctx).Publish("ORDER-EVENTS", data).Result()
-		return err
 	case "BOOK-T0":
-		key := fmt.Sprintf("%s-%s", queue.market, e.typ)
-		_, err := Redis(ctx).Set(key, data, 0).Result()
-		if err != nil {
-			return err
-		}
-		key = fmt.Sprintf("%s-ORDER-EVENTS", queue.market)
-		_, err = Redis(ctx).Del(key).Result()
-		if err != nil {
-			return err
-		}
-		data, _ = json.Marshal(map[string]interface{}{
-			"event":    "HEARTBEAT",
-			"sequence": e.seq,
+		data, _ = json.Marshal(Event{
+			market: queue.market,
+			typ:    "HEARTBEAT",
+			seq:    e.seq,
+			time:   e.time,
 		})
-		_, err = Redis(ctx).RPush(key, data).Result()
+		_, err := Redis(ctx).Pipelined(func(pipe redis.Pipeliner) error {
+			pipe.Del(key)
+			pipe.RPush(key, data)
+			return nil
+		})
 		if err != nil {
 			return err
 		}
-		_, err = Redis(ctx).Publish("ORDER-EVENTS", data).Result()
-		return err
+	default:
+		return fmt.Errorf("unsupported queue type %s", e.typ)
 	}
 
-	return fmt.Errorf("unsupported queue type %s", e.typ)
+	_, err = Redis(ctx).Publish("ORDER-EVENTS", data).Result()
+	return err
+
 }
 
 func (queue *Queue) AttachEvent(ctx context.Context, typ string, data map[string]interface{}) {

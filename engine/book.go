@@ -162,8 +162,6 @@ func (book *Book) cancelOrder(ctx context.Context, order *Order) {
 func (book *Book) Run(ctx context.Context) {
 	go book.queue.Loop(ctx)
 
-	topCacheTicker := time.NewTicker(time.Millisecond * 700)
-	defer topCacheTicker.Stop()
 	fullCacheTicker := time.NewTicker(time.Second * 30)
 	defer fullCacheTicker.Stop()
 
@@ -177,8 +175,6 @@ func (book *Book) Run(ctx context.Context) {
 			} else {
 				log.Panicln(event)
 			}
-		case <-topCacheTicker.C:
-			book.cacheList(ctx, 50)
 		case <-fullCacheTicker.C:
 			book.cacheList(ctx, 0)
 		}
