@@ -120,7 +120,7 @@ func CreateOrderAction(ctx context.Context, userId, traceId string, orderType, s
 		CreatedAt: createdAt,
 	}
 	_, err := Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		state, err := checkOrderState(ctx, txn, action.OrderId)
+		state, _, err := checkOrderState(ctx, txn, action.OrderId)
 		if err != nil || state != "" {
 			return err
 		}
@@ -137,7 +137,7 @@ func CreateOrderAction(ctx context.Context, userId, traceId string, orderType, s
 	return err
 }
 
-func CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time) error {
+func CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time, userId string) error {
 	action := Action{
 		OrderId:   orderId,
 		Action:    engine.OrderActionCancel,
@@ -148,8 +148,8 @@ func CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time)
 		if err != nil || exist {
 			return err
 		}
-		state, err := checkOrderState(ctx, txn, action.OrderId)
-		if err != nil || state != OrderStatePending {
+		state, uid, err := checkOrderState(ctx, txn, action.OrderId)
+		if err != nil || state != OrderStatePending || userId != uid {
 			return err
 		}
 		actionMutation, err := spanner.InsertStruct("actions", action)
@@ -174,17 +174,17 @@ func checkAction(ctx context.Context, txn *spanner.ReadWriteTransaction, orderId
 	return true, nil
 }
 
-func checkOrderState(ctx context.Context, txn *spanner.ReadWriteTransaction, orderId string) (string, error) {
-	it := txn.Read(ctx, "orders", spanner.Key{orderId}, []string{"state"})
+func checkOrderState(ctx context.Context, txn *spanner.ReadWriteTransaction, orderId string) (string, string, error) {
+	it := txn.Read(ctx, "orders", spanner.Key{orderId}, []string{"state", "user_id"})
 	defer it.Stop()
 
 	row, err := it.Next()
 	if err == iterator.Done {
-		return "", nil
+		return "", "", nil
 	} else if err != nil {
-		return "", err
+		return "", "", err
 	}
-	var state string
-	err = row.Columns(&state)
-	return state, err
+	var state, uid string
+	err = row.Columns(&state, &uid)
+	return state, uid, err
 }

@@ -92,7 +92,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 	if action.O.String() != uuid.Nil.String() {
-		return persistence.CancelOrderAction(ctx, action.O.String(), s.CreatedAt)
+		return persistence.CancelOrderAction(ctx, action.O.String(), s.CreatedAt, s.OpponentId)
 	}
 
 	if action.T != engine.OrderTypeLimit && action.T != engine.OrderTypeMarket {
