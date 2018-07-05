@@ -18,18 +18,14 @@ type RequestHandler struct {
 }
 
 func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer bugsnag.Recover(r, bugsnag.ErrorClass{Name: "blaze.ServeHTTP"})
+	defer bugsnag.Recover(r, bugsnag.ErrorClass{Name: "cache.ServeHTTP"})
 
 	if r.URL.Path != "/" {
 		render.New().JSON(w, http.StatusNotFound, map[string]interface{}{})
 		return
 	}
 
-	responseHeader := map[string][]string{
-		"X-Request-Id":           []string{r.Header.Get("X-Request-Id")},
-		"Sec-Websocket-Protocol": []string{"Mixin-Blaze-1"},
-	}
-	conn, err := handler.upgrader.Upgrade(w, r, http.Header(responseHeader))
+	conn, err := handler.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
 	}
@@ -65,12 +61,12 @@ func StartHTTP(ctx context.Context) error {
 			WriteBufferSize:  1024,
 			CheckOrigin:      func(r *http.Request) bool { return true },
 			Error: func(w http.ResponseWriter, r *http.Request, status int, reason error) {
-				render.New().JSON(w, status, map[string]interface{}{"error": reason})
+				render.New().JSON(w, status, map[string]interface{}{"error": reason.Error()})
 			},
 		},
 	})
 	handler = bugsnag.Handler(handler)
 
-	server := &http.Server{Addr: ":10007", Handler: handler}
+	server := &http.Server{Addr: ":7001", Handler: handler}
 	return server.ListenAndServe()
 }

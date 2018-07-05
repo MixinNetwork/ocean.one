@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"time"
 
@@ -13,6 +14,9 @@ import (
 )
 
 func main() {
+	service := flag.String("service", "http", "run a service")
+	flag.Parse()
+
 	ctx := context.Background()
 	spannerClient, err := spanner.NewClientWithConfig(ctx, config.GoogleCloudSpanner, spanner.ClientConfig{NumChannels: 4,
 		SessionPoolConfig: spanner.SessionPoolConfig{
@@ -39,5 +43,11 @@ func main() {
 
 	ctx = persistence.SetupSpanner(ctx, spannerClient)
 	ctx = cache.SetupRedis(ctx, redisClient)
-	NewExchange().Run(ctx)
+
+	switch *service {
+	case "engine":
+		NewExchange().Run(ctx)
+	case "http":
+		cache.StartHTTP(ctx)
+	}
 }
