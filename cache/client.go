@@ -93,20 +93,24 @@ func (client *Client) loopHubChannel(ctx context.Context) error {
 
 	for {
 		select {
-		case msg := <-client.hubChannel:
-			switch msg.Source {
+		case e := <-client.hubChannel:
+			switch e.Source {
 			case "LIST_PENDING_EVENTS":
-				time.Sleep(500 * time.Millisecond)
-				err := client.sendPendingEvents(ctx, msg.Channel)
+				time.Sleep(100 * time.Millisecond)
+				err := client.sendPendingEvents(ctx, e.Channel)
 				if err != nil {
 					return err
 				}
 			case "EMIT_EVENT":
-				data, err := json.Marshal(msg)
-				if err != nil {
-					return err
-				}
-				err = client.pipeHubResponse(ctx, data)
+				data, _ := json.Marshal(BlazeMessage{
+					Id:     uuid.Nil.String(),
+					Action: "EMIT_EVENT",
+					Data: map[string]interface{}{
+						"source": e.Source,
+						"event":  e.Event,
+					},
+				})
+				err := client.pipeHubResponse(ctx, data)
 				if err != nil {
 					return err
 				}
@@ -123,10 +127,14 @@ func (client *Client) sendPendingEvents(ctx context.Context, channel string) err
 		return err
 	}
 	for _, e := range events {
-		data, err := json.Marshal(e)
-		if err != nil {
-			return err
-		}
+		data, _ := json.Marshal(BlazeMessage{
+			Id:     uuid.Nil.String(),
+			Action: "EMIT_EVENT",
+			Data: map[string]interface{}{
+				"source": "LIST_PENDING_EVENTS",
+				"event":  e,
+			},
+		})
 		err = client.pipeHubResponse(ctx, data)
 		if err != nil {
 			return err
