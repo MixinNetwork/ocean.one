@@ -20,7 +20,7 @@ type Event struct {
 	Market    string                 `json:"market"`
 	Type      string                 `json:"event"`
 	Sequence  int64                  `json:"sequence"`
-	Data      map[string]interface{} `json:"data"`
+	Data      map[string]interface{} `json:"data,omitempty"`
 	Timestamp time.Time              `json:"timestamp"`
 }
 

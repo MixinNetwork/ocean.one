@@ -102,8 +102,9 @@ func (client *Client) loopHubChannel(ctx context.Context) error {
 					return err
 				}
 			case "EMIT_EVENT":
+				id, _ := uuid.NewV4()
 				data, _ := json.Marshal(BlazeMessage{
-					Id:     uuid.Nil.String(),
+					Id:     id.String(),
 					Action: "EMIT_EVENT",
 					Data: map[string]interface{}{
 						"source": e.Source,
@@ -127,8 +128,9 @@ func (client *Client) sendPendingEvents(ctx context.Context, channel string) err
 		return err
 	}
 	for _, e := range events {
+		id, _ := uuid.NewV4()
 		data, _ := json.Marshal(BlazeMessage{
-			Id:     uuid.Nil.String(),
+			Id:     id.String(),
 			Action: "EMIT_EVENT",
 			Data: map[string]interface{}{
 				"source": "LIST_PENDING_EVENTS",
@@ -253,8 +255,9 @@ func (client *Client) parseMessage(ctx context.Context, wsReader io.Reader) erro
 }
 
 func (client *Client) error(ctx context.Context, err string) error {
+	id, _ := uuid.NewV4()
 	data, _ := json.Marshal(BlazeMessage{
-		Id:     uuid.Nil.String(),
+		Id:     id.String(),
 		Action: "ERROR",
 		Error:  err,
 	})
