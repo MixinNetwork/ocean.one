@@ -245,6 +245,23 @@ func makeOrderMutations(taker, maker *engine.Order, precision int32) []*spanner.
 		mutations = append(mutations, spanner.Delete("actions", spanner.Key{maker.Id, engine.OrderActionCreate}))
 		mutations = append(mutations, spanner.Delete("actions", spanner.Key{maker.Id, engine.OrderActionCancel}))
 	}
+	if maker.Side == engine.PageSideBid && maker.RemainingAmount.Sign() == 0 && maker.Price > maker.FilledPrice {
+		change := number.FromString(fmt.Sprint(maker.Price - maker.FilledPrice)).Mul(number.New(1, precision))
+		transfer := &Transfer{
+			TransferId: getSettlementId(maker.Id, engine.OrderActionCancel),
+			Source:     TransferSourceOrderFilled,
+			Detail:     maker.Id,
+			AssetId:    maker.Quote,
+			Amount:     change.Mul(maker.FilledAmount).Persist(),
+			CreatedAt:  time.Now(),
+			UserId:     maker.UserId,
+		}
+		transferMutation, err := spanner.InsertStruct("transfers", transfer)
+		if err != nil {
+			log.Panicln(err)
+		}
+		mutations = append(mutations, transferMutation)
+	}
 	return mutations
 }
 
