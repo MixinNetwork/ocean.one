@@ -84,12 +84,6 @@ func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
 			return err
 		}
 	case "BOOK-T0":
-		data, _ = json.Marshal(Event{
-			market: queue.market,
-			typ:    "HEARTBEAT",
-			seq:    e.seq,
-			time:   e.time,
-		})
 		_, err := Redis(ctx).Pipelined(func(pipe redis.Pipeliner) error {
 			pipe.Del(key)
 			pipe.RPush(key, data)
@@ -98,6 +92,12 @@ func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
 		if err != nil {
 			return err
 		}
+		data, _ = json.Marshal(Event{
+			market: queue.market,
+			typ:    "HEARTBEAT",
+			seq:    e.seq,
+			time:   e.time,
+		})
 	default:
 		return fmt.Errorf("unsupported queue type %s", e.typ)
 	}
