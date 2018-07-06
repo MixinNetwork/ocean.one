@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"log"
 	"time"
 
 	"cloud.google.com/go/spanner"
@@ -23,6 +24,7 @@ const (
 
 	TransferSourceTradeConfirmed = "TRADE_CONFIRMED"
 	TransferSourceOrderCancelled = "ORDER_CANCELLED"
+	TransferSourceOrderFilled    = "ORDER_FILLED"
 )
 
 type Trade struct {
@@ -140,9 +142,10 @@ func Transact(ctx context.Context, taker, maker *engine.Order, amount number.Dec
 }
 
 func CancelOrder(ctx context.Context, order *engine.Order, precision int32) error {
-	filledPrice := number.FromString(fmt.Sprint(order.FilledPrice)).Mul(number.New(1, precision)).Persist()
+	price := number.FromString(fmt.Sprint(order.Price)).Mul(number.New(1, precision))
+	filledPrice := number.FromString(fmt.Sprint(order.FilledPrice)).Mul(number.New(1, precision))
 	orderCols := []string{"order_id", "filled_amount", "remaining_amount", "filled_price", "state"}
-	orderVals := []interface{}{order.Id, order.FilledAmount.Persist(), order.RemainingAmount.Persist(), filledPrice, OrderStateDone}
+	orderVals := []interface{}{order.Id, order.FilledAmount.Persist(), order.RemainingAmount.Persist(), filledPrice.Persist(), OrderStateDone}
 	mutations := []*spanner.Mutation{
 		spanner.Update("orders", orderCols, orderVals),
 		spanner.Delete("actions", spanner.Key{order.Id, engine.OrderActionCreate}),
@@ -153,13 +156,14 @@ func CancelOrder(ctx context.Context, order *engine.Order, precision int32) erro
 		TransferId: getSettlementId(order.Id, engine.OrderActionCancel),
 		Source:     TransferSourceOrderCancelled,
 		Detail:     order.Id,
-		AssetId:    order.Quote,
+		AssetId:    order.Base,
 		Amount:     order.RemainingAmount.Persist(),
 		CreatedAt:  time.Now(),
 		UserId:     order.UserId,
 	}
-	if order.Side == engine.PageSideAsk {
-		transfer.AssetId = order.Base
+	if order.Side == engine.PageSideBid {
+		transfer.AssetId = order.Quote
+		transfer.Amount = price.Mul(order.RemainingAmount.Add(order.FilledAmount)).Sub(filledPrice.Mul(order.FilledAmount)).Persist()
 	}
 	transferMutation, err := spanner.InsertStruct("transfers", transfer)
 	if err != nil {
@@ -219,6 +223,23 @@ func makeOrderMutations(taker, maker *engine.Order, precision int32) []*spanner.
 	if taker.RemainingAmount.Sign() == 0 {
 		mutations = append(mutations, spanner.Delete("actions", spanner.Key{taker.Id, engine.OrderActionCreate}))
 		mutations = append(mutations, spanner.Delete("actions", spanner.Key{taker.Id, engine.OrderActionCancel}))
+	}
+	if taker.Side == engine.PageSideBid && taker.RemainingAmount.Sign() == 0 && taker.Price > taker.FilledPrice {
+		change := number.FromString(fmt.Sprint(taker.Price - taker.FilledPrice)).Mul(number.New(1, precision))
+		transfer := &Transfer{
+			TransferId: getSettlementId(taker.Id, engine.OrderActionCancel),
+			Source:     TransferSourceOrderFilled,
+			Detail:     taker.Id,
+			AssetId:    taker.Quote,
+			Amount:     change.Mul(taker.FilledAmount).Persist(),
+			CreatedAt:  time.Now(),
+			UserId:     taker.UserId,
+		}
+		transferMutation, err := spanner.InsertStruct("transfers", transfer)
+		if err != nil {
+			log.Panicln(err)
+		}
+		mutations = append(mutations, transferMutation)
 	}
 	if maker.RemainingAmount.Sign() == 0 {
 		mutations = append(mutations, spanner.Delete("actions", spanner.Key{maker.Id, engine.OrderActionCreate}))
