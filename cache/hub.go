@@ -160,6 +160,6 @@ func (hub *Hub) loopPendingEvents(ctx context.Context) {
 		if err != nil {
 			log.Panicln(err)
 		}
-		hub.response <- &EventResponse{event.market + "-ORDER-EVENTS", "EMIT_EVENT", &event}
+		hub.response <- &EventResponse{event.Market + "-ORDER-EVENTS", "EMIT_EVENT", &event}
 	}
 }

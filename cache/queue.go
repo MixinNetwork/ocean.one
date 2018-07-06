@@ -17,11 +17,11 @@ const (
 )
 
 type Event struct {
-	market string                 `json:"market"`
-	typ    string                 `json:"event"`
-	seq    int64                  `json:"sequence"`
-	data   map[string]interface{} `json:"data"`
-	time   time.Time              `json:"timestamp"`
+	Market    string                 `json:"market"`
+	Type      string                 `json:"event"`
+	Sequence  int64                  `json:"sequence"`
+	Data      map[string]interface{} `json:"data"`
+	Timestamp time.Time              `json:"timestamp"`
 }
 
 type Queue struct {
@@ -69,7 +69,7 @@ func (queue *Queue) Loop(ctx context.Context) {
 }
 
 func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
-	e.seq = queue.sequence
+	e.Sequence = queue.sequence
 	queue.sequence = queue.sequence + 1
 	data, err := json.Marshal(e)
 	if err != nil {
@@ -77,7 +77,7 @@ func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
 	}
 
 	key := queue.market + "-ORDER-EVENTS"
-	switch e.typ {
+	switch e.Type {
 	case EventTypeOrderOpen, EventTypeOrderMatch, EventTypeOrderCancel:
 		_, err := Redis(ctx).RPush(key, data).Result()
 		if err != nil {
@@ -93,13 +93,13 @@ func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
 			return err
 		}
 		data, _ = json.Marshal(Event{
-			market: queue.market,
-			typ:    "HEARTBEAT",
-			seq:    e.seq,
-			time:   e.time,
+			Market:    queue.market,
+			Type:      "HEARTBEAT",
+			Sequence:  e.Sequence,
+			Timestamp: e.Timestamp,
 		})
 	default:
-		return fmt.Errorf("unsupported queue type %s", e.typ)
+		return fmt.Errorf("unsupported queue type %s", e.Type)
 	}
 
 	_, err = Redis(ctx).Publish("ORDER-EVENTS", data).Result()
@@ -109,9 +109,9 @@ func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
 
 func (queue *Queue) AttachEvent(ctx context.Context, typ string, data map[string]interface{}) {
 	queue.events <- &Event{
-		market: queue.market,
-		typ:    typ,
-		data:   data,
-		time:   time.Now().UTC(),
+		Market:    queue.market,
+		Type:      typ,
+		Data:      data,
+		Timestamp: time.Now().UTC(),
 	}
 }
