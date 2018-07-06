@@ -45,7 +45,7 @@ func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		return
 	}
-	if err := handler.hub.Register(r.Context(), client); err != nil {
+	if err := handler.hub.Register(ctx, client); err != nil {
 		return
 	}
 	defer handler.hub.Unregister(client)
@@ -69,12 +69,20 @@ func StartHTTP(ctx context.Context) error {
 			},
 		},
 	}
-	handler := handleCORS(rh)
+	handler := handleContext(rh, ctx)
+	handler = handleCORS(handler)
 	handler = handlers.ProxyHeaders(handler)
 	handler = bugsnag.Handler(handler)
 
 	server := &http.Server{Addr: ":7000", Handler: handler}
 	return server.ListenAndServe()
+}
+
+func handleContext(handler http.Handler, ctx context.Context) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx = SetupRedis(r.Context(), Redis(ctx))
+		handler.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func handleCORS(handler http.Handler) http.Handler {

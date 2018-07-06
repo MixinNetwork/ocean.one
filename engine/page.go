@@ -14,9 +14,9 @@ const (
 )
 
 type Entry struct {
-	Side   string
-	Price  uint64
-	Amount number.Decimal
+	Side   string         `json:"side"`
+	Price  uint64         `json:"price"`
+	Amount number.Decimal `json:"amount"`
 	list   *arraylist.List
 	orders map[string]*Order
 }
