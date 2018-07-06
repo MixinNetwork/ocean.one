@@ -31,13 +31,12 @@ func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 	defer conn.Close()
 
-	rid, err := uuid.NewV4()
+	cid, err := uuid.NewV4()
 	if err != nil {
 		return
 	}
-	cid := rid.String()
 	ctx, cancel := context.WithCancel(r.Context())
-	client, err := NewClient(ctx, handler.hub, conn, cid, cancel)
+	client, err := NewClient(ctx, handler.hub, conn, cid.String(), cancel)
 	if err != nil {
 		return
 	}
