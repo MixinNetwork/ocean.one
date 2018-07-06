@@ -1,5 +1,5 @@
 [Unit]
-Description=Ocean ONE Daemon
+Description=Ocean ONE Engine Daemon
 After=network.target
 
 [Service]

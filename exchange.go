@@ -229,29 +229,48 @@ func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg b
 	}
 	data, _ := base64.StdEncoding.DecodeString(msg.Data)
 	action := strings.Split(string(data), ":")
-	if len(action) != 2 {
+	if len(action) < 2 {
 		return nil
 	}
-	amount := number.FromString(action[1])
-	if amount.Exhausted() {
-		return nil
-	}
-	memo := &OrderAction{
-		T: "L",
-		P: amount.Persist(),
-	}
-	var asset string
-	switch action[0] {
-	case "XIN":
-		memo.S = "A"
-		memo.A, _ = uuid.FromString(BitcoinAssetId)
-		asset = "c94ac88f-4671-3976-b60a-09064f1811e8"
-	case "BTC":
-		memo.S = "B"
-		memo.A, _ = uuid.FromString("c94ac88f-4671-3976-b60a-09064f1811e8")
-		asset = BitcoinAssetId
-	default:
-		return nil
+	var memo *OrderAction
+	var assetId, assetAmount string
+	if action[0] == "CANCEL" {
+		if len(action) != 2 {
+			return nil
+		}
+		memo = &OrderAction{
+			O: uuid.FromStringOrNil(action[1]),
+		}
+		assetId = "965e5c6e-434c-3fa9-b780-c50f43cd955c" // CNB
+	} else {
+		if len(action) != 3 {
+			return nil
+		}
+		price := number.FromString(action[1])
+		if price.Exhausted() {
+			return nil
+		}
+		amount := number.FromString(action[2])
+		if amount.Exhausted() {
+			return nil
+		}
+		assetAmount = amount.Persist()
+		memo = &OrderAction{
+			T: "L",
+			P: price.Persist(),
+		}
+		switch action[0] {
+		case "XIN":
+			memo.S = "A"
+			memo.A, _ = uuid.FromString(BitcoinAssetId)
+			assetId = "c94ac88f-4671-3976-b60a-09064f1811e8"
+		case "BTC":
+			memo.S = "B"
+			memo.A, _ = uuid.FromString("c94ac88f-4671-3976-b60a-09064f1811e8")
+			assetId = BitcoinAssetId
+		default:
+			return nil
+		}
 	}
 	out := make([]byte, 140)
 	handle := new(codec.MsgpackHandle)
@@ -263,6 +282,6 @@ func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg b
 		UserId:         msg.UserId,
 		MessageId:      traceId.String(),
 		Category:       "PLAIN_TEXT",
-	}, fmt.Sprintf("mixin://pay?recipient=%s&asset=%s&amount=%s&trace=%s&memo=%s", config.ClientId, asset, amount.Persist(), traceId.String(), base64.StdEncoding.EncodeToString(out)))
+	}, fmt.Sprintf("mixin://pay?recipient=%s&asset=%s&amount=%s&trace=%s&memo=%s", config.ClientId, assetId, assetAmount, traceId.String(), base64.StdEncoding.EncodeToString(out)))
 	return nil
 }
