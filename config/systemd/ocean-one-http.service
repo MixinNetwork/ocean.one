@@ -1,0 +1,13 @@
+[Unit]
+Description=Ocean ONE HTTP Daemon
+After=network.target
+
+[Service]
+User=one
+Type=simple
+ExecStart=/home/one/bin/ocean.one -service http
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

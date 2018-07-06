@@ -1,0 +1,13 @@
+[Unit]
+Description=Ocean ONE Setup
+After=network.target
+
+[Service]
+User=one
+Type=oneshot
+ExecStart=/home/one/bin/setup.sh
+Restart=no
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

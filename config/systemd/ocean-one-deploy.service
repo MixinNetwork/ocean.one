@@ -1,0 +1,13 @@
+[Unit]
+Description=Ocean ONE Deploy Service
+After=network.target ocean-one-setup.service
+
+[Service]
+User=one
+Type=simple
+ExecStart=/home/one/bin/deploy.sh
+Restart=always
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
