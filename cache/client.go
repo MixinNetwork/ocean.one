@@ -185,7 +185,7 @@ func (client *Client) ReadPump(ctx context.Context) error {
 			return nil
 		}
 		if messageType != websocket.BinaryMessage {
-			err = client.replyError(ctx, "ERROR", uuid.Nil.String(), "bad data")
+			err = client.error(ctx, "message type must be binary")
 		} else {
 			err = client.parseMessage(ctx, wsReader)
 		}
@@ -202,10 +202,6 @@ func (client *Client) loopReceiveMessage(ctx context.Context) error {
 		select {
 		case msg := <-client.receive:
 			err := client.handleMessage(ctx, msg)
-			if err == nil {
-				continue
-			}
-			err = client.replyError(ctx, msg.Action, msg.Id, err.Error())
 			if err != nil {
 				return err
 			}
@@ -216,27 +212,28 @@ func (client *Client) loopReceiveMessage(ctx context.Context) error {
 }
 
 func (client *Client) handleMessage(ctx context.Context, msg *BlazeMessage) error {
+	var err error
 	market := fmt.Sprint(msg.Params["market"])
 	switch msg.Action {
 	case "SUBSCRIBE_BOOK":
-		return client.hub.SubscribePendingEvents(ctx, market, client.cid)
+		err = client.hub.SubscribePendingEvents(ctx, market, client.cid)
 	case "UNSUBSCRIBE_BOOK":
-		return client.hub.UnsubscribePendingEvents(ctx, market, client.cid)
+		err = client.hub.UnsubscribePendingEvents(ctx, market, client.cid)
 	case "SUBSCRIBE_TICKER":
 	case "UNSUBSCRIBE_TICKER":
 	}
-	return nil
+	return client.ack(ctx, msg.Action, msg.Id, err)
 }
 
 func (client *Client) parseMessage(ctx context.Context, wsReader io.Reader) error {
 	var message BlazeMessage
 	gzReader, err := gzip.NewReader(wsReader)
 	if err != nil {
-		return client.replyError(ctx, "ERROR", uuid.Nil.String(), "bad data")
+		return client.error(ctx, err.Error())
 	}
 	defer gzReader.Close()
 	if err = json.NewDecoder(gzReader).Decode(&message); err != nil {
-		return client.replyError(ctx, "ERROR", uuid.Nil.String(), "bad data")
+		return client.error(ctx, err.Error())
 	}
 
 	select {
@@ -247,12 +244,24 @@ func (client *Client) parseMessage(ctx context.Context, wsReader io.Reader) erro
 	return nil
 }
 
-func (client *Client) replyError(ctx context.Context, action, id, e string) error {
-	msg, err := json.Marshal(BlazeMessage{Action: action, Id: id, Error: e})
+func (client *Client) error(ctx context.Context, err string) error {
+	data, _ := json.Marshal(BlazeMessage{
+		Id:     uuid.Nil.String(),
+		Action: "ERROR",
+		Error:  err,
+	})
+	return client.pipeClientResponse(ctx, data)
+}
+
+func (client *Client) ack(ctx context.Context, action, id string, err error) error {
+	msg := &BlazeMessage{Action: action, Id: id}
 	if err != nil {
-		return err
+		msg.Error = err.Error()
+	} else {
+		msg.Data = map[string]string{"status": "received"}
 	}
-	return client.pipeClientResponse(ctx, msg)
+	data, _ := json.Marshal(msg)
+	return client.pipeClientResponse(ctx, data)
 }
 
 func (client *Client) pipeClientResponse(ctx context.Context, msg []byte) error {
