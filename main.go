@@ -28,8 +28,8 @@ func main() {
 	}
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:         config.RedisAddress,
-		DB:           config.RedisDatabase,
+		Addr:         config.RedisEngineCacheAddress,
+		DB:           config.RedisEngineCacheDatabase,
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
 		PoolTimeout:  4 * time.Second,
