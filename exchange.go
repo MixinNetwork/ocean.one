@@ -242,6 +242,7 @@ func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg b
 			O: uuid.FromStringOrNil(action[1]),
 		}
 		assetId = "965e5c6e-434c-3fa9-b780-c50f43cd955c" // CNB
+		assetAmount = "1"
 	} else {
 		if len(action) != 3 {
 			return nil
@@ -254,7 +255,6 @@ func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg b
 		if amount.Exhausted() {
 			return nil
 		}
-		assetAmount = amount.Persist()
 		memo = &OrderAction{
 			T: "L",
 			P: price.Persist(),
@@ -264,10 +264,16 @@ func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg b
 			memo.S = "A"
 			memo.A, _ = uuid.FromString(BitcoinAssetId)
 			assetId = "c94ac88f-4671-3976-b60a-09064f1811e8"
+			assetAmount = amount.Persist()
 		case "BTC":
 			memo.S = "B"
 			memo.A, _ = uuid.FromString("c94ac88f-4671-3976-b60a-09064f1811e8")
 			assetId = BitcoinAssetId
+			amount = price.Mul(amount)
+			if amount.Exhausted() {
+				return nil
+			}
+			assetAmount = amount.Persist()
 		default:
 			return nil
 		}
