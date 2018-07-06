@@ -57,7 +57,7 @@ func StartHTTP(ctx context.Context) error {
 	hub := NewHub()
 	go hub.Run(ctx)
 
-	handler := handlers.ProxyHeaders(&RequestHandler{
+	rh := &RequestHandler{
 		hub: hub,
 		upgrader: websocket.Upgrader{
 			HandshakeTimeout: 60 * time.Second,
@@ -68,9 +68,25 @@ func StartHTTP(ctx context.Context) error {
 				render.New().JSON(w, status, map[string]interface{}{"error": reason.Error()})
 			},
 		},
-	})
+	}
+	handler := handleCORS(rh)
+	handler = handlers.ProxyHeaders(handler)
 	handler = bugsnag.Handler(handler)
 
 	server := &http.Server{Addr: ":7000", Handler: handler}
 	return server.ListenAndServe()
+}
+
+func handleCORS(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+		w.Header().Add("Access-Control-Allow-Headers", "Content-Type,Authorization,Mixin-Conversation-ID")
+		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS,GET,POST,DELETE")
+		w.Header().Set("Access-Control-Max-Age", "600")
+		if r.Method == "OPTIONS" {
+			render.New().JSON(w, http.StatusOK, map[string]interface{}{})
+		} else {
+			handler.ServeHTTP(w, r)
+		}
+	})
 }
