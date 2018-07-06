@@ -20,6 +20,11 @@ type RequestHandler struct {
 func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer bugsnag.Recover(r, bugsnag.ErrorClass{Name: "cache.ServeHTTP"})
 
+	if r.URL.Path == "/_hc" {
+		render.New().JSON(w, http.StatusOK, map[string]interface{}{})
+		return
+	}
+
 	if r.URL.Path != "/" {
 		render.New().JSON(w, http.StatusNotFound, map[string]interface{}{})
 		return
@@ -66,6 +71,6 @@ func StartHTTP(ctx context.Context) error {
 	})
 	handler = bugsnag.Handler(handler)
 
-	server := &http.Server{Addr: ":7001", Handler: handler}
+	server := &http.Server{Addr: ":7000", Handler: handler}
 	return server.ListenAndServe()
 }
