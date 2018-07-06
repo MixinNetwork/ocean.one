@@ -1,4 +1,4 @@
-# ocean.one
+# Ocean ONE
 
 Ocean ONE is a decentralized exchange built on Mixin Network, it's almost the first time that a decentralized exchange gain the same user experience as a centralized one.
 
@@ -55,5 +55,5 @@ memo = base64.StdEncoding.EncodeToString(msgpack(OrderAction{
 
 ## Fee
 
-- Taker: 0.01%
-- Maker: 0%
+- Taker: 0.1%
+- Maker: 0.0%

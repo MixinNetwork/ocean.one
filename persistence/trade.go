@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	MakerFeeRate = "0.00000"
-	TakerFeeRate = "0.00001"
+	MakerFeeRate = "0.000"
+	TakerFeeRate = "0.001"
 
 	TradeLiquidityTaker = "TAKER"
 	TradeLiquidityMaker = "MAKER"
