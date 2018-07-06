@@ -135,7 +135,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 	market := order.BaseAssetId + "-" + order.QuoteAssetId
 	book := ex.books[market]
 	if book == nil {
-		book = engine.NewBook(func(taker, maker *engine.Order, amount number.Decimal) {
+		book = engine.NewBook(ctx, market, func(taker, maker *engine.Order, amount number.Decimal) {
 			for {
 				err := persistence.Transact(ctx, taker, maker, amount, EnginePrecision)
 				if err == nil {
@@ -257,11 +257,12 @@ func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg b
 	handle := new(codec.MsgpackHandle)
 	encoder := codec.NewEncoderBytes(&out, handle)
 	encoder.Encode(memo)
+	traceId, _ := uuid.NewV4()
 	bot.SendPlainText(ctx, mc, bot.MessageView{
 		ConversationId: msg.ConversationId,
 		UserId:         msg.UserId,
-		MessageId:      bot.NewV4().String(),
+		MessageId:      traceId.String(),
 		Category:       "PLAIN_TEXT",
-	}, fmt.Sprintf("mixin://pay?recipient=%s&asset=%s&amount=%s&trace=%s&memo=%s", config.ClientId, asset, amount.Persist(), bot.NewV4().String(), base64.StdEncoding.EncodeToString(out)))
+	}, fmt.Sprintf("mixin://pay?recipient=%s&asset=%s&amount=%s&trace=%s&memo=%s", config.ClientId, asset, amount.Persist(), traceId.String(), base64.StdEncoding.EncodeToString(out)))
 	return nil
 }
