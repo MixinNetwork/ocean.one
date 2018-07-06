@@ -106,10 +106,7 @@ func (client *Client) loopHubChannel(ctx context.Context) error {
 				data, _ := json.Marshal(BlazeMessage{
 					Id:     id.String(),
 					Action: "EMIT_EVENT",
-					Data: map[string]interface{}{
-						"source": e.Source,
-						"event":  e.Event,
-					},
+					Data:   e.Event,
 				})
 				err := client.pipeHubResponse(ctx, data)
 				if err != nil {
@@ -132,10 +129,7 @@ func (client *Client) sendPendingEvents(ctx context.Context, channel string) err
 		data, _ := json.Marshal(BlazeMessage{
 			Id:     id.String(),
 			Action: "EMIT_EVENT",
-			Data: map[string]interface{}{
-				"source": "LIST_PENDING_EVENTS",
-				"event":  e,
-			},
+			Data:   e,
 		})
 		err = client.pipeHubResponse(ctx, data)
 		if err != nil {
