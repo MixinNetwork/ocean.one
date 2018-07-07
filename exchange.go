@@ -121,36 +121,47 @@ type TransferAction struct {
 
 func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persistence.Transfer) {
 	for {
-		data := TransferAction{S: "CANCEL", O: uuid.FromStringOrNil(transfer.Detail)}
-		if transfer.Source == persistence.TransferSourceTradeConfirmed {
-			trade, err := persistence.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
-			if err != nil {
-				log.Println("ReadTransferTrade", err)
-				time.Sleep(PollInterval)
-				continue
-			}
-			if trade == nil {
-				log.Panicln(transfer)
-			}
-			data = TransferAction{S: "MATCH", A: uuid.FromStringOrNil(trade.AskOrderId), B: uuid.FromStringOrNil(trade.BidOrderId)}
-		}
-		out := make([]byte, 140)
-		encoder := codec.NewEncoderBytes(&out, ex.codec)
-		err := encoder.Encode(data)
-		if err != nil {
-			log.Panicln(err)
-		}
-		memo := base64.StdEncoding.EncodeToString(out)
-		if len(memo) > 140 {
-			log.Panicln(transfer, memo)
-		}
-		err = ex.sendTransfer(ctx, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
+		err := ex.processTransfer(ctx, transfer)
 		if err == nil {
 			break
 		}
 		log.Println("processTransfer", err)
 		time.Sleep(PollInterval)
 	}
+}
+
+func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.Transfer) error {
+	var data *TransferAction
+	switch transfer.Source {
+	case persistence.TransferSourceOrderFilled:
+		data = &TransferAction{S: "FILL", O: uuid.FromStringOrNil(transfer.Detail)}
+	case persistence.TransferSourceOrderCancelled:
+		data = &TransferAction{S: "CANCEL", O: uuid.FromStringOrNil(transfer.Detail)}
+	case persistence.TransferSourceOrderInvalid:
+		data = &TransferAction{S: "REFUND", O: uuid.FromStringOrNil(transfer.Detail)}
+	case persistence.TransferSourceTradeConfirmed:
+		trade, err := persistence.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
+		if err != nil {
+			return err
+		}
+		if trade == nil {
+			log.Panicln(transfer)
+		}
+		data = &TransferAction{S: "MATCH", A: uuid.FromStringOrNil(trade.AskOrderId), B: uuid.FromStringOrNil(trade.BidOrderId)}
+	default:
+		log.Panicln(transfer)
+	}
+	out := make([]byte, 140)
+	encoder := codec.NewEncoderBytes(&out, ex.codec)
+	err := encoder.Encode(data)
+	if err != nil {
+		log.Panicln(err)
+	}
+	memo := base64.StdEncoding.EncodeToString(out)
+	if len(memo) > 140 {
+		log.Panicln(transfer, memo)
+	}
+	return ex.sendTransfer(ctx, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
 }
 
 func (ex *Exchange) buildBook(ctx context.Context, market string) *engine.Book {
