@@ -230,8 +230,8 @@ func TestBook(t *testing.T) {
 
 func testSetupRedis(ctx context.Context) context.Context {
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:         config.RedisAddress,
-		DB:           config.RedisDatabase,
+		Addr:         config.RedisEngineCacheAddress,
+		DB:           config.RedisEngineCacheDatabase,
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
 		PoolTimeout:  4 * time.Second,
