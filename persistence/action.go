@@ -100,6 +100,7 @@ func ListPendingActions(ctx context.Context, checkpoint time.Time, limit int) ([
 }
 
 func CreateOrderAction(ctx context.Context, userId, traceId string, orderType, side, quote, base string, amount, price number.Decimal, createdAt time.Time) error {
+	amount, price = amount.RoundFloor(8), price.RoundFloor(8)
 	order := Order{
 		OrderId:         traceId,
 		OrderType:       orderType,

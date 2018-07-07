@@ -99,39 +99,45 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 
-	amount := number.FromString(s.Amount).RoundFloor(EnginePrecision)
-	price := number.FromString(action.P).RoundFloor(EnginePrecision)
-	if price.Exhausted() {
-		return ex.refundSnapshot(ctx, s)
-	}
-	if price.Mul(amount).Exhausted() {
+	quote, base := ex.getQuoteBasePair(s, action)
+	if quote == "" {
 		return ex.refundSnapshot(ctx, s)
 	}
 
-	var quote, base string
-	if action.S == engine.PageSideAsk {
-		quote, base = action.A.String(), s.Asset.AssetId
-	} else if action.S == engine.PageSideBid {
-		quote, base = s.Asset.AssetId, action.A.String()
-		amount = amount.Div(price)
-	} else {
+	price := number.FromString(action.P).RoundFloor(QuotePrecision(quote))
+	if price.Exhausted() {
 		return ex.refundSnapshot(ctx, s)
 	}
-	if !ex.validateQuoteBasePair(quote, base) {
+	amount := number.FromString(s.Amount).RoundFloor(8)
+	if action.S == engine.PageSideBid {
+		amount = amount.Div(price).RoundFloor(8)
+	}
+	if amount.Exhausted() {
+		return ex.refundSnapshot(ctx, s)
+	}
+	if price.Mul(amount).Cmp(QuoteMinimum(quote)) < 0 {
 		return ex.refundSnapshot(ctx, s)
 	}
 
 	return persistence.CreateOrderAction(ctx, s.OpponentId, s.TraceId, action.T, action.S, quote, base, amount, price, s.CreatedAt)
 }
 
-func (ex *Exchange) validateQuoteBasePair(quote, base string) bool {
+func (ex *Exchange) getQuoteBasePair(s *Snapshot, a *OrderAction) (string, string) {
+	var quote, base string
+	if a.S == engine.PageSideAsk {
+		quote, base = a.A.String(), s.Asset.AssetId
+	} else if a.S == engine.PageSideBid {
+		quote, base = s.Asset.AssetId, a.A.String()
+	} else {
+		return "", ""
+	}
 	if quote != BitcoinAssetId && quote != USDTAssetId {
-		return false
+		return "", ""
 	}
 	if quote == BitcoinAssetId && base == USDTAssetId {
-		return false
+		return "", ""
 	}
-	return true
+	return quote, base
 }
 
 func (ex *Exchange) refundSnapshot(ctx context.Context, s *Snapshot) error {

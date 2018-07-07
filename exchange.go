@@ -19,7 +19,6 @@ import (
 
 const (
 	PollInterval                    = 100 * time.Millisecond
-	EnginePrecision                 = 8
 	CheckpointMixinNetworkSnapshots = "exchange-checkpoint-mixin-network-snapshots"
 )
 
@@ -27,6 +26,30 @@ type Exchange struct {
 	books     map[string]*engine.Book
 	codec     codec.Handle
 	snapshots map[string]bool
+}
+
+func QuotePrecision(assetId string) int32 {
+	switch assetId {
+	case BitcoinAssetId:
+		return 8
+	case USDTAssetId:
+		return 4
+	default:
+		log.Panicln("QuotePrecision", assetId)
+	}
+	return 0
+}
+
+func QuoteMinimum(assetId string) number.Decimal {
+	switch assetId {
+	case BitcoinAssetId:
+		return number.FromString("0.0001")
+	case USDTAssetId:
+		return number.FromString("1")
+	default:
+		log.Panicln("QuoteMinimum", assetId)
+	}
+	return number.Zero()
 }
 
 func NewExchange() *Exchange {
@@ -130,34 +153,38 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 	}
 }
 
+func (ex *Exchange) buildBook(ctx context.Context, market string) *engine.Book {
+	return engine.NewBook(ctx, market, func(taker, maker *engine.Order, amount number.Decimal) {
+		for {
+			err := persistence.Transact(ctx, taker, maker, amount, QuotePrecision(maker.Quote))
+			if err == nil {
+				break
+			}
+			log.Println("Engine Transact CALLBACK", err)
+			time.Sleep(PollInterval)
+		}
+	}, func(order *engine.Order) {
+		for {
+			err := persistence.CancelOrder(ctx, order, QuotePrecision(order.Quote))
+			if err == nil {
+				break
+			}
+			log.Println("Engine Cancel CALLBACK", err)
+			time.Sleep(PollInterval)
+		}
+	})
+}
+
 func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persistence.Action) {
 	order := action.Order
 	market := order.BaseAssetId + "-" + order.QuoteAssetId
 	book := ex.books[market]
 	if book == nil {
-		book = engine.NewBook(ctx, market, func(taker, maker *engine.Order, amount number.Decimal) {
-			for {
-				err := persistence.Transact(ctx, taker, maker, amount, EnginePrecision)
-				if err == nil {
-					break
-				}
-				log.Println("Engine Transact CALLBACK", err)
-				time.Sleep(PollInterval)
-			}
-		}, func(order *engine.Order) {
-			for {
-				err := persistence.CancelOrder(ctx, order, EnginePrecision)
-				if err == nil {
-					break
-				}
-				log.Println("Engine Cancel CALLBACK", err)
-				time.Sleep(PollInterval)
-			}
-		})
+		book = ex.buildBook(ctx, market)
 		go book.Run(ctx)
 		ex.books[market] = book
 	}
-	precision := number.New(1, -EnginePrecision)
+	precision := number.New(1, -QuotePrecision(order.QuoteAssetId))
 	price := number.FromString(order.Price).Mul(precision).Floor().Float64()
 	filledPrice := number.FromString(order.FilledPrice).Mul(precision).Floor().Float64()
 	remainingAmount := number.FromString(order.RemainingAmount)
