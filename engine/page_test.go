@@ -25,9 +25,10 @@ func TestPage(t *testing.T) {
 		Id:              id.String(),
 		Side:            page.Side,
 		Type:            OrderTypeLimit,
-		Price:           100,
-		FilledPrice:     0,
-		RemainingAmount: number.FromString("1"),
+		Price:           number.NewInteger(10000, 2),
+		FilledPrice:     number.NewInteger(0, 2),
+		RemainingAmount: number.NewInteger(10, 1),
+		FilledAmount:    number.NewInteger(0, 1),
 	}
 	page.Put(o1)
 
@@ -35,16 +36,17 @@ func TestPage(t *testing.T) {
 	assert.Len(entries, 1)
 	e := entries[0]
 	assert.Equal("1", e.Amount.Persist())
-	assert.Equal(uint64(100), e.Price)
+	assert.Equal(int64(10000), e.Price)
 
 	id, _ = uuid.NewV4()
 	o3 := &Order{
 		Id:              id.String(),
 		Side:            page.Side,
 		Type:            OrderTypeLimit,
-		Price:           300,
-		FilledPrice:     0,
-		RemainingAmount: number.FromString("2"),
+		Price:           number.NewInteger(30000, 2),
+		FilledPrice:     number.NewInteger(0, 2),
+		RemainingAmount: number.NewInteger(20, 1),
+		FilledAmount:    number.NewInteger(0, 1),
 	}
 	page.Put(o3)
 
@@ -53,9 +55,10 @@ func TestPage(t *testing.T) {
 		Id:              id.String(),
 		Side:            page.Side,
 		Type:            OrderTypeLimit,
-		Price:           100,
-		FilledPrice:     0,
-		RemainingAmount: number.FromString("3"),
+		Price:           number.NewInteger(10000, 2),
+		FilledPrice:     number.NewInteger(0, 2),
+		RemainingAmount: number.NewInteger(30, 1),
+		FilledAmount:    number.NewInteger(0, 1),
 	}
 	page.Put(o1)
 
@@ -64,9 +67,10 @@ func TestPage(t *testing.T) {
 		Id:              id.String(),
 		Side:            page.Side,
 		Type:            OrderTypeLimit,
-		Price:           200,
-		FilledPrice:     0,
-		RemainingAmount: number.FromString("4"),
+		Price:           number.NewInteger(20000, 2),
+		FilledPrice:     number.NewInteger(0, 2),
+		RemainingAmount: number.NewInteger(40, 1),
+		FilledAmount:    number.NewInteger(0, 1),
 	}
 	page.Put(o2)
 
@@ -74,16 +78,16 @@ func TestPage(t *testing.T) {
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("4", e.Amount.Persist())
-	assert.Equal(uint64(100), e.Price)
+	assert.Equal(int64(10000), e.Price)
 	e = entries[1]
 	assert.Equal("4", e.Amount.Persist())
-	assert.Equal(uint64(200), e.Price)
+	assert.Equal(int64(20000), e.Price)
 	e = entries[2]
 	assert.Equal("2", e.Amount.Persist())
-	assert.Equal(uint64(300), e.Price)
+	assert.Equal(int64(30000), e.Price)
 
-	page.Iterate(func(order *Order) (number.Decimal, bool) {
-		matchedAmount := number.FromString("0.5")
+	page.Iterate(func(order *Order) (number.Integer, bool) {
+		matchedAmount := number.NewInteger(5, 1)
 		order.FilledAmount = order.FilledAmount.Add(matchedAmount)
 		order.RemainingAmount = order.RemainingAmount.Sub(matchedAmount)
 		return matchedAmount, true
@@ -93,69 +97,69 @@ func TestPage(t *testing.T) {
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("3.5", e.Amount.Persist())
-	assert.Equal(uint64(100), e.Price)
+	assert.Equal(int64(10000), e.Price)
 	e = entries[1]
 	assert.Equal("4", e.Amount.Persist())
-	assert.Equal(uint64(200), e.Price)
+	assert.Equal(int64(20000), e.Price)
 	e = entries[2]
 	assert.Equal("2", e.Amount.Persist())
-	assert.Equal(uint64(300), e.Price)
+	assert.Equal(int64(30000), e.Price)
 
 	page.Remove(o1)
 	entries = page.List(0)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("0.5", e.Amount.Persist())
-	assert.Equal(uint64(100), e.Price)
+	assert.Equal(int64(10000), e.Price)
 	e = entries[1]
 	assert.Equal("4", e.Amount.Persist())
-	assert.Equal(uint64(200), e.Price)
+	assert.Equal(int64(20000), e.Price)
 	e = entries[2]
 	assert.Equal("2", e.Amount.Persist())
-	assert.Equal(uint64(300), e.Price)
+	assert.Equal(int64(30000), e.Price)
 
 	page.Remove(o3)
 	entries = page.List(0)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("0.5", e.Amount.Persist())
-	assert.Equal(uint64(100), e.Price)
+	assert.Equal(int64(10000), e.Price)
 	e = entries[1]
 	assert.Equal("4", e.Amount.Persist())
-	assert.Equal(uint64(200), e.Price)
+	assert.Equal(int64(20000), e.Price)
 	e = entries[2]
 	assert.Equal("0", e.Amount.Persist())
-	assert.Equal(uint64(300), e.Price)
+	assert.Equal(int64(30000), e.Price)
 
-	page.Iterate(func(order *Order) (number.Decimal, bool) {
-		matchedAmount := number.FromString("0.5")
+	page.Iterate(func(order *Order) (number.Integer, bool) {
+		matchedAmount := number.NewInteger(5, 1)
 		order.FilledAmount = order.FilledAmount.Add(matchedAmount)
 		order.RemainingAmount = order.RemainingAmount.Sub(matchedAmount)
-		return matchedAmount, order.Price == 200
+		return matchedAmount, order.Price.Decimal().IntPart() == 200
 	})
 
 	entries = page.List(0)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("0", e.Amount.Persist())
-	assert.Equal(uint64(100), e.Price)
+	assert.Equal(int64(10000), e.Price)
 	e = entries[1]
 	assert.Equal("3.5", e.Amount.Persist())
-	assert.Equal(uint64(200), e.Price)
+	assert.Equal(int64(20000), e.Price)
 	e = entries[2]
 	assert.Equal("0", e.Amount.Persist())
-	assert.Equal(uint64(300), e.Price)
+	assert.Equal(int64(30000), e.Price)
 
 	page.Remove(o2)
 	entries = page.List(0)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("0", e.Amount.Persist())
-	assert.Equal(uint64(100), e.Price)
+	assert.Equal(int64(10000), e.Price)
 	e = entries[1]
 	assert.Equal("0", e.Amount.Persist())
-	assert.Equal(uint64(200), e.Price)
+	assert.Equal(int64(20000), e.Price)
 	e = entries[2]
 	assert.Equal("0", e.Amount.Persist())
-	assert.Equal(uint64(300), e.Price)
+	assert.Equal(int64(30000), e.Price)
 }

@@ -15,7 +15,7 @@ const (
 
 type Entry struct {
 	Side   string         `json:"side"`
-	Price  uint64         `json:"price"`
+	Price  int64          `json:"price"`
 	Amount number.Decimal `json:"amount"`
 	list   *arraylist.List
 	orders map[string]*Order
@@ -24,7 +24,7 @@ type Entry struct {
 type Page struct {
 	Side    string
 	points  *redblacktree.Tree
-	entries map[uint64]*Entry
+	entries map[int64]*Entry
 }
 
 func NewPage(side string) *Page {
@@ -34,7 +34,7 @@ func NewPage(side string) *Page {
 	return &Page{
 		Side:    side,
 		points:  redblacktree.NewWith(entryCompare),
-		entries: make(map[uint64]*Entry),
+		entries: make(map[int64]*Entry),
 	}
 }
 
@@ -42,11 +42,11 @@ func (page *Page) Put(order *Order) {
 	if page.Side != order.Side {
 		log.Panicln(page, order)
 	}
-	entry, found := page.entries[order.Price]
+	entry, found := page.entries[order.Price.Value()]
 	if !found {
 		entry = &Entry{
 			Side:   order.Side,
-			Price:  order.Price,
+			Price:  order.Price.Value(),
 			Amount: number.Zero(),
 			list:   arraylist.New(),
 			orders: make(map[string]*Order),
@@ -54,13 +54,13 @@ func (page *Page) Put(order *Order) {
 		page.entries[entry.Price] = entry
 		page.points.Put(entry, true)
 	}
-	if entry.Price != order.Price || entry.Side != order.Side {
+	if entry.Price != order.Price.Value() || entry.Side != order.Side {
 		log.Panicln(entry, order)
 	}
 	if _, found := entry.orders[order.Id]; found {
 		log.Panicln(order)
 	}
-	entry.Amount = entry.Amount.Add(order.RemainingAmount)
+	entry.Amount = entry.Amount.Add(order.RemainingAmount.Decimal())
 	entry.orders[order.Id] = order
 	entry.list.Add(order.Id)
 }
@@ -69,7 +69,7 @@ func (page *Page) Remove(order *Order) {
 	if page.Side != order.Side {
 		return
 	}
-	entry, found := page.entries[order.Price]
+	entry, found := page.entries[order.Price.Value()]
 	if !found {
 		return
 	}
@@ -81,17 +81,17 @@ func (page *Page) Remove(order *Order) {
 		log.Panicln(order)
 	}
 	delete(entry.orders, order.Id)
-	entry.Amount = entry.Amount.Sub(order.RemainingAmount)
+	entry.Amount = entry.Amount.Sub(order.RemainingAmount.Decimal())
 	entry.list.Remove(index)
 }
 
-func (page *Page) Iterate(hook func(*Order) (number.Decimal, bool)) {
+func (page *Page) Iterate(hook func(*Order) (number.Integer, bool)) {
 	for it := page.points.Iterator(); it.Next(); {
 		entry := it.Key().(*Entry)
 		for eit := entry.list.Iterator(); eit.Next(); {
 			order := entry.orders[eit.Value().(string)]
 			matchedAmount, done := hook(order)
-			entry.Amount = entry.Amount.Sub(matchedAmount)
+			entry.Amount = entry.Amount.Sub(matchedAmount.Decimal())
 			if done {
 				eit.End()
 				it.End()
