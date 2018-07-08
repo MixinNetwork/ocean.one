@@ -52,38 +52,65 @@ func NewBook(ctx context.Context, market string, transact TransactCallback, canc
 }
 
 func (book *Book) AttachOrderEvent(ctx context.Context, order *Order, action string) {
-	if action != OrderActionCreate && action != OrderActionCancel {
-		log.Panicln(order, action)
-	}
 	if order.Side != PageSideAsk && order.Side != PageSideBid {
 		log.Panicln(order, action)
 	}
 	if order.Type != OrderTypeLimit && order.Type != OrderTypeMarket {
 		log.Panicln(order, action)
 	}
+	if action != OrderActionCreate && action != OrderActionCancel {
+		log.Panicln(order, action)
+	}
+	if action != OrderActionCancel {
+		order.assert()
+	}
 	book.events <- &OrderEvent{Order: order, Action: action}
 }
 
-func (book *Book) process(ctx context.Context, taker, maker *Order) number.Integer {
-	matchedAmount := taker.RemainingAmount
-	if maker.RemainingAmount.Cmp(matchedAmount) < 0 {
-		matchedAmount = maker.RemainingAmount
-	}
-	matchedPrice := maker.Price
-	matchedFunds := matchedPrice.Mul(matchedAmount)
+func (book *Book) process(ctx context.Context, taker, maker *Order) (number.Integer, number.Integer) {
+	taker.assert()
+	maker.assert()
 
-	taker.RemainingAmount = taker.RemainingAmount.Sub(matchedAmount)
+	matchedPrice := maker.Price
+	makerAmount := maker.RemainingAmount
+	makerFunds := makerAmount.Mul(matchedPrice)
+	if maker.Side == PageSideBid {
+		makerAmount = maker.RemainingFunds.Div(matchedPrice)
+		makerFunds = maker.RemainingFunds
+	}
+	takerAmount := taker.RemainingAmount
+	takerFunds := takerAmount.Mul(matchedPrice)
+	if taker.Side == PageSideBid {
+		takerAmount = taker.RemainingFunds.Div(matchedPrice)
+		takerFunds = taker.RemainingFunds
+	}
+	matchedAmount := makerAmount
+	matchedFunds := makerFunds
+	if takerAmount.Cmp(matchedAmount) < 0 {
+		matchedAmount = takerAmount
+		matchedFunds = takerFunds
+	}
+
 	taker.FilledAmount = taker.FilledAmount.Add(matchedAmount)
 	taker.FilledFunds = taker.FilledFunds.Add(matchedFunds)
-	taker.FilledPrice = taker.FilledFunds.Div(taker.FilledAmount)
+	if taker.Side == PageSideAsk {
+		taker.RemainingAmount = taker.RemainingAmount.Sub(matchedAmount)
+	}
+	if taker.Side == PageSideBid {
+		taker.RemainingFunds = taker.RemainingFunds.Sub(matchedFunds)
+	}
 
-	maker.RemainingAmount = maker.RemainingAmount.Sub(matchedAmount)
 	maker.FilledAmount = maker.FilledAmount.Add(matchedAmount)
 	maker.FilledFunds = maker.FilledFunds.Add(matchedFunds)
-	maker.FilledPrice = maker.FilledFunds.Div(maker.FilledAmount)
+	if maker.Side == PageSideAsk {
+		maker.RemainingAmount = maker.RemainingAmount.Sub(matchedAmount)
+	}
+	if maker.Side == PageSideBid {
+		maker.RemainingFunds = maker.RemainingFunds.Sub(matchedFunds)
+	}
 
 	book.transact(taker, maker, matchedAmount)
-	return matchedAmount
+	return matchedAmount, matchedFunds
 }
 
 func (book *Book) createOrder(ctx context.Context, order *Order) {
@@ -94,21 +121,21 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 
 	if order.Side == PageSideAsk {
 		opponents := make([]*Order, 0)
-		book.bids.Iterate(func(opponent *Order) (number.Integer, bool) {
+		book.bids.Iterate(func(opponent *Order) (number.Integer, number.Integer, bool) {
 			if order.Type == OrderTypeLimit && opponent.Price.Cmp(order.Price) < 0 {
-				return number.NewInteger(0, order.RemainingAmount.Precision()), true
+				return order.RemainingAmount.Zero(), order.RemainingFunds.Zero(), true
 			}
-			matchedAmount := book.process(ctx, order, opponent)
+			matchedAmount, matchedFunds := book.process(ctx, order, opponent)
 			book.cacheOrderEvent(ctx, cache.EventTypeOrderMatch, opponent.Side, opponent.Price, matchedAmount)
 			opponents = append(opponents, opponent)
-			return matchedAmount, order.RemainingAmount.IsZero()
+			return matchedAmount, matchedFunds, order.filled()
 		})
 		for _, o := range opponents {
-			if o.RemainingAmount.IsZero() {
+			if o.filled() {
 				book.bids.Remove(o)
 			}
 		}
-		if order.RemainingAmount.IsPositive() {
+		if !order.filled() {
 			if order.Type == OrderTypeLimit {
 				book.asks.Put(order)
 				book.cacheOrderEvent(ctx, cache.EventTypeOrderOpen, order.Side, order.Price, order.RemainingAmount)
@@ -118,21 +145,21 @@ func (book *Book) createOrder(ctx context.Context, order *Order) {
 		}
 	} else if order.Side == PageSideBid {
 		opponents := make([]*Order, 0)
-		book.asks.Iterate(func(opponent *Order) (number.Integer, bool) {
+		book.asks.Iterate(func(opponent *Order) (number.Integer, number.Integer, bool) {
 			if order.Type == OrderTypeLimit && opponent.Price.Cmp(order.Price) > 0 {
-				return number.NewInteger(0, order.RemainingAmount.Precision()), true
+				return order.RemainingAmount.Zero(), order.RemainingFunds.Zero(), true
 			}
-			matchedAmount := book.process(ctx, order, opponent)
+			matchedAmount, matchedFunds := book.process(ctx, order, opponent)
 			book.cacheOrderEvent(ctx, cache.EventTypeOrderMatch, opponent.Side, opponent.Price, matchedAmount)
 			opponents = append(opponents, opponent)
-			return matchedAmount, order.RemainingAmount.IsZero()
+			return matchedAmount, matchedFunds, order.filled()
 		})
 		for _, o := range opponents {
-			if o.RemainingAmount.IsZero() {
+			if o.filled() {
 				book.asks.Remove(o)
 			}
 		}
-		if order.RemainingAmount.IsPositive() {
+		if !order.filled() {
 			if order.Type == OrderTypeLimit {
 				book.bids.Put(order)
 				book.cacheOrderEvent(ctx, cache.EventTypeOrderOpen, order.Side, order.Price, order.RemainingAmount)

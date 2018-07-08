@@ -17,6 +17,7 @@ type Entry struct {
 	Side   string         `json:"side"`
 	Price  int64          `json:"price"`
 	Amount number.Decimal `json:"amount"`
+	Funds  number.Decimal `json:"funds"`
 	list   *arraylist.List
 	orders map[string]*Order
 }
@@ -48,6 +49,7 @@ func (page *Page) Put(order *Order) {
 			Side:   order.Side,
 			Price:  order.Price.Value(),
 			Amount: number.Zero(),
+			Funds:  number.Zero(),
 			list:   arraylist.New(),
 			orders: make(map[string]*Order),
 		}
@@ -60,20 +62,25 @@ func (page *Page) Put(order *Order) {
 	if _, found := entry.orders[order.Id]; found {
 		log.Panicln(order)
 	}
-	entry.Amount = entry.Amount.Add(order.RemainingAmount.Decimal())
+	if entry.Side == PageSideAsk {
+		entry.Amount = entry.Amount.Add(order.RemainingAmount.Decimal())
+	} else {
+		entry.Funds = entry.Funds.Add(order.RemainingFunds.Decimal())
+	}
 	entry.orders[order.Id] = order
 	entry.list.Add(order.Id)
 }
 
-func (page *Page) Remove(order *Order) {
-	if page.Side != order.Side {
+func (page *Page) Remove(o *Order) {
+	if page.Side != o.Side {
 		return
 	}
-	entry, found := page.entries[order.Price.Value()]
+	entry, found := page.entries[o.Price.Value()]
 	if !found {
 		return
 	}
-	if _, found := entry.orders[order.Id]; !found {
+	order, found := entry.orders[o.Id]
+	if !found {
 		return
 	}
 	index := entry.list.IndexOf(order.Id)
@@ -81,17 +88,25 @@ func (page *Page) Remove(order *Order) {
 		log.Panicln(order)
 	}
 	delete(entry.orders, order.Id)
-	entry.Amount = entry.Amount.Sub(order.RemainingAmount.Decimal())
+	if entry.Side == PageSideAsk {
+		entry.Amount = entry.Amount.Sub(order.RemainingAmount.Decimal())
+	} else {
+		entry.Funds = entry.Funds.Sub(order.RemainingFunds.Decimal())
+	}
 	entry.list.Remove(index)
 }
 
-func (page *Page) Iterate(hook func(*Order) (number.Integer, bool)) {
+func (page *Page) Iterate(hook func(*Order) (number.Integer, number.Integer, bool)) {
 	for it := page.points.Iterator(); it.Next(); {
 		entry := it.Key().(*Entry)
 		for eit := entry.list.Iterator(); eit.Next(); {
 			order := entry.orders[eit.Value().(string)]
-			matchedAmount, done := hook(order)
-			entry.Amount = entry.Amount.Sub(matchedAmount.Decimal())
+			matchedAmount, matchedFunds, done := hook(order)
+			if entry.Side == PageSideAsk {
+				entry.Amount = entry.Amount.Sub(matchedAmount.Decimal())
+			} else {
+				entry.Funds = entry.Funds.Sub(matchedFunds.Decimal())
+			}
 			if done {
 				eit.End()
 				it.End()
@@ -108,6 +123,7 @@ func (page *Page) List(count int) []*Entry {
 			Side:   entry.Side,
 			Price:  entry.Price,
 			Amount: entry.Amount,
+			Funds:  entry.Funds,
 		})
 		if count = count - 1; count == 0 {
 			it.End()

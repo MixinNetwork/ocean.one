@@ -26,7 +26,6 @@ func TestPage(t *testing.T) {
 		Side:            page.Side,
 		Type:            OrderTypeLimit,
 		Price:           number.NewInteger(10000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
 		RemainingAmount: number.NewInteger(10, 1),
 		FilledAmount:    number.NewInteger(0, 1),
 	}
@@ -44,7 +43,6 @@ func TestPage(t *testing.T) {
 		Side:            page.Side,
 		Type:            OrderTypeLimit,
 		Price:           number.NewInteger(30000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
 		RemainingAmount: number.NewInteger(20, 1),
 		FilledAmount:    number.NewInteger(0, 1),
 	}
@@ -56,7 +54,6 @@ func TestPage(t *testing.T) {
 		Side:            page.Side,
 		Type:            OrderTypeLimit,
 		Price:           number.NewInteger(10000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
 		RemainingAmount: number.NewInteger(30, 1),
 		FilledAmount:    number.NewInteger(0, 1),
 	}
@@ -68,7 +65,6 @@ func TestPage(t *testing.T) {
 		Side:            page.Side,
 		Type:            OrderTypeLimit,
 		Price:           number.NewInteger(20000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
 		RemainingAmount: number.NewInteger(40, 1),
 		FilledAmount:    number.NewInteger(0, 1),
 	}
@@ -86,11 +82,11 @@ func TestPage(t *testing.T) {
 	assert.Equal("2", e.Amount.Persist())
 	assert.Equal(int64(30000), e.Price)
 
-	page.Iterate(func(order *Order) (number.Integer, bool) {
+	page.Iterate(func(order *Order) (number.Integer, number.Integer, bool) {
 		matchedAmount := number.NewInteger(5, 1)
 		order.FilledAmount = order.FilledAmount.Add(matchedAmount)
 		order.RemainingAmount = order.RemainingAmount.Sub(matchedAmount)
-		return matchedAmount, true
+		return matchedAmount, number.NewInteger(5, 1), true
 	})
 
 	entries = page.List(0)
@@ -131,11 +127,11 @@ func TestPage(t *testing.T) {
 	assert.Equal("0", e.Amount.Persist())
 	assert.Equal(int64(30000), e.Price)
 
-	page.Iterate(func(order *Order) (number.Integer, bool) {
+	page.Iterate(func(order *Order) (number.Integer, number.Integer, bool) {
 		matchedAmount := number.NewInteger(5, 1)
 		order.FilledAmount = order.FilledAmount.Add(matchedAmount)
 		order.RemainingAmount = order.RemainingAmount.Sub(matchedAmount)
-		return matchedAmount, order.Price.Decimal().IntPart() == 200
+		return matchedAmount, number.NewInteger(5, 1), order.Price.Decimal().IntPart() == 200
 	})
 
 	entries = page.List(0)

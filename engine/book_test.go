@@ -17,9 +17,11 @@ type DummyTrade struct {
 	Amount           number.Integer
 	TakerId          string
 	TakerAmount      number.Integer
+	TakerFunds       number.Integer
 	TakerFilledPrice number.Integer
 	MakerId          string
 	MakerAmount      number.Integer
+	MakerFunds       number.Integer
 	MakerFilledPrice number.Integer
 }
 
@@ -35,10 +37,12 @@ func TestBook(t *testing.T) {
 			Amount:           amount,
 			TakerId:          taker.Id,
 			TakerAmount:      taker.RemainingAmount,
-			TakerFilledPrice: taker.FilledPrice,
+			TakerFunds:       taker.RemainingFunds,
+			TakerFilledPrice: taker.FilledFunds.Div(taker.FilledAmount),
 			MakerId:          maker.Id,
 			MakerAmount:      maker.RemainingAmount,
-			MakerFilledPrice: maker.FilledPrice,
+			MakerFunds:       maker.RemainingFunds,
+			MakerFilledPrice: maker.FilledFunds.Div(maker.FilledAmount),
 		})
 	}, func(order *Order) {
 		cancelled = append(cancelled, order)
@@ -52,9 +56,9 @@ func TestBook(t *testing.T) {
 		Side:            PageSideBid,
 		Type:            OrderTypeLimit,
 		Price:           number.NewInteger(10000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
-		RemainingAmount: number.NewInteger(100, 1),
+		RemainingAmount: number.NewInteger(0, 1),
 		FilledAmount:    number.NewInteger(0, 1),
+		RemainingFunds:  number.NewInteger(1000000, 3),
 		FilledFunds:     number.NewInteger(0, 3),
 	}
 	book.AttachOrderEvent(ctx, bo1_1, OrderActionCreate)
@@ -65,9 +69,9 @@ func TestBook(t *testing.T) {
 		Side:            PageSideBid,
 		Type:            OrderTypeLimit,
 		Price:           number.NewInteger(10000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
-		RemainingAmount: number.NewInteger(200, 1),
+		RemainingAmount: number.NewInteger(0, 1),
 		FilledAmount:    number.NewInteger(0, 1),
+		RemainingFunds:  number.NewInteger(2000000, 3),
 		FilledFunds:     number.NewInteger(0, 3),
 	}
 	book.AttachOrderEvent(ctx, bo1_2, OrderActionCreate)
@@ -78,21 +82,21 @@ func TestBook(t *testing.T) {
 		Side:            PageSideBid,
 		Type:            OrderTypeLimit,
 		Price:           number.NewInteger(10000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
-		RemainingAmount: number.NewInteger(300, 1),
+		RemainingAmount: number.NewInteger(0, 1),
 		FilledAmount:    number.NewInteger(0, 1),
+		RemainingFunds:  number.NewInteger(3000000, 3),
 		FilledFunds:     number.NewInteger(0, 3),
 	}
 	book.AttachOrderEvent(ctx, bo1_3, OrderActionCreate)
 	time.Sleep(100 * time.Millisecond)
-	assert.Equal("60", book.bids.entries[10000].Amount.Persist())
+	assert.Equal("6000", book.bids.entries[10000].Funds.Persist())
 	assert.Equal(3, book.bids.entries[10000].list.Size())
 
 	book.AttachOrderEvent(ctx, bo1_2, OrderActionCancel)
 	time.Sleep(100 * time.Millisecond)
 	assert.Len(cancelled, 1)
 	assert.Equal(bo1_2.Id, cancelled[0].Id)
-	assert.Equal("40", book.bids.entries[10000].Amount.Persist())
+	assert.Equal("4000", book.bids.entries[10000].Funds.Persist())
 	assert.Equal(2, book.bids.entries[10000].list.Size())
 
 	id, _ = uuid.NewV4()
@@ -101,9 +105,9 @@ func TestBook(t *testing.T) {
 		Side:            PageSideBid,
 		Type:            OrderTypeLimit,
 		Price:           number.NewInteger(20000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
-		RemainingAmount: number.NewInteger(100, 1),
+		RemainingAmount: number.NewInteger(0, 1),
 		FilledAmount:    number.NewInteger(0, 1),
+		RemainingFunds:  number.NewInteger(2000000, 3),
 		FilledFunds:     number.NewInteger(0, 3),
 	}
 	book.AttachOrderEvent(ctx, bo2_1, OrderActionCreate)
@@ -114,9 +118,9 @@ func TestBook(t *testing.T) {
 		Side:            PageSideAsk,
 		Type:            OrderTypeLimit,
 		Price:           number.NewInteger(10000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
 		RemainingAmount: number.NewInteger(300, 1),
 		FilledAmount:    number.NewInteger(0, 1),
+		RemainingFunds:  number.NewInteger(0, 3),
 		FilledFunds:     number.NewInteger(0, 3),
 	}
 	for i := 0; i < 2; i++ {
@@ -125,7 +129,7 @@ func TestBook(t *testing.T) {
 
 		assert.Len(cancelled, 1)
 		assert.Equal(bo1_2.Id, cancelled[0].Id)
-		assert.Equal("20", book.bids.entries[10000].Amount.Persist())
+		assert.Equal("2000", book.bids.entries[10000].Funds.Persist())
 		assert.Equal(1, book.bids.entries[10000].list.Size())
 		assert.Len(book.asks.entries, 0)
 		assert.Len(matched, 3)
@@ -151,7 +155,7 @@ func TestBook(t *testing.T) {
 		assert.Equal("0", m2.TakerAmount.Persist())
 		assert.Equal("133.33", m2.TakerFilledPrice.Persist())
 		assert.Equal(bo1_3.Id, m2.MakerId)
-		assert.Equal("20", m2.MakerAmount.Persist())
+		assert.Equal("2000", m2.MakerFunds.Persist())
 		assert.Equal("100", m2.MakerFilledPrice.Persist())
 	}
 
@@ -161,9 +165,9 @@ func TestBook(t *testing.T) {
 		Side:            PageSideAsk,
 		Type:            OrderTypeLimit,
 		Price:           number.NewInteger(10000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
 		RemainingAmount: number.NewInteger(300, 1),
 		FilledAmount:    number.NewInteger(0, 1),
+		RemainingFunds:  number.NewInteger(0, 3),
 		FilledFunds:     number.NewInteger(0, 3),
 	}
 	book.AttachOrderEvent(ctx, ao1_2, OrderActionCreate)
@@ -171,7 +175,7 @@ func TestBook(t *testing.T) {
 
 	assert.Len(cancelled, 1)
 	assert.Equal(bo1_2.Id, cancelled[0].Id)
-	assert.Equal("0", book.bids.entries[10000].Amount.Persist())
+	assert.Equal("0", book.bids.entries[10000].Funds.Persist())
 	assert.Equal(0, book.bids.entries[10000].list.Size())
 	assert.Len(book.asks.entries, 1)
 	assert.Len(matched, 4)
@@ -190,9 +194,9 @@ func TestBook(t *testing.T) {
 		Side:            PageSideAsk,
 		Type:            OrderTypeLimit,
 		Price:           number.NewInteger(20000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
 		RemainingAmount: number.NewInteger(100, 1),
 		FilledAmount:    number.NewInteger(0, 1),
+		RemainingFunds:  number.NewInteger(0, 3),
 		FilledFunds:     number.NewInteger(0, 3),
 	}
 	book.AttachOrderEvent(ctx, ao2_1, OrderActionCreate)
@@ -202,18 +206,18 @@ func TestBook(t *testing.T) {
 		Id:              id.String(),
 		Side:            PageSideBid,
 		Type:            OrderTypeMarket,
-		Price:           number.NewInteger(20000, 2),
-		FilledPrice:     number.NewInteger(0, 2),
-		RemainingAmount: number.NewInteger(1000, 1),
+		Price:           number.NewInteger(0, 2),
+		RemainingAmount: number.NewInteger(0, 1),
 		FilledAmount:    number.NewInteger(0, 1),
+		RemainingFunds:  number.NewInteger(20000000, 3),
 		FilledFunds:     number.NewInteger(0, 3),
 	}
 	book.AttachOrderEvent(ctx, bo2_2, OrderActionCreate)
 	time.Sleep(100 * time.Millisecond)
 
-	assert.Equal("0", book.bids.entries[10000].Amount.Persist())
+	assert.Equal("0", book.bids.entries[10000].Funds.Persist())
 	assert.Equal(0, book.bids.entries[10000].list.Size())
-	assert.Equal("0", book.bids.entries[20000].Amount.Persist())
+	assert.Equal("0", book.bids.entries[20000].Funds.Persist())
 	assert.Equal(0, book.bids.entries[20000].list.Size())
 	assert.Equal("0", book.asks.entries[10000].Amount.Persist())
 	assert.Equal(0, book.asks.entries[10000].list.Size())
@@ -222,14 +226,14 @@ func TestBook(t *testing.T) {
 	assert.Len(cancelled, 2)
 	assert.Equal(bo1_2.Id, cancelled[0].Id)
 	assert.Equal(bo2_2.Id, cancelled[1].Id)
-	assert.Equal("80", cancelled[1].RemainingAmount.Persist())
+	assert.Equal("17000", cancelled[1].RemainingFunds.Persist())
 	assert.Equal("20", cancelled[1].FilledAmount.Persist())
-	assert.Equal("150", cancelled[1].FilledPrice.Persist())
+	assert.Equal("150", cancelled[1].FilledFunds.Div(cancelled[1].FilledAmount).Persist())
 	assert.Len(matched, 6)
 	m4 := matched[4]
 	assert.Equal("10", m4.Amount.Persist())
 	assert.Equal(bo2_2.Id, m4.TakerId)
-	assert.Equal("90", m4.TakerAmount.Persist())
+	assert.Equal("19000", m4.TakerFunds.Persist())
 	assert.Equal("100", m4.TakerFilledPrice.Persist())
 	assert.Equal(ao1_2.Id, m4.MakerId)
 	assert.Equal("0", m4.MakerAmount.Persist())
@@ -237,7 +241,7 @@ func TestBook(t *testing.T) {
 	m5 := matched[5]
 	assert.Equal("10", m5.Amount.Persist())
 	assert.Equal(bo2_2.Id, m5.TakerId)
-	assert.Equal("80", m5.TakerAmount.Persist())
+	assert.Equal("17000", m5.TakerFunds.Persist())
 	assert.Equal("150", m5.TakerFilledPrice.Persist())
 	assert.Equal(ao2_1.Id, m5.MakerId)
 	assert.Equal("0", m5.MakerAmount.Persist())
