@@ -29,6 +29,8 @@ import (
 )
 
 const (
+	AmountPrecision = 4
+
 	BitcoinAssetId = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
 	USDTAssetId    = "815b0b1a-2764-3736-8faa-42d694fa620a"
 )
@@ -107,9 +109,9 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 	if price.Exhausted() {
 		return ex.refundSnapshot(ctx, s)
 	}
-	amount := number.FromString(s.Amount).RoundFloor(8)
+	amount := number.FromString(s.Amount).RoundFloor(AmountPrecision)
 	if action.S == engine.PageSideBid {
-		amount = amount.Div(price).RoundFloor(8)
+		amount = amount.Div(price).RoundFloor(AmountPrecision)
 	}
 	if amount.Exhausted() {
 		return ex.refundSnapshot(ctx, s)
