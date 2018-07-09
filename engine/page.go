@@ -15,7 +15,7 @@ const (
 
 type Entry struct {
 	Side   string         `json:"side"`
-	Price  int64          `json:"price"`
+	Price  number.Integer `json:"price"`
 	Amount number.Decimal `json:"amount"`
 	Funds  number.Decimal `json:"funds"`
 	list   *arraylist.List
@@ -47,16 +47,16 @@ func (page *Page) Put(order *Order) {
 	if !found {
 		entry = &Entry{
 			Side:   order.Side,
-			Price:  order.Price.Value(),
+			Price:  order.Price,
 			Amount: number.Zero(),
 			Funds:  number.Zero(),
 			list:   arraylist.New(),
 			orders: make(map[string]*Order),
 		}
-		page.entries[entry.Price] = entry
+		page.entries[entry.Price.Value()] = entry
 		page.points.Put(entry, true)
 	}
-	if entry.Price != order.Price.Value() || entry.Side != order.Side {
+	if entry.Price.Cmp(order.Price) != 0 || entry.Side != order.Side {
 		log.Panicln(entry, order)
 	}
 	if _, found := entry.orders[order.Id]; found {
@@ -136,20 +136,16 @@ func (page *Page) List(count int) []*Entry {
 func entryCompare(a, b interface{}) int {
 	entry := a.(*Entry)
 	opponent := b.(*Entry)
-	if entry.Price == opponent.Price {
+	if entry.Price.Cmp(opponent.Price) == 0 {
 		log.Panicln(entry, opponent)
 	}
 	switch entry.Side {
 	case PageSideAsk:
-		if entry.Price < opponent.Price {
-			return -1
-		}
+		return entry.Price.Cmp(opponent.Price)
 	case PageSideBid:
-		if entry.Price > opponent.Price {
-			return -1
-		}
+		return opponent.Price.Cmp(entry.Price)
 	default:
 		log.Panicln(entry, opponent)
+		return 0
 	}
-	return 1
 }
