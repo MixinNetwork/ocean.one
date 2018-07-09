@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	EventTypeOrderOpen   = "ORDER_OPEN"
-	EventTypeOrderMatch  = "ORDER_MATCH"
-	EventTypeOrderCancel = "ORDER_CANCEL"
+	EventTypeOrderOpen   = "ORDER-OPEN"
+	EventTypeOrderMatch  = "ORDER-MATCH"
+	EventTypeOrderCancel = "ORDER-CANCEL"
 )
 
 type Event struct {
