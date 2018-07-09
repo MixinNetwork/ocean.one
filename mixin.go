@@ -114,7 +114,11 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 	price := priceDecimal.Integer(QuotePrecision(quote))
-	if price.IsZero() {
+	if action.T == engine.OrderTypeLimit {
+		if price.IsZero() {
+			return ex.refundSnapshot(ctx, s)
+		}
+	} else if !price.IsZero() {
 		return ex.refundSnapshot(ctx, s)
 	}
 
@@ -138,7 +142,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 			return ex.refundSnapshot(ctx, s)
 		}
 		amount = assetDecimal.Integer(AmountPrecision)
-		if price.Mul(amount).Decimal().Cmp(QuoteMinimum(quote)) < 0 {
+		if action.T == engine.OrderTypeLimit && price.Mul(amount).Decimal().Cmp(QuoteMinimum(quote)) < 0 {
 			return ex.refundSnapshot(ctx, s)
 		}
 	}
