@@ -195,6 +195,8 @@ func (book *Book) Run(ctx context.Context) {
 	fullCacheTicker := time.NewTicker(time.Second * 30)
 	defer fullCacheTicker.Stop()
 
+	book.cacheList(ctx, 0)
+
 	for {
 		select {
 		case event := <-book.events:
