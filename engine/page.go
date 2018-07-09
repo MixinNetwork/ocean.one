@@ -119,13 +119,20 @@ func (page *Page) Iterate(hook func(*Order) (number.Integer, number.Integer, boo
 func (page *Page) List(count int) []*Entry {
 	entries := make([]*Entry, 0)
 	for it := page.points.Iterator(); it.Next(); {
-		entry := it.Key().(*Entry)
-		entries = append(entries, &Entry{
-			Side:   entry.Side,
-			Price:  entry.Price,
-			Amount: entry.Amount,
-			Funds:  entry.Funds,
-		})
+		ie := it.Key().(*Entry)
+		entry := &Entry{
+			Side:   ie.Side,
+			Price:  ie.Price,
+			Amount: ie.Amount,
+			Funds:  ie.Funds,
+		}
+		price := ie.Price.Decimal()
+		if entry.Amount.IsZero() {
+			entry.Amount = entry.Funds.Div(price)
+		} else if entry.Funds.IsZero() {
+			entry.Funds = price.Mul(entry.Amount)
+		}
+		entries = append(entries, entry)
 		if count = count - 1; count == 0 {
 			it.End()
 		}

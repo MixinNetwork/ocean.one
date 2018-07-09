@@ -221,6 +221,11 @@ func (book *Book) cacheList(ctx context.Context, limit int) {
 }
 
 func (book *Book) cacheOrderEvent(ctx context.Context, event, side string, price, amount, funds number.Integer) {
+	if amount.IsZero() {
+		amount = funds.Div(price)
+	} else if funds.IsZero() {
+		funds = price.Mul(amount)
+	}
 	data := map[string]interface{}{
 		"side":   side,
 		"price":  price,
