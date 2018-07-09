@@ -126,3 +126,8 @@ The order is cancelled and no longer on the order book, `amount` indicates how m
 
 - Taker: 0.1%
 - Maker: 0.0%
+
+
+## References
+
+- Coinbase Pro API https://docs.pro.coinbase.com/
