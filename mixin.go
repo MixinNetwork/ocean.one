@@ -122,7 +122,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 
-	fundsPrecision := AmountPrecision * QuotePrecision(quote)
+	fundsPrecision := AmountPrecision + QuotePrecision(quote)
 	funds := number.NewInteger(0, fundsPrecision)
 	amount := number.NewInteger(0, AmountPrecision)
 

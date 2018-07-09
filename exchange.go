@@ -196,7 +196,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 		ex.books[market] = book
 	}
 	pricePrecision := QuotePrecision(order.QuoteAssetId)
-	fundsPrecision := pricePrecision * AmountPrecision
+	fundsPrecision := pricePrecision + AmountPrecision
 	price := number.FromString(order.Price).Integer(pricePrecision)
 	remainingAmount := number.FromString(order.RemainingAmount).Integer(AmountPrecision)
 	filledAmount := number.FromString(order.FilledAmount).Integer(AmountPrecision)

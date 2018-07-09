@@ -25,8 +25,8 @@ type Order struct {
 	Price           string    `spanner:"price"`
 	RemainingAmount string    `spanner:"remaining_amount"`
 	FilledAmount    string    `spanner:"filled_amount"`
-	RemainingFunds  string    `spanner:"remaining_amount"`
-	FilledFunds     string    `spanner:"filled_amount"`
+	RemainingFunds  string    `spanner:"remaining_funds"`
+	FilledFunds     string    `spanner:"filled_funds"`
 	CreatedAt       time.Time `spanner:"created_at"`
 	State           string    `spanner:"state"`
 	UserId          string    `spanner:"user_id"`
