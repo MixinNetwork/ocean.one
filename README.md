@@ -53,6 +53,75 @@ memo = base64.StdEncoding.EncodeToString(msgpack(OrderAction{
 ```
 
 
+## Events
+
+The order book and all matches are always available in the Mixin Network snapshots, and Ocean ONE offers a WebSocket layer to provide a convenient query interface.
+
+The WebSocket endipoint is wss://events.ocean.one, and all messages sent and received should be gziped. The event message is in a standard format.
+
+```json
+{
+  "id": "a3fb2c7d-88ed-4605-977c-ebbb3f32ad71",
+  "action": "EMIT_EVENT",
+  "params": {},
+  "data": {},
+  "error": "description"
+}
+```
+
+The `params` field is for the client sent message. The `data` or `error` is for the server message, and only one of them will be present in the message. If the message is the server response of a message from the client, the `id` and `action` fields will be identical to the sent one.
+
+Whenever a client connects to the events server, it must send a `SUBSCRIBE_BOOK` message to the server, otherwise the client won't receive any events messages.
+
+```json
+{
+  "id": "a3fb2c7d-88ed-4605-977c-ebbb3f32ad71",
+  "action": "SUBSCRIBE_BOOK",
+  "params": {
+    "market": "c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa"
+  }
+}
+```
+
+This will subscibe the client to all the events of the specific `market` in the `params`. To unsubscribe, send a similar message but with the action `UNSUBSCRIBE_BOOK`. A client can always subscribe to many markets with many different `SUBSCRIBE_BOOK` messages.
+
+
+### BOOK-T0
+
+This is the first event whenever a client subscribe to a specific market, the event contains the full order book of the market.
+
+```json
+{
+  "id": "a3fb2c7d-88ed-4605-977c-ebbb3f32ad71",
+  "action": "EMIT_EVENT",
+  "data": {
+    "market": "c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa",
+    "sequence": 1531142594,
+    "event": "BOOK-T0",
+    "data": {
+      "asks": [],
+      "bids": []
+    }
+  }
+}
+```
+
+
+### ORDER-OPEN
+
+The order is now open on the order book. This message will only be sent for orders which are not fully filled immediately. `amount` will indicate how much of the order is unfilled and going on the book.
+
+
+### ORDER-MATCH
+
+A trade occurred between two orders. The taker order is the one executing immediately after being received and the maker order is a resting order on the book. The `side` field indicates the maker order side. If the side is `ask` this indicates the maker was a sell order and the match is considered an up-tick. A `bid` side match is a down-tick.
+
+
+### ORDER-CANCEL
+
+The order is cancelled and no longer on the order book, `amount` indicates how much of the order went unfilled.
+
+
 ## Fee
 
 - Taker: 0.1%
