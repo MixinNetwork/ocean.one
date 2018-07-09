@@ -175,15 +175,17 @@ func (book *Book) cancelOrder(ctx context.Context, order *Order) {
 		return
 	}
 	book.cancelIndex[order.Id] = true
-	book.cancel(order)
-	book.cacheOrderEvent(ctx, cache.EventTypeOrderCancel, order.Side, order.Price, order.RemainingAmount)
 
 	if order.Side == PageSideAsk {
-		book.asks.Remove(order)
+		order = book.asks.Remove(order)
 	} else if order.Side == PageSideBid {
-		book.bids.Remove(order)
+		order = book.bids.Remove(order)
 	} else {
 		log.Panicln(order)
+	}
+	if order != nil {
+		book.cancel(order)
+		book.cacheOrderEvent(ctx, cache.EventTypeOrderCancel, order.Side, order.Price, order.RemainingAmount)
 	}
 }
 

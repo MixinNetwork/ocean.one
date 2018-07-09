@@ -125,8 +125,8 @@ func CreateOrderAction(ctx context.Context, o *engine.Order, userId string, crea
 		CreatedAt: createdAt,
 	}
 	_, err := Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		state, _, err := checkOrderState(ctx, txn, action.OrderId)
-		if err != nil || state != "" {
+		state, err := checkOrderState(ctx, txn, action.OrderId)
+		if err != nil || state != nil {
 			return err
 		}
 		orderMutation, err := spanner.InsertStruct("orders", order)
@@ -149,12 +149,12 @@ func CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time,
 		CreatedAt: createdAt,
 	}
 	_, err := Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		exist, err := checkAction(ctx, txn, action.OrderId, action.Action)
+		exist, err := checkActionExistence(ctx, txn, action.OrderId, action.Action)
 		if err != nil || exist {
 			return err
 		}
-		state, uid, err := checkOrderState(ctx, txn, action.OrderId)
-		if err != nil || state != OrderStatePending || userId != uid {
+		state, err := checkOrderState(ctx, txn, action.OrderId)
+		if err != nil || state.State != OrderStatePending || state.UserId != userId || state.OrderType != engine.OrderTypeLimit {
 			return err
 		}
 		actionMutation, err := spanner.InsertStruct("actions", action)
@@ -166,7 +166,7 @@ func CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time,
 	return err
 }
 
-func checkAction(ctx context.Context, txn *spanner.ReadWriteTransaction, orderId, action string) (bool, error) {
+func checkActionExistence(ctx context.Context, txn *spanner.ReadWriteTransaction, orderId, action string) (bool, error) {
 	it := txn.Read(ctx, "actions", spanner.Key{orderId, action}, []string{"created_at"})
 	defer it.Stop()
 
@@ -179,17 +179,17 @@ func checkAction(ctx context.Context, txn *spanner.ReadWriteTransaction, orderId
 	return true, nil
 }
 
-func checkOrderState(ctx context.Context, txn *spanner.ReadWriteTransaction, orderId string) (string, string, error) {
-	it := txn.Read(ctx, "orders", spanner.Key{orderId}, []string{"state", "user_id"})
+func checkOrderState(ctx context.Context, txn *spanner.ReadWriteTransaction, orderId string) (*Order, error) {
+	it := txn.Read(ctx, "orders", spanner.Key{orderId}, []string{"order_type", "state", "user_id"})
 	defer it.Stop()
 
 	row, err := it.Next()
 	if err == iterator.Done {
-		return "", "", nil
+		return nil, nil
 	} else if err != nil {
-		return "", "", err
+		return nil, err
 	}
-	var state, uid string
-	err = row.Columns(&state, &uid)
-	return state, uid, err
+	var o Order
+	err = row.Columns(&o.OrderType, &o.State, &o.UserId)
+	return &o, err
 }

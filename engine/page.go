@@ -71,17 +71,17 @@ func (page *Page) Put(order *Order) {
 	entry.list.Add(order.Id)
 }
 
-func (page *Page) Remove(o *Order) {
+func (page *Page) Remove(o *Order) *Order {
 	if page.Side != o.Side {
-		return
+		return nil
 	}
 	entry, found := page.entries[o.Price.Value()]
 	if !found {
-		return
+		return nil
 	}
 	order, found := entry.orders[o.Id]
 	if !found {
-		return
+		return nil
 	}
 	index := entry.list.IndexOf(order.Id)
 	if index < 0 {
@@ -94,6 +94,7 @@ func (page *Page) Remove(o *Order) {
 		entry.Funds = entry.Funds.Sub(order.RemainingFunds.Decimal())
 	}
 	entry.list.Remove(index)
+	return order
 }
 
 func (page *Page) Iterate(hook func(*Order) (number.Integer, number.Integer, bool)) {
