@@ -3,9 +3,7 @@ package persistence
 import (
 	"context"
 	"crypto/md5"
-	"fmt"
 	"io"
-	"log"
 	"time"
 
 	"cloud.google.com/go/spanner"
@@ -38,8 +36,8 @@ type Trade struct {
 	FeeAmount    string    `spanner:"fee_amount"`
 }
 
-func Transact(ctx context.Context, taker, maker *engine.Order, amount number.Decimal, precision int32) error {
-	askTrade, bidTrade := makeTrades(taker, maker, amount, precision)
+func Transact(ctx context.Context, taker, maker *engine.Order, amount, funds number.Integer) error {
+	askTrade, bidTrade := makeTrades(taker, maker, amount.Decimal())
 	askTransfer, bidTransfer := handleFees(askTrade, bidTrade)
 
 	askTradeMutation, err := spanner.InsertStruct("trades", askTrade)
@@ -60,18 +58,16 @@ func Transact(ctx context.Context, taker, maker *engine.Order, amount number.Dec
 		return err
 	}
 
-	mutations := makeOrderMutations(taker, maker, precision)
+	mutations := makeOrderMutations(taker, maker)
 	mutations = append(mutations, askTradeMutation, bidTradeMutation)
 	mutations = append(mutations, askTransferMutation, bidTransferMutation)
 	_, err = Spanner(ctx).Apply(ctx, mutations)
 	return err
 }
 
-func CancelOrder(ctx context.Context, order *engine.Order, precision int32) error {
-	price := number.FromString(fmt.Sprint(order.Price)).Mul(number.New(1, precision))
-	filledPrice := number.FromString(fmt.Sprint(order.FilledPrice)).Mul(number.New(1, precision))
-	orderCols := []string{"order_id", "filled_amount", "remaining_amount", "filled_price", "state"}
-	orderVals := []interface{}{order.Id, order.FilledAmount.Persist(), order.RemainingAmount.Persist(), filledPrice.Persist(), OrderStateDone}
+func CancelOrder(ctx context.Context, order *engine.Order) error {
+	orderCols := []string{"order_id", "filled_amount", "remaining_amount", "filled_funds", "remaining_funds", "state"}
+	orderVals := []interface{}{order.Id, order.FilledAmount.Persist(), order.RemainingAmount.Persist(), order.FilledFunds.Persist(), order.RemainingFunds.Persist(), OrderStateDone}
 	mutations := []*spanner.Mutation{
 		spanner.Update("orders", orderCols, orderVals),
 		spanner.Delete("actions", spanner.Key{order.Id, engine.OrderActionCreate}),
@@ -89,7 +85,7 @@ func CancelOrder(ctx context.Context, order *engine.Order, precision int32) erro
 	}
 	if order.Side == engine.PageSideBid {
 		transfer.AssetId = order.Quote
-		transfer.Amount = price.Mul(order.RemainingAmount.Add(order.FilledAmount)).Sub(filledPrice.Mul(order.FilledAmount)).Persist()
+		transfer.Amount = order.RemainingFunds.Persist()
 	}
 	transferMutation, err := spanner.InsertStruct("transfers", transfer)
 	if err != nil {
@@ -100,19 +96,16 @@ func CancelOrder(ctx context.Context, order *engine.Order, precision int32) erro
 	return err
 }
 
-func makeOrderMutations(taker, maker *engine.Order, precision int32) []*spanner.Mutation {
-	makerFilledPrice := number.FromString(fmt.Sprint(maker.FilledPrice)).Mul(number.New(1, precision)).Persist()
-	takerFilledPrice := number.FromString(fmt.Sprint(taker.FilledPrice)).Mul(number.New(1, precision)).Persist()
-
-	takerOrderCols := []string{"order_id", "filled_amount", "remaining_amount", "filled_price"}
-	takerOrderVals := []interface{}{taker.Id, taker.FilledAmount.Persist(), taker.RemainingAmount.Persist(), takerFilledPrice}
-	makerOrderCols := []string{"order_id", "filled_amount", "remaining_amount", "filled_price"}
-	makerOrderVals := []interface{}{maker.Id, maker.FilledAmount.Persist(), maker.RemainingAmount.Persist(), makerFilledPrice}
-	if taker.RemainingAmount.Sign() == 0 {
+func makeOrderMutations(taker, maker *engine.Order) []*spanner.Mutation {
+	takerOrderCols := []string{"order_id", "filled_amount", "remaining_amount", "filled_funds", "remaining_funds"}
+	takerOrderVals := []interface{}{taker.Id, taker.FilledAmount.Persist(), taker.RemainingAmount.Persist(), taker.FilledFunds.Persist(), taker.RemainingFunds.Persist()}
+	makerOrderCols := []string{"order_id", "filled_amount", "remaining_amount", "filled_funds", "remaining_funds"}
+	makerOrderVals := []interface{}{maker.Id, maker.FilledAmount.Persist(), maker.RemainingAmount.Persist(), maker.FilledFunds.Persist(), maker.RemainingFunds.Persist()}
+	if taker.RemainingAmount.IsZero() && taker.RemainingFunds.IsZero() {
 		takerOrderCols = append(takerOrderCols, "state")
 		takerOrderVals = append(takerOrderVals, OrderStateDone)
 	}
-	if maker.RemainingAmount.Sign() == 0 {
+	if maker.RemainingAmount.IsZero() && maker.RemainingFunds.IsZero() {
 		makerOrderCols = append(makerOrderCols, "state")
 		makerOrderVals = append(makerOrderVals, OrderStateDone)
 	}
@@ -121,58 +114,24 @@ func makeOrderMutations(taker, maker *engine.Order, precision int32) []*spanner.
 		spanner.Update("orders", makerOrderCols, makerOrderVals),
 	}
 
-	if taker.RemainingAmount.Sign() == 0 {
+	if taker.RemainingAmount.IsZero() && taker.RemainingFunds.IsZero() {
 		mutations = append(mutations, spanner.Delete("actions", spanner.Key{taker.Id, engine.OrderActionCreate}))
 		mutations = append(mutations, spanner.Delete("actions", spanner.Key{taker.Id, engine.OrderActionCancel}))
 	}
-	if taker.Side == engine.PageSideBid && taker.RemainingAmount.Sign() == 0 && taker.Price > taker.FilledPrice {
-		change := number.FromString(fmt.Sprint(taker.Price - taker.FilledPrice)).Mul(number.New(1, precision))
-		transfer := &Transfer{
-			TransferId: getSettlementId(taker.Id, engine.OrderActionCancel),
-			Source:     TransferSourceOrderFilled,
-			Detail:     taker.Id,
-			AssetId:    taker.Quote,
-			Amount:     change.Mul(taker.FilledAmount).Persist(),
-			CreatedAt:  time.Now(),
-			UserId:     taker.UserId,
-		}
-		transferMutation, err := spanner.InsertStruct("transfers", transfer)
-		if err != nil {
-			log.Panicln(err)
-		}
-		mutations = append(mutations, transferMutation)
-	}
-	if maker.RemainingAmount.Sign() == 0 {
+	if maker.RemainingAmount.IsZero() && maker.RemainingFunds.IsZero() {
 		mutations = append(mutations, spanner.Delete("actions", spanner.Key{maker.Id, engine.OrderActionCreate}))
 		mutations = append(mutations, spanner.Delete("actions", spanner.Key{maker.Id, engine.OrderActionCancel}))
-	}
-	if maker.Side == engine.PageSideBid && maker.RemainingAmount.Sign() == 0 && maker.Price > maker.FilledPrice {
-		change := number.FromString(fmt.Sprint(maker.Price - maker.FilledPrice)).Mul(number.New(1, precision))
-		transfer := &Transfer{
-			TransferId: getSettlementId(maker.Id, engine.OrderActionCancel),
-			Source:     TransferSourceOrderFilled,
-			Detail:     maker.Id,
-			AssetId:    maker.Quote,
-			Amount:     change.Mul(maker.FilledAmount).Persist(),
-			CreatedAt:  time.Now(),
-			UserId:     maker.UserId,
-		}
-		transferMutation, err := spanner.InsertStruct("transfers", transfer)
-		if err != nil {
-			log.Panicln(err)
-		}
-		mutations = append(mutations, transferMutation)
 	}
 	return mutations
 }
 
-func makeTrades(taker, maker *engine.Order, amount number.Decimal, precision int32) (*Trade, *Trade) {
+func makeTrades(taker, maker *engine.Order, amount number.Decimal) (*Trade, *Trade) {
 	tradeId, _ := uuid.NewV4()
 	askOrderId, bidOrderId := taker.Id, maker.Id
 	if taker.Side == engine.PageSideBid {
 		askOrderId, bidOrderId = maker.Id, taker.Id
 	}
-	price := number.FromString(fmt.Sprint(maker.Price)).Mul(number.New(1, precision))
+	price := maker.Price.Decimal()
 
 	takerTrade := &Trade{
 		TradeId:      tradeId.String(),

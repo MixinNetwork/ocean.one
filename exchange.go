@@ -28,7 +28,7 @@ type Exchange struct {
 	snapshots map[string]bool
 }
 
-func QuotePrecision(assetId string) int32 {
+func QuotePrecision(assetId string) uint8 {
 	switch assetId {
 	case BitcoinAssetId:
 		return 8
@@ -165,9 +165,9 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 }
 
 func (ex *Exchange) buildBook(ctx context.Context, market string) *engine.Book {
-	return engine.NewBook(ctx, market, func(taker, maker *engine.Order, amount number.Decimal) {
+	return engine.NewBook(ctx, market, func(taker, maker *engine.Order, amount, funds number.Integer) {
 		for {
-			err := persistence.Transact(ctx, taker, maker, amount, QuotePrecision(maker.Quote))
+			err := persistence.Transact(ctx, taker, maker, amount, funds)
 			if err == nil {
 				break
 			}
@@ -176,7 +176,7 @@ func (ex *Exchange) buildBook(ctx context.Context, market string) *engine.Book {
 		}
 	}, func(order *engine.Order) {
 		for {
-			err := persistence.CancelOrder(ctx, order, QuotePrecision(order.Quote))
+			err := persistence.CancelOrder(ctx, order)
 			if err == nil {
 				break
 			}
@@ -195,19 +195,22 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 		go book.Run(ctx)
 		ex.books[market] = book
 	}
-	precision := number.New(1, -QuotePrecision(order.QuoteAssetId))
-	price := number.FromString(order.Price).Mul(precision).Floor().Float64()
-	filledPrice := number.FromString(order.FilledPrice).Mul(precision).Floor().Float64()
-	remainingAmount := number.FromString(order.RemainingAmount)
-	filledAmount := number.FromString(order.FilledAmount)
+	pricePrecision := QuotePrecision(order.QuoteAssetId)
+	fundsPrecision := pricePrecision * AmountPrecision
+	price := number.FromString(order.Price).Integer(pricePrecision)
+	remainingAmount := number.FromString(order.RemainingAmount).Integer(AmountPrecision)
+	filledAmount := number.FromString(order.FilledAmount).Integer(AmountPrecision)
+	remainingFunds := number.FromString(order.RemainingFunds).Integer(fundsPrecision)
+	filledFunds := number.FromString(order.FilledFunds).Integer(fundsPrecision)
 	book.AttachOrderEvent(ctx, &engine.Order{
 		Id:              order.OrderId,
 		Side:            order.Side,
 		Type:            order.OrderType,
-		Price:           uint64(price),
-		FilledPrice:     uint64(filledPrice),
+		Price:           price,
 		RemainingAmount: remainingAmount,
 		FilledAmount:    filledAmount,
+		RemainingFunds:  remainingFunds,
+		FilledFunds:     filledFunds,
 		Quote:           order.QuoteAssetId,
 		Base:            order.BaseAssetId,
 		UserId:          order.UserId,

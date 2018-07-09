@@ -30,6 +30,9 @@ import (
 
 const (
 	AmountPrecision = 4
+	MaxPrice        = 1000000000
+	MaxAmount       = 5000000000
+	MaxFunds        = MaxPrice * MaxAmount
 
 	BitcoinAssetId = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
 	USDTAssetId    = "815b0b1a-2764-3736-8faa-42d694fa620a"
@@ -105,22 +108,53 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 
-	price := number.FromString(action.P).RoundFloor(QuotePrecision(quote))
-	if price.Exhausted() {
+	priceDecimal := number.FromString(action.P)
+	maxPrice := number.NewDecimal(MaxPrice, int32(QuotePrecision(quote)))
+	if priceDecimal.Cmp(maxPrice) > 0 {
 		return ex.refundSnapshot(ctx, s)
 	}
-	amount := number.FromString(s.Amount).RoundFloor(AmountPrecision)
-	if action.S == engine.PageSideBid {
-		amount = amount.Div(price).RoundFloor(AmountPrecision)
-	}
-	if amount.Exhausted() {
-		return ex.refundSnapshot(ctx, s)
-	}
-	if price.Mul(amount).Cmp(QuoteMinimum(quote)) < 0 {
+	price := priceDecimal.Integer(QuotePrecision(quote))
+	if price.IsZero() {
 		return ex.refundSnapshot(ctx, s)
 	}
 
-	return persistence.CreateOrderAction(ctx, s.OpponentId, s.TraceId, action.T, action.S, quote, base, amount, price, s.CreatedAt)
+	fundsPrecision := AmountPrecision * QuotePrecision(quote)
+	funds := number.NewInteger(0, fundsPrecision)
+	amount := number.NewInteger(0, AmountPrecision)
+
+	assetDecimal := number.FromString(s.Amount)
+	if action.S == engine.PageSideBid {
+		maxFunds := number.NewDecimal(MaxFunds, int32(fundsPrecision))
+		if assetDecimal.Cmp(maxFunds) > 0 {
+			return ex.refundSnapshot(ctx, s)
+		}
+		funds = assetDecimal.Integer(fundsPrecision)
+		if funds.Decimal().Cmp(QuoteMinimum(quote)) < 0 {
+			return ex.refundSnapshot(ctx, s)
+		}
+	} else {
+		maxAmount := number.NewDecimal(MaxAmount, AmountPrecision)
+		if assetDecimal.Cmp(maxAmount) > 0 {
+			return ex.refundSnapshot(ctx, s)
+		}
+		amount = assetDecimal.Integer(AmountPrecision)
+		if price.Mul(amount).Decimal().Cmp(QuoteMinimum(quote)) < 0 {
+			return ex.refundSnapshot(ctx, s)
+		}
+	}
+
+	return persistence.CreateOrderAction(ctx, &engine.Order{
+		Id:              s.TraceId,
+		Type:            action.T,
+		Side:            action.S,
+		Quote:           quote,
+		Base:            base,
+		Price:           price,
+		RemainingAmount: amount,
+		FilledAmount:    amount.Zero(),
+		RemainingFunds:  funds,
+		FilledFunds:     funds.Zero(),
+	}, s.OpponentId, s.CreatedAt)
 }
 
 func (ex *Exchange) getQuoteBasePair(s *Snapshot, a *OrderAction) (string, string) {

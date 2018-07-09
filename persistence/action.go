@@ -3,10 +3,10 @@ package persistence
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"cloud.google.com/go/spanner"
-	"github.com/MixinMessenger/go-number"
 	"github.com/MixinMessenger/ocean.one/engine"
 	"google.golang.org/api/iterator"
 )
@@ -23,9 +23,10 @@ type Order struct {
 	BaseAssetId     string    `spanner:"base_asset_id"`
 	Side            string    `spanner:"side"`
 	Price           string    `spanner:"price"`
-	FilledPrice     string    `spanner:"filled_price"`
 	RemainingAmount string    `spanner:"remaining_amount"`
 	FilledAmount    string    `spanner:"filled_amount"`
+	RemainingFunds  string    `spanner:"remaining_amount"`
+	FilledFunds     string    `spanner:"filled_amount"`
 	CreatedAt       time.Time `spanner:"created_at"`
 	State           string    `spanner:"state"`
 	UserId          string    `spanner:"user_id"`
@@ -99,18 +100,21 @@ func ListPendingActions(ctx context.Context, checkpoint time.Time, limit int) ([
 	return actions, nil
 }
 
-func CreateOrderAction(ctx context.Context, userId, traceId string, orderType, side, quote, base string, amount, price number.Decimal, createdAt time.Time) error {
-	amount, price = amount.RoundFloor(8), price.RoundFloor(8)
+func CreateOrderAction(ctx context.Context, o *engine.Order, userId string, createdAt time.Time) error {
+	if !o.FilledFunds.IsZero() || !o.FilledAmount.IsZero() {
+		log.Panicln(userId, o)
+	}
 	order := Order{
-		OrderId:         traceId,
-		OrderType:       orderType,
-		Side:            side,
-		QuoteAssetId:    quote,
-		BaseAssetId:     base,
-		Price:           price.Persist(),
-		FilledPrice:     number.Zero().Persist(),
-		RemainingAmount: amount.Persist(),
-		FilledAmount:    number.Zero().Persist(),
+		OrderId:         o.Id,
+		OrderType:       o.Type,
+		Side:            o.Side,
+		QuoteAssetId:    o.Quote,
+		BaseAssetId:     o.Base,
+		Price:           o.Price.Persist(),
+		RemainingAmount: o.RemainingAmount.Persist(),
+		FilledAmount:    o.FilledAmount.Persist(),
+		RemainingFunds:  o.RemainingFunds.Persist(),
+		FilledFunds:     o.FilledFunds.Persist(),
 		CreatedAt:       createdAt,
 		State:           OrderStatePending,
 		UserId:          userId,

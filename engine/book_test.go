@@ -15,6 +15,7 @@ import (
 
 type DummyTrade struct {
 	Amount           number.Integer
+	Funds            number.Integer
 	TakerId          string
 	TakerAmount      number.Integer
 	TakerFunds       number.Integer
@@ -32,9 +33,10 @@ func TestBook(t *testing.T) {
 
 	matched := make([]*DummyTrade, 0)
 	cancelled := make([]*Order, 0)
-	book := NewBook(ctx, "market", func(taker, maker *Order, amount number.Integer) {
+	book := NewBook(ctx, "market", func(taker, maker *Order, amount, funds number.Integer) {
 		matched = append(matched, &DummyTrade{
 			Amount:           amount,
+			Funds:            funds,
 			TakerId:          taker.Id,
 			TakerAmount:      taker.RemainingAmount,
 			TakerFunds:       taker.RemainingFunds,
