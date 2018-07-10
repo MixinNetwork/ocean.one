@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"time"
 
 	"cloud.google.com/go/spanner"
 	"github.com/dgrijalva/jwt-go"
@@ -86,4 +87,64 @@ func Authenticate(ctx context.Context, jwtToken string) (string, error) {
 		return userId, nil
 	}
 	return "", nil
+}
+
+func UserOrders(ctx context.Context, userId string, market string, offset time.Time, limit int) ([]*Order, error) {
+	txn := Spanner(ctx).ReadOnlyTransaction()
+	defer txn.Close()
+
+	if limit > 100 {
+		limit = 100
+	}
+
+	query := "SELECT order_id FROM orders@{FORCE_INDEX=orders_by_user_created_desc} WHERE user_id=@user_id AND created_at<@offset"
+	params := map[string]interface{}{"user_id": userId, "offset": offset}
+	if sides := strings.Split(market, "-"); len(sides) == 2 && len(market) == 73 {
+		query = query + " AND base_asset_id=@base AND quote_asset_id=@quote"
+		params["base"] = uuid.FromStringOrNil(sides[0]).String()
+		params["quote"] = uuid.FromStringOrNil(sides[1]).String()
+	}
+	query = query + " ORDER BY user_id,created_at DESC"
+	query = fmt.Sprint("%s LIMIT %d", query, limit)
+
+	iit := txn.Query(ctx, spanner.Statement{query, params})
+	defer iit.Stop()
+
+	var orderIds []string
+	for {
+		row, err := iit.Next()
+		if err == iterator.Done {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		var id string
+		err = row.Columns(&id)
+		if err != nil {
+			return nil, err
+		}
+		orderIds = append(orderIds, id)
+	}
+
+	oit := txn.Query(ctx, spanner.Statement{
+		SQL:    "SELECT * FROM orders WHERE order_id IN UNNEST(@order_ids)",
+		Params: map[string]interface{}{"order_ids": orderIds},
+	})
+	defer oit.Stop()
+
+	var orders []*Order
+	for {
+		row, err := oit.Next()
+		if err == iterator.Done {
+			return orders, nil
+		} else if err != nil {
+			return orders, err
+		}
+		var o Order
+		err = row.ToStruct(&o)
+		if err != nil {
+			return orders, err
+		}
+		orders = append(orders, &o)
+	}
 }

@@ -21,6 +21,8 @@ CREATE TABLE orders (
   user_id           STRING(36) NOT NULL,
 ) PRIMARY KEY(order_id);
 
+CREATE INDEX orders_by_user_created_desc ON orders(user_id, created_at DESC);
+
 
 CREATE TABLE actions (
   order_id     STRING(36) NOT NULL,
@@ -47,6 +49,8 @@ CREATE TABLE trades (
   fee_asset_id      STRING(36) NOT NULL,
   fee_amount        STRING(128) NOT NULL,
 ) PRIMARY KEY(trade_id, liquidity);
+
+CREATE INDEX trades_by_base_quote_created_desc ON trades(base_asset_id, quote_asset_id, created_at DESC);
 
 
 CREATE TABLE transfers (
