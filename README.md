@@ -62,7 +62,7 @@ A bid order, despite a limit bid order or market bid order, will transfer some q
 
 The order book and all matches are always available in the Mixin Network snapshots, and Ocean ONE offers a WebSocket layer to provide a convenient query interface.
 
-The WebSocket endipoint is wss://events.ocean.one, and all messages sent and received should be gziped. The event message is in a standard format.
+The WebSocket endipoint is `wss://events.ocean.one`, and all messages sent and received should be gziped. The event message is in a standard format.
 
 ```json
 {
@@ -91,7 +91,7 @@ Whenever a client connects to the events server, it must send a `SUBSCRIBE_BOOK`
 This will subscibe the client to all the events of the specific `market` in the `params`. To unsubscribe, send a similar message but with the action `UNSUBSCRIBE_BOOK`. A client can always subscribe to many markets with many different `SUBSCRIBE_BOOK` messages.
 
 
-### BOOK-T0
+#### BOOK-T0
 
 This is the first event whenever a client subscribe to a specific market, the event contains the full order book of the market.
 
@@ -112,17 +112,17 @@ This is the first event whenever a client subscribe to a specific market, the ev
 ```
 
 
-### ORDER-OPEN
+#### ORDER-OPEN
 
 The order is now open on the order book. This message will only be sent for orders which are not fully filled immediately. `amount` will indicate how much of the order is unfilled and going on the book.
 
 
-### ORDER-MATCH
+#### ORDER-MATCH
 
 A trade occurred between two orders. The taker order is the one executing immediately after being received and the maker order is a resting order on the book. The `side` field indicates the maker order side. If the side is `ask` this indicates the maker was a sell order and the match is considered an up-tick. A `bid` side match is a down-tick.
 
 
-### ORDER-CANCEL
+#### ORDER-CANCEL
 
 The order is cancelled and no longer on the order book, `amount` indicates how much of the order went unfilled.
 
