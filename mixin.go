@@ -59,6 +59,7 @@ type Snapshot struct {
 }
 
 type OrderAction struct {
+	U string    // user
 	S string    // side
 	A uuid.UUID // asset
 	P string    // price
@@ -92,13 +93,16 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 	if action == nil {
 		return ex.refundSnapshot(ctx, s)
 	}
-	if action.A.String() == s.Asset.AssetId {
-		return ex.refundSnapshot(ctx, s)
+	if len(action.U) > 16 {
+		return persistence.UpdateUserPublicKey(ctx, s.OpponentId, action.U)
 	}
 	if action.O.String() != uuid.Nil.String() {
 		return persistence.CancelOrderAction(ctx, action.O.String(), s.CreatedAt, s.OpponentId)
 	}
 
+	if action.A.String() == s.Asset.AssetId {
+		return ex.refundSnapshot(ctx, s)
+	}
 	if action.T != engine.OrderTypeLimit && action.T != engine.OrderTypeMarket {
 		return ex.refundSnapshot(ctx, s)
 	}

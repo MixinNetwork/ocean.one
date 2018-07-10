@@ -60,3 +60,11 @@ CREATE TABLE transfers (
 ) PRIMARY KEY(transfer_id);
 
 CREATE INDEX transfers_by_created ON transfers(created_at);
+
+
+CREATE TABLE users (
+  user_id          STRING(36) NOT NULL,
+  public_key       STRING(128) NOT NULL,
+) PRIMARY KEY(user_id);
+
+CREATE UNIQUE INDEX users_by_public_key ON users(public_key);
