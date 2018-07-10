@@ -1,0 +1,155 @@
+@import './normalize.css';
+@import './animate.scss';
+@import './fonts/index.scss';
+@import './constant.scss';
+@import '../node_modules/noty/src/noty.scss';
+@import '../node_modules/noty/src/themes/nest.scss';
+
+html,
+body {
+  font-family: $font-main-content;
+  color: $color-main-foreground-dark;
+  margin: 0px;
+  padding: 0px;
+}
+
+html {
+  height: 100%;
+}
+
+a {
+  text-decoration: none;
+}
+
+input[type='number'] {
+    -moz-appearance:textfield;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+
+.loading.layout {
+  height: 100%;
+  cursor: wait;
+
+  #layout-container {
+    height: 100%;
+    position: relative;
+  }
+}
+
+.error.layout {
+  height: 100%;
+
+  #layout-container {
+    height: 100%;
+    position: relative;
+  }
+
+  .error.content {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-family: $font-main-title;
+    text-align: center;
+
+    h1 {
+      font-size: 64px;
+      letter-spacing: 8px;
+    }
+  }
+}
+
+.spinner-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  .spinner {
+    position: relative;
+    text-align: center;
+    width: 60px;
+    height: 40px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .spinner > div {
+    background-color: $color-main-highlight;
+    height: 100%;
+    width: 6px;
+    display: inline-block;
+
+    -webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out;
+    animation: sk-stretchdelay 1.2s infinite ease-in-out;
+  }
+
+  .spinner .rect2 {
+    -webkit-animation-delay: -1.1s;
+    animation-delay: -1.1s;
+  }
+
+  .spinner .rect3 {
+    -webkit-animation-delay: -1.0s;
+    animation-delay: -1.0s;
+  }
+
+  .spinner .rect4 {
+    -webkit-animation-delay: -0.9s;
+    animation-delay: -0.9s;
+  }
+
+  .spinner .rect5 {
+    -webkit-animation-delay: -0.8s;
+    animation-delay: -0.8s;
+  }
+
+  @-webkit-keyframes sk-stretchdelay {
+    0%, 40%, 100% { -webkit-transform: scaleY(0.4) }
+    20% { -webkit-transform: scaleY(1.0) }
+  }
+
+  @keyframes sk-stretchdelay {
+    0%, 40%, 100% {
+      transform: scaleY(0.4);
+      -webkit-transform: scaleY(0.4);
+    }  20% {
+      transform: scaleY(1.0);
+      -webkit-transform: scaleY(1.0);
+    }
+  }
+}
+
+#noty_layout__top {
+  left: 50%;
+  top: 8px;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 500px;
+
+  .noty_theme__nest.noty_bar .noty_body {
+    padding: 16px;
+  }
+
+  .noty_has_timeout .noty_progressbar{
+    background-color: transparent;
+  }
+
+  .noty_type__success {
+    background-color: #00B379;
+  }
+
+  .noty_type__warning {
+    background-color: #FF884D;
+  }
+}
+
+.animated.slideOutUp.noty {
+  animation-duration: 0.2s;
+}
