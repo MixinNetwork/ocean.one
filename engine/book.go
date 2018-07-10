@@ -84,11 +84,9 @@ func (book *Book) process(ctx context.Context, taker, maker *Order) (number.Inte
 		takerAmount = taker.RemainingFunds.Div(matchedPrice)
 		takerFunds = taker.RemainingFunds
 	}
-	matchedAmount := makerAmount
-	matchedFunds := makerFunds
-	if takerAmount.Cmp(matchedAmount) < 0 {
-		matchedAmount = takerAmount
-		matchedFunds = takerFunds
+	matchedAmount, matchedFunds := makerAmount, makerFunds
+	if takerAmount.Cmp(matchedAmount) < 0 || takerFunds.Cmp(matchedFunds) < 0 {
+		matchedAmount, matchedFunds = takerAmount, takerFunds
 	}
 
 	taker.FilledAmount = taker.FilledAmount.Add(matchedAmount)
