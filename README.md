@@ -53,6 +53,11 @@ memo = base64.StdEncoding.EncodeToString(msgpack(OrderAction{
 ```
 
 
+## Bid Order Behavior
+
+A bid order, despite a limit bid order or market bid order, will transfer some quote funds to the matching engine. Ocean ONE engine will match all the funds, this is a typical behavior for market order. However for a limit bid order, user may expect the order done whenever the desired bid size filled, in this situation, Ocean ONE engine still matches all the funds which may result in a larger order size filled.
+
+
 ## Events
 
 The order book and all matches are always available in the Mixin Network snapshots, and Ocean ONE offers a WebSocket layer to provide a convenient query interface.
