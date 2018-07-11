@@ -49,8 +49,8 @@ func MarketTrades(ctx context.Context, market string, offset time.Time, limit in
 	}
 
 	tit := txn.Query(ctx, spanner.Statement{
-		SQL:    "SELECT * FROM trades WHERE trade_id IN UNNEST(@trade_ids)",
-		Params: map[string]interface{}{"trade_ids": tradeIds},
+		SQL:    "SELECT * FROM trades WHERE trade_id IN UNNEST(@trade_ids) AND liquidity=@liquidity",
+		Params: map[string]interface{}{"trade_ids": tradeIds, "liquidity": TradeLiquidityMaker},
 	})
 	defer tit.Stop()
 
