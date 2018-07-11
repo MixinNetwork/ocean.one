@@ -48,7 +48,6 @@ func (impl *R) marketTrades(w http.ResponseWriter, r *http.Request, params map[s
 	for _, t := range trades {
 		data = append(data, map[string]interface{}{
 			"trade_id":   t.TradeId,
-			"liquidity":  t.Liquidity,
 			"market":     params["id"],
 			"side":       t.Side,
 			"price":      t.Price,

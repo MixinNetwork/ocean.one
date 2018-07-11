@@ -3,6 +3,7 @@ package persistence
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"cloud.google.com/go/spanner"
@@ -23,10 +24,10 @@ func MarketTrades(ctx context.Context, market string, offset time.Time, limit in
 		return nil, nil
 	}
 
-	query := "SELECT trade_id FROM trades@{FORCE_INDEX=trades_by_base_quote_created_desc} WHERE base_asset_id=@base AND quote_asset_id=@quote AND created_at<@offset"
+	query := "SELECT trade_id FROM trades@{FORCE_INDEX=trades_by_base_quote_created_desc} WHERE base_asset_id=@base AND quote_asset_id=@quote AND created_at<@offset AND liquidity=@liquidity"
 	query = query + " ORDER BY base_asset_id,quote_asset_id,created_at DESC"
 	query = fmt.Sprintf("%s LIMIT %d", query, limit)
-	params := map[string]interface{}{"base": base, "quote": quote, "offset": offset}
+	params := map[string]interface{}{"base": base, "quote": quote, "offset": offset, "liquidity": TradeLiquidityMaker}
 
 	iit := txn.Query(ctx, spanner.Statement{query, params})
 	defer iit.Stop()
@@ -57,7 +58,7 @@ func MarketTrades(ctx context.Context, market string, offset time.Time, limit in
 	for {
 		row, err := tit.Next()
 		if err == iterator.Done {
-			return trades, nil
+			break
 		} else if err != nil {
 			return trades, err
 		}
@@ -68,6 +69,8 @@ func MarketTrades(ctx context.Context, market string, offset time.Time, limit in
 		}
 		trades = append(trades, &t)
 	}
+	sort.Slice(trades, func(i, j int) bool { return trades[i].CreatedAt.After(trades[j].CreatedAt) })
+	return trades, nil
 }
 
 func getBaseQuote(market string) (string, string) {

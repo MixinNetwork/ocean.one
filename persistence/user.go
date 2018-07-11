@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -140,7 +141,7 @@ func UserOrders(ctx context.Context, userId string, market string, offset time.T
 	for {
 		row, err := oit.Next()
 		if err == iterator.Done {
-			return orders, nil
+			break
 		} else if err != nil {
 			return orders, err
 		}
@@ -151,4 +152,6 @@ func UserOrders(ctx context.Context, userId string, market string, offset time.T
 		}
 		orders = append(orders, &o)
 	}
+	sort.Slice(orders, func(i, j int) bool { return orders[i].CreatedAt.After(orders[j].CreatedAt) })
+	return orders, nil
 }
