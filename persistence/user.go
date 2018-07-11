@@ -109,7 +109,7 @@ func UserOrders(ctx context.Context, userId string, market string, offset time.T
 		params["base"], params["quote"] = base, quote
 	}
 	query = query + " ORDER BY user_id,created_at DESC"
-	query = fmt.Sprint("%s LIMIT %d", query, limit)
+	query = fmt.Sprintf("%s LIMIT %d", query, limit)
 
 	iit := txn.Query(ctx, spanner.Statement{query, params})
 	defer iit.Stop()

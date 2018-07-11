@@ -25,7 +25,7 @@ func MarketTrades(ctx context.Context, market string, offset time.Time, limit in
 
 	query := "SELECT trade_id FROM trades@{FORCE_INDEX=trades_by_base_quote_created_desc} WHERE base=@base AND quote=@quote AND created_at<@offset"
 	query = query + " ORDER BY base,quote,created_at DESC"
-	query = fmt.Sprint("%s LIMIT %d", query, limit)
+	query = fmt.Sprintf("%s LIMIT %d", query, limit)
 	params := map[string]interface{}{"base": base, "quote": quote, "offset": offset}
 
 	iit := txn.Query(ctx, spanner.Statement{query, params})
