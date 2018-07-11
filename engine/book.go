@@ -193,6 +193,9 @@ func (book *Book) Run(ctx context.Context) {
 	fullCacheTicker := time.NewTicker(time.Second * 30)
 	defer fullCacheTicker.Stop()
 
+	bestCacheTicker := time.NewTicker(time.Second)
+	defer bestCacheTicker.Stop()
+
 	book.cacheList(ctx, 0)
 
 	for {
@@ -207,6 +210,8 @@ func (book *Book) Run(ctx context.Context) {
 			}
 		case <-fullCacheTicker.C:
 			book.cacheList(ctx, 0)
+		case <-bestCacheTicker.C:
+			book.cacheList(ctx, 1)
 		}
 	}
 }

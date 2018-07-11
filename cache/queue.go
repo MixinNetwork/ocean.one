@@ -47,8 +47,9 @@ func ListPendingEvents(ctx context.Context, key string) ([]*Event, error) {
 	return events, nil
 }
 
-func Book(ctx context.Context, market string) (*Event, error) {
-	data, err := Redis(ctx).Get(market + "-BOOK-T0").Result()
+func Book(ctx context.Context, market string, limit int) (*Event, error) {
+	key := fmt.Sprintf("%s-BOOK-T%d", market, limit)
+	data, err := Redis(ctx).Get(key).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -80,11 +81,16 @@ func (queue *Queue) Loop(ctx context.Context) {
 
 func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
 	e.Sequence = queue.sequence
-	queue.sequence = queue.sequence + 1
 	data, err := json.Marshal(e)
 	if err != nil {
 		log.Panicln(err)
 	}
+	if e.Type == "BOOK-T1" {
+		_, err := Redis(ctx).Set(queue.market+"-BOOK-T1", data, 0).Result()
+		return err
+	}
+
+	queue.sequence = queue.sequence + 1
 
 	key := queue.market + "-ORDER-EVENTS"
 	switch e.Type {
