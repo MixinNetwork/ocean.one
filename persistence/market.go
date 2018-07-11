@@ -11,6 +11,29 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+func LastTrade(ctx context.Context, market string) (*Trade, error) {
+	base, quote := getBaseQuote(market)
+	if base == "" || quote == "" {
+		return nil, nil
+	}
+
+	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{
+		SQL:    "SELECT trade_id FROM trades@{FORCE_INDEX=trades_by_base_quote_created_desc} WHERE base_asset_id=@base AND quote_asset_id=@quote ORDER BY base_asset_id,quote_asset_id,created_at DESC",
+		Params: map[string]interface{}{"base": base, "quote": quote},
+	})
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	var t Trade
+	err = row.ToStruct(&t)
+	return &t, err
+}
+
 func MarketTrades(ctx context.Context, market string, offset time.Time, limit int) ([]*Trade, error) {
 	txn := Spanner(ctx).ReadOnlyTransaction()
 	defer txn.Close()

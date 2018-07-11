@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -21,17 +22,54 @@ func NewRouter() *httptreemux.TreeMux {
 	router.GET("/markets/:id/ticker", impl.marketTicker)
 	router.GET("/markets/:id/book", impl.marketBook)
 	router.GET("/markets/:id/trades", impl.marketTrades)
-	router.GET("/markets/:id/candles", impl.marketCandles)
 	router.GET("/orders", impl.orders)
 	registerHanders(router)
 	return router
 }
 
 func (impl *R) marketTicker(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	t, err := persistence.LastTrade(r.Context(), params["id"])
+	if err != nil {
+		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	if t == nil {
+		render.New().JSON(w, http.StatusOK, map[string]interface{}{})
+		return
+	}
+	book, err := cache.Book(r.Context(), params["id"], 1)
+	if err != nil {
+		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	ticker := map[string]interface{}{
+		"trade_id": t.TradeId,
+		"amount":   t.Amount,
+		"price":    t.Price,
+		"ask":      "0",
+		"bid":      "0",
+	}
+	data, _ := json.Marshal(book.Data)
+	var best struct {
+		Asks []struct {
+			Price string `json:"price"`
+		} `json:"asks"`
+		Bids []struct {
+			Price string `json:"price"`
+		} `json:"bids"`
+	}
+	json.Unmarshal(data, &best)
+	if len(best.Asks) > 0 {
+		ticker["ask"] = best.Asks[0].Price
+	}
+	if len(best.Bids) > 0 {
+		ticker["bid"] = best.Bids[0].Price
+	}
+	render.New().JSON(w, http.StatusOK, ticker)
 }
 
 func (impl *R) marketBook(w http.ResponseWriter, r *http.Request, params map[string]string) {
-	book, err := cache.Book(r.Context(), params["id"])
+	book, err := cache.Book(r.Context(), params["id"], 0)
 	if err != nil {
 		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	} else {
@@ -59,9 +97,6 @@ func (impl *R) marketTrades(w http.ResponseWriter, r *http.Request, params map[s
 		})
 	}
 	render.New().JSON(w, http.StatusOK, data)
-}
-
-func (impl *R) marketCandles(w http.ResponseWriter, r *http.Request, params map[string]string) {
 }
 
 func (impl *R) orders(w http.ResponseWriter, r *http.Request, params map[string]string) {
