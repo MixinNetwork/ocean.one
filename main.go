@@ -48,6 +48,6 @@ func main() {
 	case "engine":
 		NewExchange().Run(ctx)
 	case "http":
-		cache.StartHTTP(ctx)
+		StartHTTP(ctx)
 	}
 }

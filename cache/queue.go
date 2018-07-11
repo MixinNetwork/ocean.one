@@ -47,6 +47,19 @@ func ListPendingEvents(ctx context.Context, key string) ([]*Event, error) {
 	return events, nil
 }
 
+func Book(ctx context.Context, market string) (map[string]interface{}, error) {
+	data, err := Redis(ctx).Get(market + "-BOOK-T0").Result()
+	if err != nil {
+		return nil, err
+	}
+	var e Event
+	err = json.Unmarshal([]byte(data), &e)
+	if err != nil {
+		return nil, err
+	}
+	return e.Data, nil
+}
+
 func NewQueue(ctx context.Context, market string) *Queue {
 	return &Queue{
 		market:   market,
@@ -87,6 +100,7 @@ func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
 		_, err := Redis(ctx).Pipelined(func(pipe redis.Pipeliner) error {
 			pipe.Del(key)
 			pipe.RPush(key, data)
+			pipe.Set(queue.market+"-BOOK-T0", data, 0)
 			return nil
 		})
 		if err != nil {

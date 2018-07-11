@@ -1,11 +1,13 @@
-package cache
+package main
 
 import (
 	"context"
 	"net/http"
 	"time"
 
+	"github.com/MixinMessenger/ocean.one/cache"
 	"github.com/bugsnag/bugsnag-go"
+	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/websocket"
 	"github.com/satori/go.uuid"
@@ -13,8 +15,9 @@ import (
 )
 
 type RequestHandler struct {
-	hub      *Hub
-	upgrader websocket.Upgrader
+	hub      *cache.Hub
+	upgrader *websocket.Upgrader
+	router   *httptreemux.TreeMux
 }
 
 func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +29,7 @@ func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 
 	if r.URL.Path != "/" {
-		render.New().JSON(w, http.StatusNotFound, map[string]interface{}{})
+		handler.router.ServeHTTP(w, r)
 		return
 	}
 
@@ -41,7 +44,7 @@ func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	ctx, cancel := context.WithCancel(r.Context())
-	client, err := NewClient(ctx, handler.hub, conn, cid.String(), cancel)
+	client, err := cache.NewClient(ctx, handler.hub, conn, cid.String(), cancel)
 	if err != nil {
 		return
 	}
@@ -54,12 +57,12 @@ func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 }
 
 func StartHTTP(ctx context.Context) error {
-	hub := NewHub()
+	hub := cache.NewHub()
 	go hub.Run(ctx)
 
 	rh := &RequestHandler{
 		hub: hub,
-		upgrader: websocket.Upgrader{
+		upgrader: &websocket.Upgrader{
 			HandshakeTimeout: 60 * time.Second,
 			ReadBufferSize:   1024,
 			WriteBufferSize:  1024,
@@ -68,6 +71,7 @@ func StartHTTP(ctx context.Context) error {
 				render.New().JSON(w, status, map[string]interface{}{"error": reason.Error()})
 			},
 		},
+		router: NewRouter(),
 	}
 	handler := handleContext(rh, ctx)
 	handler = handleCORS(handler)
@@ -80,7 +84,7 @@ func StartHTTP(ctx context.Context) error {
 
 func handleContext(handler http.Handler, ctx context.Context) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx = SetupRedis(r.Context(), Redis(ctx))
+		ctx = cache.SetupRedis(r.Context(), cache.Redis(ctx))
 		handler.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
