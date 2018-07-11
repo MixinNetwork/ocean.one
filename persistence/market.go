@@ -18,7 +18,7 @@ func LastTrade(ctx context.Context, market string) (*Trade, error) {
 	}
 
 	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{
-		SQL:    "SELECT trade_id FROM trades@{FORCE_INDEX=trades_by_base_quote_created_desc} WHERE base_asset_id=@base AND quote_asset_id=@quote ORDER BY base_asset_id,quote_asset_id,created_at DESC",
+		SQL:    "SELECT * FROM trades@{FORCE_INDEX=trades_by_base_quote_created_desc} WHERE base_asset_id=@base AND quote_asset_id=@quote ORDER BY base_asset_id,quote_asset_id,created_at DESC",
 		Params: map[string]interface{}{"base": base, "quote": quote},
 	})
 	defer it.Stop()
