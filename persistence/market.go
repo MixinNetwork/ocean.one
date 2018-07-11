@@ -3,7 +3,6 @@ package persistence
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"cloud.google.com/go/spanner"
@@ -19,10 +18,8 @@ func MarketTrades(ctx context.Context, market string, offset time.Time, limit in
 		limit = 100
 	}
 
-	sides := strings.Split(market, "-")
-	base := uuid.FromStringOrNil(sides[0])
-	quote := uuid.FromStringOrNil(sides[1])
-	if base.String() == uuid.Nil.String() || quote.String() == uuid.Nil.String() {
+	base, quote := getBaseQuote(market)
+	if base == "" || quote == "" {
 		return nil, nil
 	}
 
@@ -71,4 +68,19 @@ func MarketTrades(ctx context.Context, market string, offset time.Time, limit in
 		}
 		trades = append(trades, &t)
 	}
+}
+
+func getBaseQuote(market string) (string, string) {
+	if len(market) != 73 {
+		return "", ""
+	}
+	base := uuid.FromStringOrNil(market[0:36])
+	if base.String() == uuid.Nil.String() {
+		return "", ""
+	}
+	quote := uuid.FromStringOrNil(market[37:73])
+	if quote.String() == uuid.Nil.String() {
+		return "", ""
+	}
+	return base.String(), quote.String()
 }

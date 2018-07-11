@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/MixinMessenger/ocean.one/cache"
+	"github.com/MixinMessenger/ocean.one/persistence"
 	"github.com/bugsnag/bugsnag-go"
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/handlers"
@@ -82,9 +83,10 @@ func StartHTTP(ctx context.Context) error {
 	return server.ListenAndServe()
 }
 
-func handleContext(handler http.Handler, ctx context.Context) http.Handler {
+func handleContext(handler http.Handler, src context.Context) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx = cache.SetupRedis(r.Context(), cache.Redis(ctx))
+		ctx := cache.SetupRedis(r.Context(), cache.Redis(src))
+		ctx = persistence.SetupSpanner(ctx, persistence.Spanner(src))
 		handler.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -97,12 +97,16 @@ func UserOrders(ctx context.Context, userId string, market string, offset time.T
 		limit = 100
 	}
 
+	base, quote := getBaseQuote(market)
+	if base == "" || quote == "" {
+		return nil, nil
+	}
+
 	query := "SELECT order_id FROM orders@{FORCE_INDEX=orders_by_user_created_desc} WHERE user_id=@user_id AND created_at<@offset"
 	params := map[string]interface{}{"user_id": userId, "offset": offset}
-	if sides := strings.Split(market, "-"); len(sides) == 2 && len(market) == 73 {
+	if base != "" && quote != "" {
 		query = query + " AND base_asset_id=@base AND quote_asset_id=@quote"
-		params["base"] = uuid.FromStringOrNil(sides[0]).String()
-		params["quote"] = uuid.FromStringOrNil(sides[1]).String()
+		params["base"], params["quote"] = base, quote
 	}
 	query = query + " ORDER BY user_id,created_at DESC"
 	query = fmt.Sprint("%s LIMIT %d", query, limit)
