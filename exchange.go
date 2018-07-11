@@ -165,11 +165,11 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 }
 
 func (ex *Exchange) buildBook(ctx context.Context, market string) *engine.Book {
-	return engine.NewBook(ctx, market, func(taker, maker *engine.Order, amount, funds number.Integer) {
+	return engine.NewBook(ctx, market, func(taker, maker *engine.Order, amount, funds number.Integer) string {
 		for {
-			err := persistence.Transact(ctx, taker, maker, amount, funds)
+			tradeId, err := persistence.Transact(ctx, taker, maker, amount, funds)
 			if err == nil {
-				break
+				return tradeId
 			}
 			log.Println("Engine Transact CALLBACK", err)
 			time.Sleep(PollInterval)

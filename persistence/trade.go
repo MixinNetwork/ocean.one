@@ -36,33 +36,33 @@ type Trade struct {
 	FeeAmount    string    `spanner:"fee_amount"`
 }
 
-func Transact(ctx context.Context, taker, maker *engine.Order, amount, funds number.Integer) error {
+func Transact(ctx context.Context, taker, maker *engine.Order, amount, funds number.Integer) (string, error) {
 	askTrade, bidTrade := makeTrades(taker, maker, amount.Decimal())
 	askTransfer, bidTransfer := handleFees(askTrade, bidTrade)
 
 	askTradeMutation, err := spanner.InsertStruct("trades", askTrade)
 	if err != nil {
-		return err
+		return "", err
 	}
 	bidTradeMutation, err := spanner.InsertStruct("trades", bidTrade)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	askTransferMutation, err := spanner.InsertStruct("transfers", askTransfer)
 	if err != nil {
-		return err
+		return "", err
 	}
 	bidTransferMutation, err := spanner.InsertStruct("transfers", bidTransfer)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	mutations := makeOrderMutations(taker, maker)
 	mutations = append(mutations, askTradeMutation, bidTradeMutation)
 	mutations = append(mutations, askTransferMutation, bidTransferMutation)
 	_, err = Spanner(ctx).Apply(ctx, mutations)
-	return err
+	return askTrade.TradeId, err
 }
 
 func CancelOrder(ctx context.Context, order *engine.Order) error {
