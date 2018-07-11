@@ -17,7 +17,7 @@ func TestPageAsk(t *testing.T) {
 	page = NewPage(PageSideAsk)
 	assert.Equal("ASK", page.Side)
 
-	entries := page.List(0)
+	entries := page.List(0, false)
 	assert.Len(entries, 0)
 
 	id, _ := uuid.NewV4()
@@ -31,7 +31,7 @@ func TestPageAsk(t *testing.T) {
 	}
 	page.Put(o1)
 
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 1)
 	e := entries[0]
 	assert.Equal("1", e.Amount.Persist())
@@ -70,7 +70,7 @@ func TestPageAsk(t *testing.T) {
 	}
 	page.Put(o2)
 
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("4", e.Amount.Persist())
@@ -89,7 +89,7 @@ func TestPageAsk(t *testing.T) {
 		return matchedAmount, number.NewInteger(5, 1), true
 	})
 
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("3.5", e.Amount.Persist())
@@ -102,7 +102,7 @@ func TestPageAsk(t *testing.T) {
 	assert.Equal(int64(30000), e.Price.Value())
 
 	page.Remove(o1)
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("0.5", e.Amount.Persist())
@@ -115,7 +115,7 @@ func TestPageAsk(t *testing.T) {
 	assert.Equal(int64(30000), e.Price.Value())
 
 	page.Remove(o3)
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("0.5", e.Amount.Persist())
@@ -134,7 +134,7 @@ func TestPageAsk(t *testing.T) {
 		return matchedAmount, number.NewInteger(5, 1), order.Price.Decimal().IntPart() == 200
 	})
 
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("0", e.Amount.Persist())
@@ -147,7 +147,7 @@ func TestPageAsk(t *testing.T) {
 	assert.Equal(int64(30000), e.Price.Value())
 
 	page.Remove(o2)
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("0", e.Amount.Persist())
@@ -169,7 +169,7 @@ func TestPageBid(t *testing.T) {
 	page = NewPage(PageSideBid)
 	assert.Equal("BID", page.Side)
 
-	entries := page.List(0)
+	entries := page.List(0, false)
 	assert.Len(entries, 0)
 
 	id, _ := uuid.NewV4()
@@ -185,7 +185,7 @@ func TestPageBid(t *testing.T) {
 	}
 	page.Put(o1)
 
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 1)
 	e := entries[0]
 	assert.Equal("1", e.Amount.Persist())
@@ -231,7 +231,7 @@ func TestPageBid(t *testing.T) {
 	}
 	page.Put(o2)
 
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("2", e.Amount.Persist())
@@ -253,7 +253,7 @@ func TestPageBid(t *testing.T) {
 		return number.NewInteger(5, 1), matchedFunds, true
 	})
 
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("1.83333333333333333333333333333333", e.Amount.Persist())
@@ -269,7 +269,7 @@ func TestPageBid(t *testing.T) {
 	assert.Equal(int64(10000), e.Price.Value())
 
 	page.Remove(o1)
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("1.83333333333333333333333333333333", e.Amount.Persist())
@@ -285,7 +285,7 @@ func TestPageBid(t *testing.T) {
 	assert.Equal(int64(10000), e.Price.Value())
 
 	page.Remove(o3)
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("0", e.Amount.Persist())
@@ -307,7 +307,7 @@ func TestPageBid(t *testing.T) {
 		return number.NewInteger(5, 1), matchedFunds, order.Price.Decimal().IntPart() == 100
 	})
 
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("0", e.Amount.Persist())
@@ -323,7 +323,7 @@ func TestPageBid(t *testing.T) {
 	assert.Equal(int64(10000), e.Price.Value())
 
 	page.Remove(o2)
-	entries = page.List(0)
+	entries = page.List(0, false)
 	assert.Len(entries, 3)
 	e = entries[0]
 	assert.Equal("0", e.Amount.Persist())

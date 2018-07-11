@@ -116,7 +116,7 @@ func (page *Page) Iterate(hook func(*Order) (number.Integer, number.Integer, boo
 	}
 }
 
-func (page *Page) List(count int) []*Entry {
+func (page *Page) List(count int, filterEmpty bool) []*Entry {
 	entries := make([]*Entry, 0)
 	for it := page.points.Iterator(); it.Next(); {
 		ie := it.Key().(*Entry)
@@ -132,7 +132,9 @@ func (page *Page) List(count int) []*Entry {
 		} else if entry.Funds.IsZero() {
 			entry.Funds = price.Mul(entry.Amount)
 		}
-		entries = append(entries, entry)
+		if !filterEmpty || !entry.Funds.IsZero() {
+			entries = append(entries, entry)
+		}
 		if count = count - 1; count == 0 {
 			it.End()
 		}

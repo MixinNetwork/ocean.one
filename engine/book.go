@@ -214,8 +214,8 @@ func (book *Book) Run(ctx context.Context) {
 func (book *Book) cacheList(ctx context.Context, limit int) {
 	event := fmt.Sprintf("BOOK-T%d", limit)
 	data := map[string]interface{}{
-		"asks": book.asks.List(limit),
-		"bids": book.bids.List(limit),
+		"asks": book.asks.List(limit, true),
+		"bids": book.bids.List(limit, true),
 	}
 	book.queue.AttachEvent(ctx, event, data)
 }
