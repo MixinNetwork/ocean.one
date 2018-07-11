@@ -37,19 +37,21 @@ func (impl *R) marketTicker(w http.ResponseWriter, r *http.Request, params map[s
 		render.New().JSON(w, http.StatusOK, map[string]interface{}{})
 		return
 	}
-	book, err := cache.Book(r.Context(), params["id"], 1)
+	b, err := cache.Book(r.Context(), params["id"], 1)
 	if err != nil {
 		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
 	ticker := map[string]interface{}{
-		"trade_id": t.TradeId,
-		"amount":   t.Amount,
-		"price":    t.Price,
-		"ask":      "0",
-		"bid":      "0",
+		"trade_id":  t.TradeId,
+		"amount":    t.Amount,
+		"price":     t.Price,
+		"sequence":  b.Sequence,
+		"timestamp": b.Timestamp,
+		"ask":       "0",
+		"bid":       "0",
 	}
-	data, _ := json.Marshal(book.Data)
+	data, _ := json.Marshal(b.Data)
 	var best struct {
 		Asks []struct {
 			Price string `json:"price"`
