@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/MixinMessenger/ocean.one/cache"
@@ -48,7 +50,8 @@ func (impl *R) marketTrades(w http.ResponseWriter, r *http.Request, params map[s
 	for _, t := range trades {
 		data = append(data, map[string]interface{}{
 			"trade_id":   t.TradeId,
-			"market":     params["id"],
+			"base":       t.BaseAssetId,
+			"quote":      t.QuoteAssetId,
 			"side":       t.Side,
 			"price":      t.Price,
 			"amount":     t.Amount,
@@ -62,6 +65,51 @@ func (impl *R) marketCandles(w http.ResponseWriter, r *http.Request, params map[
 }
 
 func (impl *R) orders(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	userId, err := authenticateUser(r)
+	if err != nil {
+		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	if userId == "" {
+		render.New().JSON(w, http.StatusUnauthorized, map[string]interface{}{})
+		return
+	}
+
+	market := r.URL.Query().Get("market")
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	offset, _ := time.Parse(time.RFC3339Nano, r.URL.Query().Get("offset"))
+	orders, err := persistence.UserOrders(r.Context(), userId, market, offset, limit)
+	if err != nil {
+		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return
+	}
+
+	data := make([]map[string]interface{}, 0)
+	for _, o := range orders {
+		data = append(data, map[string]interface{}{
+			"order_id":         o.OrderId,
+			"order_type":       o.OrderType,
+			"base":             o.BaseAssetId,
+			"quote":            o.QuoteAssetId,
+			"side":             o.Side,
+			"price":            o.Price,
+			"remaining_amount": o.RemainingAmount,
+			"filled_amount":    o.FilledAmount,
+			"remaining_funds":  o.RemainingFunds,
+			"filled_funds":     o.FilledFunds,
+			"state":            o.State,
+			"created_at":       o.CreatedAt,
+		})
+	}
+	render.New().JSON(w, http.StatusOK, data)
+}
+
+func authenticateUser(r *http.Request) (string, error) {
+	header := r.Header.Get("Authorization")
+	if !strings.HasPrefix(header, "Bearer ") {
+		return "", nil
+	}
+	return persistence.Authenticate(r.Context(), header[7:])
 }
 
 func registerHanders(router *httptreemux.TreeMux) {
