@@ -127,6 +127,101 @@ A trade occurred between two orders. The taker order is the one executing immedi
 The order is cancelled and no longer on the order book, `amount` indicates how much of the order went unfilled.
 
 
+## List Orders
+
+List orders of the authenticated user. The authentication is ECDSA JWT based, and the user needs to register a ECDSA public key to Ocean ONE with base64 encoded MessagePack data as the memo.
+
+```golang
+memo = base64.StdEncoding.EncodeToString(msgpack(OrderAction{
+  U: "HEX REPRESENTATION OF THE ECDSA PUBLIC KEY",
+}))
+```
+
+To authenticate, create the JWT payload with user id as `uid` and sign it with the ECDSA private key. Then pass the token as a HTTP Bearer Authorization header.
+
+Then make a HTTP `GET` request to `https://events.ocean.one/markets/:id/orders`. Available query params are `market`, `state`, `limit` and `offset`.
+
+
+## Market Data
+
+The market data API is an unauthenticated set of endpoints for retrieving market data. These endpoints provide snapshots of market data.
+
+
+#### Ticker
+
+Snapshot information about the last trade (tick), best bid/ask.
+
+```
+GET https://events.ocean.one/markets/:id/ticker
+
+{
+  "trade_id": "bf1bf64b-9ba6-4961-9ca8-38ea8358b9f3"
+  "amount": "0.001",
+  "price": "0.2",
+  "ask": "0.2",
+  "bid": "0.1",
+  "sequence": 1531305918,
+  "timestamp": "2018-07-12T05:51:30.757002284Z",
+}
+```
+
+
+#### Order Book
+
+Get the full list of open orders for a market, the list is not udpated in real time, for the most up-to-date data, consider using the websocket stream.
+
+```
+GET https://events.ocean.one/markets/:id/book
+
+{
+  "market": "c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa",
+  "event": "BOOK-T0",
+  "sequence": 1531305926,
+  "data": {
+    "asks": [
+      {
+        "amount": "0.999",
+        "funds": "0.1998",
+        "price": "0.2",
+        "side": "ASK"
+      }
+    ],
+    "bids": [
+      {
+        "amount": "0.52",
+        "funds": "0.052",
+        "price": "0.1",
+        "side": "BID"
+      }
+    ]
+  },
+  "timestamp": "2018-07-12T05:55:44.757025182Z"
+}
+```
+
+
+#### Trades
+
+List the trades history for a market. Available query params are `market`, `state`, `limit` and `offset`.
+
+
+```
+GET https://events.ocean.one/markets/:id/trades
+
+[
+  {
+    "amount": "0.001",
+    "base": "c94ac88f-4671-3976-b60a-09064f1811e8",
+    "created_at": "2018-07-11T08:02:44.094160294Z",
+    "price": "0.2",
+    "quote": "c6d0c728-2624-429b-8e0d-d9d19b6592fa",
+    "side": "ASK",
+    "trade_id": "bf1bf64b-9ba6-4961-9ca8-38ea8358b9f3"
+  }
+]
+```
+
+
 ## Fee
 
 - Taker: 0.1%
