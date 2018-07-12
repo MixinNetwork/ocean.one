@@ -34,6 +34,7 @@ const (
 	MaxAmount       = 5000000000
 	MaxFunds        = MaxPrice * MaxAmount
 
+	MixinAssetId   = "c94ac88f-4671-3976-b60a-09064f1811e8"
 	BitcoinAssetId = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
 	USDTAssetId    = "815b0b1a-2764-3736-8faa-42d694fa620a"
 )
@@ -174,10 +175,19 @@ func (ex *Exchange) getQuoteBasePair(s *Snapshot, a *OrderAction) (string, strin
 	} else {
 		return "", ""
 	}
-	if quote != BitcoinAssetId && quote != USDTAssetId {
+	if quote == base {
+		return "", ""
+	}
+	if quote != BitcoinAssetId && quote != USDTAssetId && quote != MixinAssetId {
 		return "", ""
 	}
 	if quote == BitcoinAssetId && base == USDTAssetId {
+		return "", ""
+	}
+	if quote == MixinAssetId && base == USDTAssetId {
+		return "", ""
+	}
+	if quote == MixinAssetId && base == BitcoinAssetId {
 		return "", ""
 	}
 	return quote, base

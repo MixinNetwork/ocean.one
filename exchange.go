@@ -30,6 +30,8 @@ type Exchange struct {
 
 func QuotePrecision(assetId string) uint8 {
 	switch assetId {
+	case MixinAssetId:
+		return 8
 	case BitcoinAssetId:
 		return 8
 	case USDTAssetId:
@@ -42,6 +44,8 @@ func QuotePrecision(assetId string) uint8 {
 
 func QuoteMinimum(assetId string) number.Decimal {
 	switch assetId {
+	case MixinAssetId:
+		return number.FromString("0.0001")
 	case BitcoinAssetId:
 		return number.FromString("0.0001")
 	case USDTAssetId:
