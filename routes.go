@@ -113,9 +113,10 @@ func (impl *R) orders(w http.ResponseWriter, r *http.Request, params map[string]
 	}
 
 	market := r.URL.Query().Get("market")
+	state := r.URL.Query().Get("state")
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := time.Parse(time.RFC3339Nano, r.URL.Query().Get("offset"))
-	orders, err := persistence.UserOrders(r.Context(), userId, market, offset, limit)
+	orders, err := persistence.UserOrders(r.Context(), userId, market, state, offset, limit)
 	if err != nil {
 		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return

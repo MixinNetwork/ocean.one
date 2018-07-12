@@ -90,7 +90,7 @@ func Authenticate(ctx context.Context, jwtToken string) (string, error) {
 	return "", nil
 }
 
-func UserOrders(ctx context.Context, userId string, market string, offset time.Time, limit int) ([]*Order, error) {
+func UserOrders(ctx context.Context, userId string, market, state string, offset time.Time, limit int) ([]*Order, error) {
 	txn := Spanner(ctx).ReadOnlyTransaction()
 	defer txn.Close()
 
@@ -103,8 +103,8 @@ func UserOrders(ctx context.Context, userId string, market string, offset time.T
 		return nil, nil
 	}
 
-	query := "SELECT order_id FROM orders@{FORCE_INDEX=orders_by_user_created_desc} WHERE user_id=@user_id AND created_at<@offset"
-	params := map[string]interface{}{"user_id": userId, "offset": offset}
+	query := "SELECT order_id FROM orders@{FORCE_INDEX=orders_by_user_created_desc} WHERE user_id=@user_id AND created_at<@offset AND state=@state"
+	params := map[string]interface{}{"user_id": userId, "offset": offset, "state": state}
 	if base != "" && quote != "" {
 		query = query + " AND base_asset_id=@base AND quote_asset_id=@quote"
 		params["base"], params["quote"] = base, quote

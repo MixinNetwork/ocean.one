@@ -21,7 +21,7 @@ CREATE TABLE orders (
   user_id           STRING(36) NOT NULL,
 ) PRIMARY KEY(order_id);
 
-CREATE INDEX orders_by_user_created_desc ON orders(user_id, created_at DESC);
+CREATE INDEX orders_by_user_created_desc ON orders(user_id, created_at DESC) STORING(quote_asset_id,base_asset_id,state);
 
 
 CREATE TABLE actions (
