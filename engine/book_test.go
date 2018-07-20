@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MixinMessenger/go-number"
-	"github.com/MixinMessenger/ocean.one/cache"
-	"github.com/MixinMessenger/ocean.one/config"
+	"github.com/MixinNetwork/go-number"
+	"github.com/MixinNetwork/ocean.one/cache"
+	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/go-redis/redis"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +33,7 @@ func TestBook(t *testing.T) {
 
 	matched := make([]*DummyTrade, 0)
 	cancelled := make([]*Order, 0)
-	book := NewBook(ctx, "market", func(taker, maker *Order, amount, funds number.Integer) {
+	book := NewBook(ctx, "market", func(taker, maker *Order, amount, funds number.Integer) string {
 		matched = append(matched, &DummyTrade{
 			Amount:           amount,
 			Funds:            funds,
@@ -46,6 +46,7 @@ func TestBook(t *testing.T) {
 			MakerFunds:       maker.RemainingFunds,
 			MakerFilledPrice: maker.FilledFunds.Div(maker.FilledAmount),
 		})
+		return "TRADE-ID"
 	}, func(order *Order) {
 		cancelled = append(cancelled, order)
 	})

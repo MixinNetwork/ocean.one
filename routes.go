@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MixinMessenger/ocean.one/cache"
-	"github.com/MixinMessenger/ocean.one/persistence"
+	"github.com/MixinNetwork/ocean.one/cache"
+	"github.com/MixinNetwork/ocean.one/persistence"
 	"github.com/bugsnag/bugsnag-go/errors"
 	"github.com/dimfeld/httptreemux"
 	"github.com/unrolled/render"

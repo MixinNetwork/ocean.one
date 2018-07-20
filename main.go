@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
-	"github.com/MixinMessenger/ocean.one/cache"
-	"github.com/MixinMessenger/ocean.one/config"
-	"github.com/MixinMessenger/ocean.one/persistence"
+	"github.com/MixinNetwork/ocean.one/cache"
+	"github.com/MixinNetwork/ocean.one/config"
+	"github.com/MixinNetwork/ocean.one/persistence"
 	"github.com/go-redis/redis"
 )
 

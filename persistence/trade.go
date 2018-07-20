@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
-	"github.com/MixinMessenger/go-number"
-	"github.com/MixinMessenger/ocean.one/engine"
+	"github.com/MixinNetwork/go-number"
+	"github.com/MixinNetwork/ocean.one/engine"
 	"github.com/satori/go.uuid"
 )
 

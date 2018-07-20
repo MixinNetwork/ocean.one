@@ -3,7 +3,7 @@ package engine
 import (
 	"log"
 
-	"github.com/MixinMessenger/go-number"
+	"github.com/MixinNetwork/go-number"
 )
 
 const (

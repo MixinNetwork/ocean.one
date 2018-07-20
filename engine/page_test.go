@@ -3,7 +3,7 @@ package engine
 import (
 	"testing"
 
-	"github.com/MixinMessenger/go-number"
+	"github.com/MixinNetwork/go-number"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 )

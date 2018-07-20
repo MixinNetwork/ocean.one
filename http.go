@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/MixinMessenger/ocean.one/cache"
-	"github.com/MixinMessenger/ocean.one/persistence"
+	"github.com/MixinNetwork/ocean.one/cache"
+	"github.com/MixinNetwork/ocean.one/persistence"
 	"github.com/bugsnag/bugsnag-go"
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/handlers"

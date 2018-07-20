@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
-	"github.com/MixinMessenger/go-number"
+	"github.com/MixinNetwork/go-number"
 	"google.golang.org/api/iterator"
 )
 

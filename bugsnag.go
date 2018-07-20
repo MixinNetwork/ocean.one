@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/MixinMessenger/ocean.one/config"
+	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/bugsnag/bugsnag-go"
 )
 
