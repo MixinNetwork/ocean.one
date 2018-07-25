@@ -133,7 +133,7 @@ List orders of the authenticated user. The authentication is ECDSA JWT based, an
 
 ```golang
 memo = base64.StdEncoding.EncodeToString(msgpack(OrderAction{
-  U: "HEX REPRESENTATION OF THE ECDSA PUBLIC KEY",
+  U: RAW BYTES OF THE ECDSA PUBLIC KEY,
 }))
 ```
 

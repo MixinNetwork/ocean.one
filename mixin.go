@@ -11,6 +11,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -60,7 +61,7 @@ type Snapshot struct {
 }
 
 type OrderAction struct {
-	U string    // user
+	U []byte    // user
 	S string    // side
 	A uuid.UUID // asset
 	P string    // price
@@ -95,7 +96,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 	if len(action.U) > 16 {
-		return persistence.UpdateUserPublicKey(ctx, s.OpponentId, action.U)
+		return persistence.UpdateUserPublicKey(ctx, s.OpponentId, hex.EncodeToString(action.U))
 	}
 	if action.O.String() != uuid.Nil.String() {
 		return persistence.CancelOrderAction(ctx, action.O.String(), s.CreatedAt, s.OpponentId)
