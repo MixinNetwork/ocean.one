@@ -38,15 +38,16 @@ CREATE TABLE keys (
 	pin_token         STRING(512) NOT NULL,
 	encrypted_pin     STRING(512) NOT NULL,
 	encryption_header BYTES(1024) NOT NULL,
+	ocean_key         STRING(1024) NOT NULL,
 	created_at        TIMESTAMP NOT NULL,
 ) PRIMARY KEY(user_id),
 INTERLEAVE IN PARENT users ON DELETE CASCADE;
 `
 
-var keysColumnsFull = []string{"user_id", "session_id", "session_key", "pin_token", "encrypted_pin", "encryption_header", "created_at"}
+var keysColumnsFull = []string{"user_id", "session_id", "session_key", "pin_token", "encrypted_pin", "encryption_header", "ocean_key", "created_at"}
 
 func (k *Key) valuesFull() []interface{} {
-	return []interface{}{k.UserId, k.SessionId, k.SessionKey, k.PinToken, k.EncryptedPIN, k.EncryptionHeader, k.CreatedAt}
+	return []interface{}{k.UserId, k.SessionId, k.SessionKey, k.PinToken, k.EncryptedPIN, k.EncryptionHeader, k.OceanKey, k.CreatedAt}
 }
 
 type Key struct {
@@ -56,12 +57,20 @@ type Key struct {
 	PinToken         string
 	EncryptedPIN     string
 	EncryptionHeader []byte
+	OceanKey         string
 	CreatedAt        time.Time
 
 	DecryptedPIN string
 }
 
 func GenerateKey(ctx context.Context) (*Key, error) {
+	seed := make([]byte, 32)
+	_, err := rand.Read(seed)
+	if err != nil {
+		return nil, session.ServerError(ctx, err)
+	}
+	oceanKey := fmt.Sprintf("%x", seed)
+
 	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
 		return nil, session.ServerError(ctx, err)
@@ -71,6 +80,7 @@ func GenerateKey(ctx context.Context) (*Key, error) {
 		return nil, session.ServerError(ctx, err)
 	}
 	sessionSecret := base64.StdEncoding.EncodeToString(publicKeyBytes)
+
 	data, err := json.Marshal(map[string]string{
 		"session_secret": sessionSecret,
 	})
@@ -81,6 +91,7 @@ func GenerateKey(ctx context.Context) (*Key, error) {
 	if err != nil {
 		return nil, session.ServerError(ctx, err)
 	}
+
 	body, err := bot.Request(ctx, "POST", "/pin/update", data, token)
 	if err != nil {
 		return nil, session.ServerError(ctx, err)
@@ -100,6 +111,7 @@ func GenerateKey(ctx context.Context) (*Key, error) {
 	if resp.Error.Code > 0 {
 		return nil, session.ServerError(ctx, errors.New(resp.Error.Description))
 	}
+
 	key := &Key{
 		UserId:    resp.Data.UserId,
 		SessionId: resp.Data.SessionId,
@@ -108,8 +120,10 @@ func GenerateKey(ctx context.Context) (*Key, error) {
 			Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 		})),
 		PinToken:  resp.Data.PinToken,
+		OceanKey:  oceanKey,
 		CreatedAt: time.Now(),
 	}
+
 	err = key.setupPIN(ctx)
 	if err != nil {
 		return nil, session.ServerError(ctx, err)
@@ -172,7 +186,7 @@ func readKey(ctx context.Context, txn durable.Transaction, userId string) (*Key,
 
 func keyFromRow(row *spanner.Row) (*Key, error) {
 	var k Key
-	err := row.Columns(&k.UserId, &k.SessionId, &k.SessionKey, &k.PinToken, &k.EncryptedPIN, &k.EncryptionHeader, &k.CreatedAt)
+	err := row.Columns(&k.UserId, &k.SessionId, &k.SessionKey, &k.PinToken, &k.EncryptedPIN, &k.EncryptionHeader, &k.OceanKey, &k.CreatedAt)
 	return &k, err
 }
 
