@@ -139,7 +139,7 @@ memo = base64.StdEncoding.EncodeToString(msgpack(OrderAction{
 
 To authenticate, create the JWT payload with user id as `uid` and sign it with the ECDSA private key. Then pass the token as a HTTP Bearer Authorization header.
 
-Then make a HTTP `GET` request to `https://events.ocean.one/markets/:id/orders`. Available query params are `market`, `state`, `limit` and `offset`.
+Make a HTTP `GET` request to `https://events.ocean.one/orders` to retrieve orders, and the available query params are `market`, `state`, `limit` and `offset`.
 
 
 ## Market Data
