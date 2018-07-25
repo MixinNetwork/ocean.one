@@ -1,22 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/sha256"
-	"crypto/x509"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"time"
 
@@ -293,34 +283,6 @@ func (ex *Exchange) sendTransfer(ctx context.Context, recipientId, assetId strin
 }
 
 func encryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string, iterator uint64) string {
-	privBlock, _ := pem.Decode([]byte(privateKey))
-	if privBlock == nil {
-		return ""
-	}
-	priv, err := x509.ParsePKCS1PrivateKey(privBlock.Bytes)
-	if err != nil {
-		return ""
-	}
-	token, _ := base64.StdEncoding.DecodeString(pinToken)
-	keyBytes, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, priv, token, []byte(sessionId))
-	if err != nil {
-		return ""
-	}
-	pinByte := []byte(pin)
-	timeBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(timeBytes, uint64(time.Now().Unix()))
-	pinByte = append(pinByte, timeBytes...)
-	iteratorBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(iteratorBytes, iterator)
-	pinByte = append(pinByte, iteratorBytes...)
-	padding := aes.BlockSize - len(pinByte)%aes.BlockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	pinByte = append(pinByte, padtext...)
-	block, _ := aes.NewCipher(keyBytes)
-	ciphertext := make([]byte, aes.BlockSize+len(pinByte))
-	iv := ciphertext[:aes.BlockSize]
-	io.ReadFull(rand.Reader, iv)
-	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(ciphertext[aes.BlockSize:], pinByte)
-	return base64.StdEncoding.EncodeToString(ciphertext)
+	encryptedPIN, _ := bot.EncryptPIN(ctx, pin, pinToken, sessionId, privateKey, iterator)
+	return encryptedPIN
 }
