@@ -286,7 +286,7 @@ func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg b
 		memo = &OrderAction{
 			O: uuid.FromStringOrNil(action[1]),
 		}
-		assetId = "965e5c6e-434c-3fa9-b780-c50f43cd955c" // CNB
+		assetId = "de5a6414-c181-3ecc-b401-ce375d08c399" // OOO
 		assetAmount = "1"
 	} else {
 		if len(action) != 3 {
@@ -308,11 +308,11 @@ func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg b
 		case "XIN":
 			memo.S = "A"
 			memo.A, _ = uuid.FromString(BitcoinAssetId)
-			assetId = "c94ac88f-4671-3976-b60a-09064f1811e8"
+			assetId = MixinAssetId
 			assetAmount = amount.Persist()
 		case "BTC":
 			memo.S = "B"
-			memo.A, _ = uuid.FromString("c94ac88f-4671-3976-b60a-09064f1811e8")
+			memo.A, _ = uuid.FromString(MixinAssetId)
 			assetId = BitcoinAssetId
 			amount = price.Mul(amount)
 			if amount.Exhausted() {

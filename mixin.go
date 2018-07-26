@@ -243,46 +243,11 @@ func (ex *Exchange) requestMixinNetwork(ctx context.Context, checkpoint time.Tim
 }
 
 func (ex *Exchange) sendTransfer(ctx context.Context, recipientId, assetId string, amount number.Decimal, traceId, memo string) error {
-	if amount.Exhausted() {
-		return nil
-	}
-
-	pin := encryptPIN(ctx, config.SessionAssetPIN, config.PinToken, config.SessionId, config.SessionKey, uint64(time.Now().UnixNano()))
-	data, err := json.Marshal(map[string]interface{}{
-		"asset_id":    assetId,
-		"opponent_id": recipientId,
-		"amount":      amount.Persist(),
-		"pin":         pin,
-		"trace_id":    traceId,
-		"memo":        memo,
-	})
-	if err != nil {
-		return err
-	}
-
-	token, err := bot.SignAuthenticationToken(config.ClientId, config.SessionId, config.SessionKey, "POST", "/transfers", string(data))
-	if err != nil {
-		return err
-	}
-	body, err := bot.Request(ctx, "POST", "/transfers", data, token)
-	if err != nil {
-		return err
-	}
-
-	var resp struct {
-		Error Error `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return err
-	}
-	if resp.Error.Code > 0 {
-		return errors.New(resp.Error.Description)
-	}
-	return nil
-}
-
-func encryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string, iterator uint64) string {
-	encryptedPIN, _ := bot.EncryptPIN(ctx, pin, pinToken, sessionId, privateKey, iterator)
-	return encryptedPIN
+	return bot.CreateTransfer(ctx, &bot.TransferInput{
+		AssetId:     assetId,
+		RecipientId: recipientId,
+		Amount:      amount,
+		TraceId:     traceId,
+		Memo:        memo,
+	}, config.ClientId, config.SessionId, config.SessionKey, config.SessionAssetPIN, config.PinToken)
 }
