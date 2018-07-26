@@ -3,9 +3,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/MixinNetwork/bot-api-go-client"
@@ -268,71 +266,5 @@ func (ex *Exchange) PollMixinMessages(ctx context.Context) {
 }
 
 func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg bot.MessageView, userId string) error {
-	log.Println(msg, userId)
-	if msg.Category != "PLAIN_TEXT" {
-		return nil
-	}
-	data, _ := base64.StdEncoding.DecodeString(msg.Data)
-	action := strings.Split(string(data), ":")
-	if len(action) < 2 {
-		return nil
-	}
-	var memo *OrderAction
-	var assetId, assetAmount string
-	if action[0] == "CANCEL" {
-		if len(action) != 2 {
-			return nil
-		}
-		memo = &OrderAction{
-			O: uuid.FromStringOrNil(action[1]),
-		}
-		assetId = "de5a6414-c181-3ecc-b401-ce375d08c399" // OOO
-		assetAmount = "1"
-	} else {
-		if len(action) != 3 {
-			return nil
-		}
-		price := number.FromString(action[1])
-		if price.Exhausted() {
-			return nil
-		}
-		amount := number.FromString(action[2])
-		if amount.Exhausted() {
-			return nil
-		}
-		memo = &OrderAction{
-			T: "L",
-			P: price.Persist(),
-		}
-		switch action[0] {
-		case "XIN":
-			memo.S = "A"
-			memo.A, _ = uuid.FromString(BitcoinAssetId)
-			assetId = MixinAssetId
-			assetAmount = amount.Persist()
-		case "BTC":
-			memo.S = "B"
-			memo.A, _ = uuid.FromString(MixinAssetId)
-			assetId = BitcoinAssetId
-			amount = price.Mul(amount)
-			if amount.Exhausted() {
-				return nil
-			}
-			assetAmount = amount.Persist()
-		default:
-			return nil
-		}
-	}
-	out := make([]byte, 140)
-	handle := new(codec.MsgpackHandle)
-	encoder := codec.NewEncoderBytes(&out, handle)
-	encoder.Encode(memo)
-	traceId, _ := uuid.NewV4()
-	bot.SendPlainText(ctx, mc, bot.MessageView{
-		ConversationId: msg.ConversationId,
-		UserId:         msg.UserId,
-		MessageId:      traceId.String(),
-		Category:       "PLAIN_TEXT",
-	}, fmt.Sprintf("mixin://pay?recipient=%s&asset=%s&amount=%s&trace=%s&memo=%s", config.ClientId, assetId, assetAmount, traceId.String(), base64.StdEncoding.EncodeToString(out)))
 	return nil
 }
