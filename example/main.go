@@ -7,6 +7,7 @@ import (
 
 	"github.com/MixinNetwork/ocean.one/example/config"
 	"github.com/MixinNetwork/ocean.one/example/durable"
+	"github.com/MixinNetwork/ocean.one/example/services"
 )
 
 func init() {
@@ -26,6 +27,12 @@ func main() {
 	switch *service {
 	case "http":
 		err := StartServer(spanner)
+		if err != nil {
+			log.Println(err)
+		}
+	default:
+		hub := services.NewHub(spanner)
+		err := hub.StartService(*service)
 		if err != nil {
 			log.Println(err)
 		}

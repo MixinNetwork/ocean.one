@@ -9,20 +9,6 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-const users_DDL = `
-CREATE TABLE users (
-	user_id	           STRING(36) NOT NULL,
-	email              STRING(512),
-	phone              STRING(512),
-	mixin_id           STRING(36),
-	identity_id        STRING(36),
-	full_name          STRING(512) NOT NULL,
-	encrypted_password STRING(1024) NOT NULL,
-	active_at          TIMESTAMP NOT NULL,
-	created_at         TIMESTAMP NOT NULL,
-) PRIMARY KEY(user_id);
-`
-
 var usersColumnsFull = []string{"user_id", "email", "phone", "mixin_id", "identity_id", "full_name", "encrypted_password", "active_at", "created_at"}
 
 func (u *User) valuesFull() []interface{} {

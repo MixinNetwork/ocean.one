@@ -12,18 +12,6 @@ const (
 	VerificationCategoryEmail = "EMAIL"
 )
 
-const verifications_DDL = `
-CREATE TABLE verifications (
-	verification_id   STRING(36) NOT NULL,
-	category          STRING(36) NOT NULL,
-	receiver          STRING(512) NOT NULL,
-	code              STRING(128) NOT NULL,
-	provider          STRING(128) NOT NULL,
-	created_at        TIMESTAMP NOT NULL,
-	verified_at       TIMESTAMP,
-) PRIMARY KEY(verification_id);
-`
-
 var verificationsColumnsFull = []string{"verification_id", "category", "receiver", "code", "provider", "created_at", "verified_at"}
 
 func (p *Verification) valuesFull() []interface{} {

@@ -1,0 +1,65 @@
+CREATE TABLE properties (
+	key         STRING(512) NOT NULL,
+	value       STRING(8192) NOT NULL,
+	updated_at  TIMESTAMP NOT NULL,
+) PRIMARY KEY(key);
+
+
+CREATE TABLE pool_keys (
+	user_id	          STRING(36) NOT NULL,
+	session_id        STRING(36) NOT NULL,
+	session_key       STRING(1024) NOT NULL,
+	pin_token         STRING(512) NOT NULL,
+	encrypted_pin     STRING(512) NOT NULL,
+	encryption_header BYTES(1024) NOT NULL,
+	ocean_key         STRING(1024) NOT NULL,
+	created_at        TIMESTAMP NOT NULL,
+) PRIMARY KEY(user_id);
+
+
+CREATE TABLE verifications (
+	verification_id   STRING(36) NOT NULL,
+	category          STRING(36) NOT NULL,
+	receiver          STRING(512) NOT NULL,
+	code              STRING(128) NOT NULL,
+	provider          STRING(128) NOT NULL,
+	created_at        TIMESTAMP NOT NULL,
+	verified_at       TIMESTAMP,
+) PRIMARY KEY(verification_id);
+
+
+CREATE TABLE users (
+	user_id	           STRING(36) NOT NULL,
+	email              STRING(512),
+	phone              STRING(512),
+	mixin_id           STRING(36),
+	identity_id        STRING(36),
+	full_name          STRING(512) NOT NULL,
+	encrypted_password STRING(1024) NOT NULL,
+	active_at          TIMESTAMP NOT NULL,
+	created_at         TIMESTAMP NOT NULL,
+) PRIMARY KEY(user_id);
+
+
+CREATE TABLE keys (
+	user_id	          STRING(36) NOT NULL,
+	session_id        STRING(36) NOT NULL,
+	session_key       STRING(1024) NOT NULL,
+	pin_token         STRING(512) NOT NULL,
+	encrypted_pin     STRING(512) NOT NULL,
+	encryption_header BYTES(1024) NOT NULL,
+	ocean_key         STRING(1024) NOT NULL,
+	created_at        TIMESTAMP NOT NULL,
+) PRIMARY KEY(user_id),
+INTERLEAVE IN PARENT users ON DELETE CASCADE;
+
+
+CREATE TABLE sessions (
+	user_id	          STRING(36) NOT NULL,
+	session_id        STRING(36) NOT NULL,
+	secret            STRING(512) NOT NULL,
+	remote_address    STRING(1024) NOT NULL,
+	active_at         TIMESTAMP NOT NULL,
+	created_at        TIMESTAMP NOT NULL,
+) PRIMARY KEY(user_id, session_id),
+INTERLEAVE IN PARENT users ON DELETE CASCADE;
