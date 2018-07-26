@@ -27,6 +27,8 @@ CREATE TABLE verifications (
 	verified_at       TIMESTAMP,
 ) PRIMARY KEY(verification_id);
 
+CREATE INDEX verifications_by_receiver_created_desc ON verifications(receiver, created_at DESC);
+
 
 CREATE TABLE users (
 	user_id	           STRING(36) NOT NULL,

@@ -16,13 +16,8 @@ import (
 var whitelist = [][2]string{
 	{"GET", "^/$"},
 	{"GET", "^/_hc$"},
-	{"GET", "^/codes/"},
-	{"GET", "^/network"},
 	{"POST", "^/verifications"},
-	{"POST", "^/logout$"},
 	{"POST", "^/callbacks/twilio/"},
-	{"POST", "^/oauth/token$"},
-	{"POST", "^/payments$"},
 }
 
 type contextValueKey struct{ int }

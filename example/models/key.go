@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/hex"
 	"time"
 
 	"cloud.google.com/go/spanner"
@@ -17,6 +18,7 @@ import (
 	"github.com/MixinNetwork/ocean.one/example/config"
 	"github.com/MixinNetwork/ocean.one/example/durable"
 	"github.com/MixinNetwork/ocean.one/example/session"
+	"github.com/dgrijalva/jwt-go"
 	"google.golang.org/api/iterator"
 )
 
@@ -39,9 +41,24 @@ type Key struct {
 	DecryptedPIN string
 }
 
-func GenerateKey(ctx context.Context) (*Key, error) {
-
-	return nil, nil
+func (k *Key) OceanToken(ctx context.Context) (string, error) {
+	oceanKey, err := hex.DecodeString(k.OceanKey)
+	if err != nil {
+		return "", session.ServerError(ctx, err)
+	}
+	privateKey, err := x509.ParseECPrivateKey(oceanKey)
+	if err != nil {
+		return "", session.ServerError(ctx, err)
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+		"uid": k.UserId,
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+	})
+	tokenString, err := token.SignedString(privateKey)
+	if err != nil {
+		return "", session.ServerError(ctx, err)
+	}
+	return tokenString, nil
 }
 
 func readKey(ctx context.Context, txn durable.Transaction, userId string) (*Key, error) {

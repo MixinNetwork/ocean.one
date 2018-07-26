@@ -68,6 +68,21 @@ func BadDataError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 10002, description, nil)
 }
 
+func PhoneSMSDeliveryError(ctx context.Context, phone string, err error) Error {
+	description := fmt.Sprintf("Failed to deliver SMS to %s.", phone)
+	return createError(ctx, http.StatusAccepted, 10003, description, err)
+}
+
+func RecaptchaVerifyError(ctx context.Context) Error {
+	description := fmt.Sprintf("Recaptcha is invalid.")
+	return createError(ctx, http.StatusAccepted, 10004, description, nil)
+}
+
+func RecaptchaRequiredError(ctx context.Context) Error {
+	description := fmt.Sprintf("Recaptcha is required.")
+	return createError(ctx, http.StatusAccepted, 10005, description, nil)
+}
+
 func PhoneInvalidFormatError(ctx context.Context, phone string) Error {
 	description := fmt.Sprintf("Invalid phone number %s.", phone)
 	return createError(ctx, http.StatusAccepted, 20110, description, nil)

@@ -17,10 +17,8 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io"
 	"log"
-	mathRand "math/rand"
 	"time"
 
 	"cloud.google.com/go/spanner"
@@ -202,11 +200,13 @@ func getSettlementId(id, modifier string) string {
 }
 
 func (k *PoolKey) setupPIN(ctx context.Context) error {
-	mathRand.Seed(time.Now().UnixNano())
-	pin := fmt.Sprintf("%d%d%d%d%d%d", mathRand.Intn(10), mathRand.Intn(10), mathRand.Intn(10), mathRand.Intn(10), mathRand.Intn(10), mathRand.Intn(10))
+	pin, err := generateSixDigitCode(ctx)
+	if err != nil {
+		return session.ServerError(ctx, err)
+	}
 	encryptedPIN, err := bot.EncryptPIN(ctx, pin, k.PinToken, k.SessionId, k.SessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
-		return err
+		return session.ServerError(ctx, err)
 	}
 	data, _ := json.Marshal(map[string]string{"pin": encryptedPIN})
 
