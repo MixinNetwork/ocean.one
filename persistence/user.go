@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/hex"
 	"fmt"
 	"sort"
@@ -78,7 +79,11 @@ func Authenticate(ctx context.Context, jwtToken string) (string, error) {
 			return nil, err
 		}
 
-		return hex.DecodeString(publicKey)
+		pkix, err := hex.DecodeString(publicKey)
+		if err != nil {
+			return nil, err
+		}
+		return x509.ParsePKIXPublicKey(pkix)
 	})
 
 	if err != nil && strings.Contains(err.Error(), "spanner") {
