@@ -88,6 +88,16 @@ func PhoneInvalidFormatError(ctx context.Context, phone string) Error {
 	return createError(ctx, http.StatusAccepted, 20110, description, nil)
 }
 
+func VerificationCodeInvalidError(ctx context.Context) Error {
+	description := "Invalid verification code."
+	return createError(ctx, http.StatusAccepted, 20113, description, nil)
+}
+
+func VerificationCodeExpiredError(ctx context.Context) Error {
+	description := "Expired verification code."
+	return createError(ctx, http.StatusAccepted, 20114, description, nil)
+}
+
 func createError(ctx context.Context, status, code int, description string, err error) Error {
 	pc, file, line, _ := runtime.Caller(2)
 	funcName := runtime.FuncForPC(pc).Name()

@@ -91,8 +91,8 @@ func CreateVerification(ctx context.Context, category, receiver string, recaptch
 	}, "verifications", "INSERT", "CreateVerification")
 
 	if err != nil {
-		if sessionErr, ok := session.ParseError(spanner.ErrDesc(err)); ok {
-			return nil, sessionErr
+		if se, ok := session.ParseError(spanner.ErrDesc(err)); ok {
+			return nil, se
 		}
 		return nil, session.TransactionError(ctx, err)
 	}
@@ -100,7 +100,7 @@ func CreateVerification(ctx context.Context, category, receiver string, recaptch
 	if shouldDeliver {
 		limiter := session.Limiter(ctx)
 		limiterKey := "limiter:code:receiver:" + vf.Receiver
-		limiterRetry := config.PhoneSMSSenderLimit
+		limiterRetry := config.VerificationSendLimit
 		limiterDuration := time.Hour * 24
 		limiterCount, err := limiter.Available(limiterKey, limiterDuration, limiterRetry, true)
 		if err != nil {
@@ -117,7 +117,100 @@ func CreateVerification(ctx context.Context, category, receiver string, recaptch
 }
 
 func DoVerification(ctx context.Context, id, code string) (*Verification, error) {
-	return nil, nil
+	limiter := session.Limiter(ctx)
+	limiterRetry := config.VerificationValidateLimit
+	limiterDuration := time.Minute * 60
+
+	vf, err := findVerificationById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	limiterKey := "limiter:verification:receiver:" + vf.Receiver
+	limiterCount, err := limiter.Available(limiterKey, limiterDuration, limiterRetry, false)
+	if err != nil {
+		return nil, session.ServerError(ctx, err)
+	} else if limiterCount < 1 {
+		return nil, session.TooManyRequestsError(ctx)
+	}
+
+	if vf.Code != code {
+		vf, err = findVerificationByReceiverAndCode(ctx, vf.Receiver, code)
+		if err != nil {
+			if se, ok := err.(session.Error); ok && se.Code == 20113 {
+				limiterCount, err := limiter.Available(limiterKey, limiterDuration, limiterRetry, true)
+				if err != nil {
+					return nil, session.ServerError(ctx, err)
+				} else if limiterCount < 1 {
+					return nil, session.TooManyRequestsError(ctx)
+				}
+			}
+			return nil, err
+		}
+	}
+
+	if time.Now().After(vf.CreatedAt.Add(time.Minute * 30)) {
+		limiterCount, err := limiter.Available(limiterKey, limiterDuration, limiterRetry, true)
+		if err != nil {
+			return nil, session.ServerError(ctx, err)
+		} else if limiterCount < 1 {
+			return nil, session.TooManyRequestsError(ctx)
+		}
+		return nil, session.VerificationCodeExpiredError(ctx)
+	}
+
+	err = limiter.Clear(limiterKey, limiterDuration)
+	if err != nil {
+		return nil, session.ServerError(ctx, err)
+	}
+
+	vf.VerifiedAt = spanner.NullTime{time.Now(), true}
+	err = session.Database(ctx).Apply(ctx, []*spanner.Mutation{
+		spanner.Update("verifications", []string{"verification_id", "verified_at"}, []interface{}{vf.VerificationId, vf.VerifiedAt}),
+	}, "verifications", "INSERT", "DoVerification")
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+
+	return vf, nil
+}
+
+func findVerificationById(ctx context.Context, id string) (*Verification, error) {
+	it := session.Database(ctx).Read(ctx, "verifications", spanner.Key{id}, verificationsColumnsFull, "findVerificationById")
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return nil, session.VerificationCodeInvalidError(ctx)
+	} else if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	vf, err := verificationFromRow(row)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+
+	return vf, nil
+}
+
+func findVerificationByReceiverAndCode(ctx context.Context, receiver, code string) (*Verification, error) {
+	query := fmt.Sprintf("SELECT %s FROM verifications@{FORCE_INDEX=verifications_by_receiver_created_at_desc} WHERE receiver=@receiver AND code=@code ORDER BY receiver, created_at DESC LIMIT 1", strings.Join(verificationsColumnsFull, ","))
+	statement := spanner.Statement{SQL: query, Params: map[string]interface{}{"receiver": receiver, "code": code}}
+	it := session.Database(ctx).Query(ctx, statement, "verifications", "findVerificationByReceiverAndCode")
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return nil, session.VerificationCodeInvalidError(ctx)
+	} else if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+
+	vf, err := verificationFromRow(row)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	return vf, nil
 }
 
 func checkVerificationFrequency(ctx context.Context, txn durable.Transaction, vf *Verification) (*Verification, error) {
@@ -133,11 +226,11 @@ func checkVerificationFrequency(ctx context.Context, txn durable.Transaction, vf
 		return nil, err
 	}
 
-	verification, err := verificationFromRow(row)
+	last, err := verificationFromRow(row)
 	if err != nil {
 		return nil, err
 	}
-	return verification, nil
+	return last, nil
 }
 
 func verificationFromRow(row *spanner.Row) (*Verification, error) {
