@@ -10,6 +10,9 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/pem"
+	"fmt"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/spanner"
@@ -41,6 +44,28 @@ type Key struct {
 	DecryptedPIN string
 }
 
+func (k *Key) MixinToken(ctx context.Context, method, uri string) (string, error) {
+	sum := sha256.Sum256([]byte(method + uri))
+	token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
+		"uid": k.UserId,
+		"sid": k.SessionId,
+		"scp": "ASSETS:READ",
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"sig": hex.EncodeToString(sum[:]),
+	})
+
+	block, _ := pem.Decode([]byte(k.SessionKey))
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return "", session.ServerError(ctx, err)
+	}
+	tokenString, err := token.SignedString(privateKey)
+	if err != nil {
+		return "", session.ServerError(ctx, err)
+	}
+	return tokenString, nil
+}
+
 func (k *Key) OceanToken(ctx context.Context) (string, error) {
 	oceanKey, err := hex.DecodeString(k.OceanKey)
 	if err != nil {
@@ -59,6 +84,36 @@ func (k *Key) OceanToken(ctx context.Context) (string, error) {
 		return "", session.ServerError(ctx, err)
 	}
 	return tokenString, nil
+}
+
+func consumePoolKey(ctx context.Context, txn *spanner.ReadWriteTransaction) (*Key, error) {
+	it := txn.Query(ctx, spanner.Statement{
+		SQL: fmt.Sprintf("SELECT %s FROM pool_keys LIMIT 1", strings.Join(poolKeysColumnsFull, ",")),
+	})
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	pk, err := poolKeyFromRow(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Key{
+		UserId:           pk.UserId,
+		SessionId:        pk.SessionId,
+		SessionKey:       pk.SessionKey,
+		PinToken:         pk.PinToken,
+		EncryptedPIN:     pk.EncryptedPIN,
+		EncryptionHeader: pk.EncryptionHeader,
+		OceanKey:         pk.OceanKey,
+		CreatedAt:        time.Now(),
+	}, txn.BufferWrite([]*spanner.Mutation{spanner.Delete("pool_keys", spanner.Key{pk.UserId})})
 }
 
 func readKey(ctx context.Context, txn durable.Transaction, userId string) (*Key, error) {

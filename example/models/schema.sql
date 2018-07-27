@@ -42,6 +42,10 @@ CREATE TABLE users (
 	created_at         TIMESTAMP NOT NULL,
 ) PRIMARY KEY(user_id);
 
+CREATE UNIQUE NULL_FILTERED INDEX users_by_email ON users(email);
+CREATE UNIQUE NULL_FILTERED INDEX users_by_phone ON users(phone);
+CREATE UNIQUE NULL_FILTERED INDEX users_by_mixin_id ON users(mixin_id);
+
 
 CREATE TABLE keys (
 	user_id	          STRING(36) NOT NULL,

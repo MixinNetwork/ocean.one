@@ -88,6 +88,11 @@ func PhoneInvalidFormatError(ctx context.Context, phone string) Error {
 	return createError(ctx, http.StatusAccepted, 20110, description, nil)
 }
 
+func InsufficientKeyPoolError(ctx context.Context) Error {
+	description := "Insufficient keys."
+	return createError(ctx, http.StatusAccepted, 20111, description, nil)
+}
+
 func VerificationCodeInvalidError(ctx context.Context) Error {
 	description := "Invalid verification code."
 	return createError(ctx, http.StatusAccepted, 20113, description, nil)
@@ -96,6 +101,16 @@ func VerificationCodeInvalidError(ctx context.Context) Error {
 func VerificationCodeExpiredError(ctx context.Context) Error {
 	description := "Expired verification code."
 	return createError(ctx, http.StatusAccepted, 20114, description, nil)
+}
+
+func PasswordTooSimpleError(ctx context.Context) Error {
+	description := "Password too simple, at least 8 characters required."
+	return createError(ctx, http.StatusAccepted, 20118, description, nil)
+}
+
+func PhoneOccupiedError(ctx context.Context) Error {
+	description := "The phone number has been registered, please sign in with it."
+	return createError(ctx, http.StatusAccepted, 20122, description, nil)
 }
 
 func createError(ctx context.Context, status, code int, description string, err error) Error {

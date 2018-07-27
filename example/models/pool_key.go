@@ -248,6 +248,12 @@ func (k *PoolKey) sendTransfer(ctx context.Context, recipientId, assetId string,
 	}, k.UserId, k.SessionId, k.SessionKey, k.PlainPIN, k.PinToken)
 }
 
+func poolKeyFromRow(row *spanner.Row) (*PoolKey, error) {
+	var k PoolKey
+	err := row.Columns(&k.UserId, &k.SessionId, &k.SessionKey, &k.PinToken, &k.EncryptedPIN, &k.EncryptionHeader, &k.OceanKey, &k.CreatedAt)
+	return &k, err
+}
+
 func encryptPIN(ctx context.Context, pin string) (string, []byte, error) {
 	aesKey := make([]byte, 32)
 	_, err := rand.Read(aesKey)

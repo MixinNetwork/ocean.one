@@ -176,18 +176,14 @@ func DoVerification(ctx context.Context, id, code string) (*Verification, error)
 }
 
 func findVerificationById(ctx context.Context, id string) (*Verification, error) {
-	it := session.Database(ctx).Read(ctx, "verifications", spanner.Key{id}, verificationsColumnsFull, "findVerificationById")
-	defer it.Stop()
+	txn := session.Database(ctx).ReadOnlyTransaction()
+	defer txn.Close()
 
-	row, err := it.Next()
-	if err == iterator.Done {
-		return nil, session.VerificationCodeInvalidError(ctx)
-	} else if err != nil {
-		return nil, session.TransactionError(ctx, err)
-	}
-	vf, err := verificationFromRow(row)
+	vf, err := readVerification(ctx, txn, id)
 	if err != nil {
 		return nil, session.TransactionError(ctx, err)
+	} else if vf == nil {
+		return nil, session.VerificationCodeInvalidError(ctx)
 	}
 
 	return vf, nil
@@ -231,6 +227,19 @@ func checkVerificationFrequency(ctx context.Context, txn durable.Transaction, vf
 		return nil, err
 	}
 	return last, nil
+}
+
+func readVerification(ctx context.Context, txn durable.Transaction, id string) (*Verification, error) {
+	it := txn.Read(ctx, "verifications", spanner.Key{id}, verificationsColumnsFull)
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	return verificationFromRow(row)
 }
 
 func verificationFromRow(row *spanner.Row) (*Verification, error) {

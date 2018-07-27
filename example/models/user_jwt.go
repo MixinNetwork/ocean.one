@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/hex"
 	"fmt"
 	"strings"
@@ -41,7 +42,11 @@ func AuthenticateWithToken(ctx context.Context, jwtToken string) (*User, error) 
 			return nil, nil
 		}
 
-		return hex.DecodeString(s.Secret)
+		pkix, err := hex.DecodeString(s.Secret)
+		if err != nil {
+			return nil, err
+		}
+		return x509.ParsePKIXPublicKey(pkix)
 	})
 
 	if err != nil && strings.Contains(err.Error(), "spanner") {

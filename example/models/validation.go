@@ -7,6 +7,7 @@ import (
 
 	"github.com/MixinNetwork/ocean.one/example/session"
 	"github.com/nyaruka/phonenumbers"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func ValidatePhoneNumberFormat(ctx context.Context, phone string) (string, error) {
@@ -24,4 +25,16 @@ func ValidatePhoneNumberFormat(ctx context.Context, phone string) (string, error
 		return "", session.PhoneInvalidFormatError(ctx, phone)
 	}
 	return fmt.Sprintf("+%d%d", number.GetCountryCode(), number.GetNationalNumber()), nil
+}
+
+func ValidateAndEncryptPassword(ctx context.Context, password string) (string, error) {
+	password = strings.TrimSpace(password)
+	if len(password) < 8 {
+		return password, session.PasswordTooSimpleError(ctx)
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return password, session.ServerError(ctx, err)
+	}
+	return string(hashedPassword), nil
 }
