@@ -88,6 +88,11 @@ func RecaptchaRequiredError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 10005, description, nil)
 }
 
+func MixinNotConnectedError(ctx context.Context) Error {
+	description := fmt.Sprintf("Mixin Messenger not connected.")
+	return createError(ctx, http.StatusAccepted, 10006, description, nil)
+}
+
 func PhoneInvalidFormatError(ctx context.Context, phone string) Error {
 	description := fmt.Sprintf("Invalid phone number %s.", phone)
 	return createError(ctx, http.StatusAccepted, 20110, description, nil)
