@@ -14,6 +14,8 @@ func RegisterRoutes(router *httptreemux.TreeMux) {
 	router.GET("/_hc", healthCheck)
 
 	registerVerifications(router)
+	registerUsers(router)
+	registerSessions(router)
 }
 
 func root(w http.ResponseWriter, r *http.Request, params map[string]string) {

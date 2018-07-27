@@ -47,8 +47,11 @@ func CreateUser(ctx context.Context, verificationId, password, sessionSecret str
 		return nil, err
 	}
 
+	createdAt := time.Now()
 	user := &User{
 		EncryptedPassword: password,
+		ActiveAt:          createdAt,
+		CreatedAt:         createdAt,
 	}
 
 	_, err = session.Database(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {

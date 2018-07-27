@@ -2,12 +2,15 @@ package models
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/hex"
 	"time"
 
 	"cloud.google.com/go/spanner"
 	"github.com/MixinNetwork/ocean.one/example/durable"
 	"github.com/MixinNetwork/ocean.one/example/session"
 	"github.com/MixinNetwork/ocean.one/example/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/api/iterator"
 )
 
@@ -24,6 +27,52 @@ type Session struct {
 	RemoteAddress string
 	ActiveAt      time.Time
 	CreatedAt     time.Time
+}
+
+func CreateSession(ctx context.Context, receiver, password string, secret string) (*User, error) {
+	pkix, err := hex.DecodeString(secret)
+	if err != nil {
+		return nil, session.BadDataError(ctx)
+	}
+	_, err = x509.ParsePKIXPublicKey(pkix)
+	if err != nil {
+		return nil, session.BadDataError(ctx)
+	}
+
+	var user *User
+	_, err = session.Database(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+		u, err := readUserByPhone(ctx, txn, receiver)
+		if err != nil {
+			return err
+		}
+		if u == nil {
+			return session.AuthorizationError(ctx)
+		}
+		err = bcrypt.CompareHashAndPassword([]byte(u.EncryptedPassword), []byte(password))
+		if err != nil {
+			return session.AuthorizationError(ctx)
+		}
+		s, err := addSession(ctx, txn, u.UserId, secret)
+		if err != nil {
+			return err
+		}
+		u.SessionId = s.SessionId
+		u.ActiveAt = s.ActiveAt
+		u.CreatedAt = s.CreatedAt
+		txn.BufferWrite([]*spanner.Mutation{
+			spanner.Update("users", []string{"user_id", "active_at", "created_at"}, []interface{}{u.UserId, u.ActiveAt, u.CreatedAt}),
+		})
+		user = u
+		return nil
+	}, "sessions", "INSERT", "CreateSession")
+
+	if err != nil {
+		if se, ok := session.ParseError(spanner.ErrDesc(err)); ok {
+			return nil, se
+		}
+		return nil, session.TransactionError(ctx, err)
+	}
+	return user, nil
 }
 
 func addSession(ctx context.Context, txn *spanner.ReadWriteTransaction, userId string, secret string) (*Session, error) {
