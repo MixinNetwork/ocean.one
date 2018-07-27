@@ -17,6 +17,7 @@ func registerOrders(router *httptreemux.TreeMux) {
 	impl := &ordersImpl{}
 
 	router.POST("/orders", impl.create)
+	router.POST("/orders/:id/cancel", impl.cancel)
 }
 
 func (impl *ordersImpl) create(w http.ResponseWriter, r *http.Request, _ map[string]string) {
@@ -27,6 +28,15 @@ func (impl *ordersImpl) create(w http.ResponseWriter, r *http.Request, _ map[str
 	}
 
 	err := middlewares.CurrentUser(r).CreateOrder(r.Context(), &body)
+	if err != nil {
+		views.RenderErrorResponse(w, r, err)
+	} else {
+		views.RenderBlankResponse(w, r)
+	}
+}
+
+func (impl *ordersImpl) cancel(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	err := middlewares.CurrentUser(r).CancelOrder(r.Context(), params["id"])
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
 	} else {

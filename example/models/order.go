@@ -101,6 +101,23 @@ func (current *User) CreateOrder(ctx context.Context, o *OrderAction) error {
 	return current.Key.sendTransfer(ctx, config.EngineUserId, sent, amount, o.TraceId, hex.EncodeToString(memo))
 }
 
+func (current *User) CancelOrder(ctx context.Context, id string) error {
+	oid, _ := uuid.FromString(id)
+	if oid.String() == uuid.Nil.String() {
+		return session.BadDataError(ctx)
+	}
+	action := map[string]interface{}{"O": oid}
+	memo := make([]byte, 140)
+	handle := new(codec.MsgpackHandle)
+	encoder := codec.NewEncoderBytes(&memo, handle)
+	err := encoder.Encode(action)
+	if err != nil {
+		return session.ServerError(ctx, err)
+	}
+
+	return current.Key.sendTransfer(ctx, config.EngineUserId, config.OOOAssetId, number.FromString("0.00000001"), uuid.NewV4().String(), hex.EncodeToString(memo))
+}
+
 func validateQuoteBase(quote, base string) bool {
 	if quote == base {
 		return false
