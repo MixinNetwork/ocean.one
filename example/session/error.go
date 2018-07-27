@@ -48,6 +48,11 @@ func AuthorizationError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 401, description, nil)
 }
 
+func ForbiddenError(ctx context.Context) Error {
+	description := http.StatusText(http.StatusForbidden)
+	return createError(ctx, http.StatusAccepted, http.StatusForbidden, description, nil)
+}
+
 func TooManyRequestsError(ctx context.Context) Error {
 	description := http.StatusText(http.StatusTooManyRequests)
 	return createError(ctx, http.StatusAccepted, http.StatusTooManyRequests, description, nil)

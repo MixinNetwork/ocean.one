@@ -44,8 +44,8 @@ type Key struct {
 	DecryptedPIN string
 }
 
-func (k *Key) MixinToken(ctx context.Context, method, uri string) (string, error) {
-	sum := sha256.Sum256([]byte(method + uri))
+func (k *Key) MixinToken(ctx context.Context, uri string) (string, error) {
+	sum := sha256.Sum256([]byte("GET" + uri))
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
 		"uid": k.UserId,
 		"sid": k.SessionId,

@@ -14,7 +14,6 @@ type tokensImpl struct{}
 
 type tokenRequest struct {
 	Category string `json:"category"`
-	Method   string `json:"method"`
 	URI      string `json:"uri"`
 }
 
@@ -34,7 +33,7 @@ func (impl *tokensImpl) create(w http.ResponseWriter, r *http.Request, _ map[str
 	key := middlewares.CurrentUser(r).Key
 	switch body.Category {
 	case "MIXIN":
-		token, err := key.MixinToken(r.Context(), body.Method, body.URI)
+		token, err := key.MixinToken(r.Context(), body.URI)
 		if err != nil {
 			views.RenderErrorResponse(w, r, err)
 		} else {

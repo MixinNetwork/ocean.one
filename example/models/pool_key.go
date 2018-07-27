@@ -238,16 +238,6 @@ func (k *PoolKey) setupPIN(ctx context.Context) error {
 	return nil
 }
 
-func (k *PoolKey) sendTransfer(ctx context.Context, recipientId, assetId string, amount number.Decimal, traceId, memo string) error {
-	return bot.CreateTransfer(ctx, &bot.TransferInput{
-		AssetId:     assetId,
-		RecipientId: recipientId,
-		Amount:      amount,
-		TraceId:     traceId,
-		Memo:        memo,
-	}, k.UserId, k.SessionId, k.SessionKey, k.PlainPIN, k.PinToken)
-}
-
 func poolKeyFromRow(row *spanner.Row) (*PoolKey, error) {
 	var k PoolKey
 	err := row.Columns(&k.UserId, &k.SessionId, &k.SessionKey, &k.PinToken, &k.EncryptedPIN, &k.EncryptionHeader, &k.OceanKey, &k.CreatedAt)
