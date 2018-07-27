@@ -21,11 +21,16 @@ type User struct {
 }
 
 func UpdateUserPublicKey(ctx context.Context, userId, publicKey string) error {
-	if _, err := hex.DecodeString(publicKey); err != nil {
+	pkix, err := hex.DecodeString(publicKey)
+	if err != nil {
+		return nil
+	}
+	_, err = x509.ParsePKIXPublicKey(pkix)
+	if err != nil {
 		return nil
 	}
 
-	_, err := Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+	_, err = Spanner(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
 		it := txn.ReadUsingIndex(ctx, "users", "users_by_public_key", spanner.Key{publicKey}, []string{"user_id"})
 		defer it.Stop()
 
@@ -37,11 +42,10 @@ func UpdateUserPublicKey(ctx context.Context, userId, publicKey string) error {
 			return nil
 		}
 
-		txn.BufferWrite([]*spanner.Mutation{spanner.InsertOrUpdateMap("users", map[string]interface{}{
+		return txn.BufferWrite([]*spanner.Mutation{spanner.InsertOrUpdateMap("users", map[string]interface{}{
 			"user_id":    userId,
 			"public_key": publicKey,
 		})})
-		return nil
 	})
 
 	return err
