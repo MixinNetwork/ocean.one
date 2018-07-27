@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/MixinNetwork/ocean.one/example/middlewares"
 	"github.com/MixinNetwork/ocean.one/example/models"
 	"github.com/MixinNetwork/ocean.one/example/session"
 	"github.com/MixinNetwork/ocean.one/example/views"
@@ -22,6 +23,7 @@ func registerUsers(router *httptreemux.TreeMux) {
 	impl := &usersImpl{}
 
 	router.POST("/users", impl.create)
+	router.GET("/me", impl.me)
 }
 
 func (impl *usersImpl) create(w http.ResponseWriter, r *http.Request, _ map[string]string) {
@@ -37,4 +39,8 @@ func (impl *usersImpl) create(w http.ResponseWriter, r *http.Request, _ map[stri
 		return
 	}
 	views.RenderUserWithAuthentication(w, r, user)
+}
+
+func (impl *usersImpl) me(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	views.RenderUserWithAuthentication(w, r, middlewares.CurrentUser(r))
 }

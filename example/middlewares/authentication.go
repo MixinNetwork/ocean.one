@@ -17,6 +17,8 @@ var whitelist = [][2]string{
 	{"GET", "^/$"},
 	{"GET", "^/_hc$"},
 	{"POST", "^/verifications"},
+	{"POST", "^/users"},
+	{"POST", "^/sessions"},
 	{"POST", "^/callbacks/twilio/"},
 }
 

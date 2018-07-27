@@ -42,6 +42,12 @@ func AuthenticateWithToken(ctx context.Context, jwtToken string) (*User, error) 
 			return nil, nil
 		}
 
+		k, err := readKey(ctx, txn, user.UserId)
+		if err != nil {
+			return nil, session.TransactionError(ctx, err)
+		}
+		user.Key = k
+
 		pkix, err := hex.DecodeString(s.Secret)
 		if err != nil {
 			return nil, err

@@ -190,7 +190,7 @@ func findVerificationById(ctx context.Context, id string) (*Verification, error)
 }
 
 func findVerificationByReceiverAndCode(ctx context.Context, receiver, code string) (*Verification, error) {
-	query := fmt.Sprintf("SELECT %s FROM verifications@{FORCE_INDEX=verifications_by_receiver_created_at_desc} WHERE receiver=@receiver AND code=@code ORDER BY receiver, created_at DESC LIMIT 1", strings.Join(verificationsColumnsFull, ","))
+	query := fmt.Sprintf("SELECT %s FROM verifications@{FORCE_INDEX=verifications_by_receiver_created_desc} WHERE receiver=@receiver AND code=@code ORDER BY receiver, created_at DESC LIMIT 1", strings.Join(verificationsColumnsFull, ","))
 	statement := spanner.Statement{SQL: query, Params: map[string]interface{}{"receiver": receiver, "code": code}}
 	it := session.Database(ctx).Query(ctx, statement, "verifications", "findVerificationByReceiverAndCode")
 	defer it.Stop()
@@ -210,7 +210,7 @@ func findVerificationByReceiverAndCode(ctx context.Context, receiver, code strin
 }
 
 func checkVerificationFrequency(ctx context.Context, txn durable.Transaction, vf *Verification) (*Verification, error) {
-	query := fmt.Sprintf("SELECT %s FROM verifications@{FORCE_INDEX=verifications_by_receiver_created_at_desc} WHERE receiver=@receiver ORDER BY receiver, created_at DESC LIMIT 1", strings.Join(verificationsColumnsFull, ","))
+	query := fmt.Sprintf("SELECT %s FROM verifications@{FORCE_INDEX=verifications_by_receiver_created_desc} WHERE receiver=@receiver ORDER BY receiver, created_at DESC LIMIT 1", strings.Join(verificationsColumnsFull, ","))
 	statement := spanner.Statement{SQL: query, Params: map[string]interface{}{"receiver": vf.Receiver}}
 	it := txn.Query(ctx, statement)
 	defer it.Stop()

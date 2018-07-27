@@ -30,6 +30,7 @@ type User struct {
 	CreatedAt         time.Time
 
 	SessionId string
+	Key       *Key
 }
 
 func CreateUser(ctx context.Context, verificationId, password, sessionSecret string) (*User, error) {
@@ -62,18 +63,18 @@ func CreateUser(ctx context.Context, verificationId, password, sessionSecret str
 		if vf == nil {
 			return session.VerificationCodeInvalidError(ctx)
 		}
-		if time.Now().After(vf.VerifiedAt.Time.Add(time.Minute * 30)) {
-			return session.VerificationCodeExpiredError(ctx)
+		if !vf.VerifiedAt.Valid {
+			return session.VerificationCodeInvalidError(ctx)
 		}
 		if vf.Category != VerificationCategoryPhone {
 			return session.BadDataError(ctx)
 		}
 
-		old, err := readUserByPhone(ctx, txn, vf.Receiver)
+		old, err := readUserIdByIndexKey(ctx, txn, "users_by_phone", vf.Receiver)
 		if err != nil {
 			return err
 		}
-		if old != nil {
+		if old != "" {
 			return session.PhoneOccupiedError(ctx)
 		}
 		user.FullName = vf.Receiver
@@ -114,8 +115,29 @@ func CreateUser(ctx context.Context, verificationId, password, sessionSecret str
 	return user, nil
 }
 
+func readUserIdByIndexKey(ctx context.Context, txn durable.Transaction, index, key string) (string, error) {
+	it := txn.ReadUsingIndex(ctx, "users", index, spanner.Key{key}, []string{"user_id"})
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return "", nil
+	} else if err != nil {
+		return "", err
+	}
+
+	var id string
+	err = row.Columns(&id)
+	return id, err
+}
+
 func readUserByPhone(ctx context.Context, txn durable.Transaction, phone string) (*User, error) {
-	it := txn.ReadUsingIndex(ctx, "users", "users_by_phone", spanner.Key{phone}, usersColumnsFull)
+	id, err := readUserIdByIndexKey(ctx, txn, "users_by_phone", phone)
+	if err != nil || id == "" {
+		return nil, err
+	}
+
+	it := txn.Read(ctx, "users", spanner.Key{id}, usersColumnsFull)
 	defer it.Stop()
 
 	row, err := it.Next()

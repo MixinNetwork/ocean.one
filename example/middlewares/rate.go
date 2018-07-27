@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/MixinNetwork/ocean.one/example/session"
-	"github.com/MixinNetwork/ocean.one/example/uuid"
 	"github.com/MixinNetwork/ocean.one/example/views"
 	"github.com/bugsnag/bugsnag-go"
 )
@@ -53,11 +52,6 @@ func checkLimiter(r *http.Request) error {
 
 	if pattern := getRareRoutePattern(r); pattern != "" {
 		keys := []string{"limiter:rare:ip:" + remoteAddr + ":" + pattern}
-		deviceId, err := uuid.FromString(r.Header.Get("Mixin-Device-Id"))
-		if err != nil {
-			return session.TooManyRequestsError(r.Context())
-		}
-		keys = append(keys, "limiter:rare:device:"+deviceId.String()+":"+pattern)
 		for _, key := range keys {
 			if count, err := limiter.Available(key, 10*time.Minute, 10, true); err != nil {
 				bugsnag.Notify(err, r)
