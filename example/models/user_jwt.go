@@ -35,12 +35,13 @@ func AuthenticateWithToken(ctx context.Context, jwtToken string) (*User, error) 
 		}
 		user = u
 
-		s, err := readSession(ctx, txn, sid)
+		s, err := readSession(ctx, txn, user.UserId, sid)
 		if err != nil {
 			return nil, session.TransactionError(ctx, err)
 		} else if s == nil {
 			return nil, nil
 		}
+		user.SessionId = s.SessionId
 
 		k, err := readKey(ctx, txn, user.UserId)
 		if err != nil {

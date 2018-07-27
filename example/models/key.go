@@ -131,11 +131,8 @@ func readKey(ctx context.Context, txn durable.Transaction, userId string) (*Key,
 		return nil, err
 	}
 
-	privateBytes, err := base64.StdEncoding.DecodeString(config.AssetPrivateKey)
-	if err != nil {
-		return nil, session.ServerError(ctx, err)
-	}
-	privateKey, err := x509.ParsePKCS1PrivateKey(privateBytes)
+	privateBlock, _ := pem.Decode([]byte(config.AssetPrivateKey))
+	privateKey, err := x509.ParsePKCS1PrivateKey(privateBlock.Bytes)
 	if err != nil {
 		return nil, session.ServerError(ctx, err)
 	}

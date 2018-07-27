@@ -88,8 +88,8 @@ func addSession(ctx context.Context, txn *spanner.ReadWriteTransaction, userId s
 	return s, txn.BufferWrite([]*spanner.Mutation{spanner.Insert("sessions", sessionColumnsFull, s.valuesFull())})
 }
 
-func readSession(ctx context.Context, txn durable.Transaction, sid string) (*Session, error) {
-	it := txn.Read(ctx, "sessions", spanner.Key{sid}, sessionColumnsFull)
+func readSession(ctx context.Context, txn durable.Transaction, uid, sid string) (*Session, error) {
+	it := txn.Read(ctx, "sessions", spanner.Key{uid, sid}, sessionColumnsFull)
 	defer it.Stop()
 
 	row, err := it.Next()
