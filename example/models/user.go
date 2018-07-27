@@ -115,6 +115,20 @@ func CreateUser(ctx context.Context, verificationId, password, sessionSecret str
 	return user, nil
 }
 
+func (current *User) UpdateName(ctx context.Context, name string) (*User, error) {
+	if len(name) > 128 {
+		return nil, session.BadDataError(ctx)
+	}
+	err := session.Database(ctx).Apply(ctx, []*spanner.Mutation{
+		spanner.Update("users", []string{"user_id", "full_name"}, []interface{}{current.UserId, name}),
+	}, "users", "UPDATE", "UpdateName")
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	current.FullName = name
+	return current, nil
+}
+
 func readUserIdByIndexKey(ctx context.Context, txn durable.Transaction, index, key string) (string, error) {
 	it := txn.ReadUsingIndex(ctx, "users", index, spanner.Key{key}, []string{"user_id"})
 	defer it.Stop()
