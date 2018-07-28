@@ -78,6 +78,32 @@
   }
 }
 
+.markets.nav {
+  position: fixed;
+  top: 50%;
+  left: 32px;
+  margin: 0;
+  padding: 0;
+  transform: translateY(-50%);
+  list-style: none;
+  display: none;
+
+  li {
+    margin: 16px 0;
+    padding: 0;
+    opacity: 0.3;
+
+    &.active {
+      opacity: 1;
+    }
+
+    img {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
 .markets.block {
   position: relative;
   box-sizing: border-box;
@@ -248,11 +274,11 @@
       cursor: pointer;
     }
 
-    .up.change.cell {
+    .up.change.cell .main {
       color: $color-side-bid;
     }
 
-    .down.change.cell {
+    .down.change.cell .main {
       color: $color-side-ask;
     }
   }
