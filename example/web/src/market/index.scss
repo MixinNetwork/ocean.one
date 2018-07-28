@@ -1,0 +1,208 @@
+@import '../constant.scss';
+
+.market.layout {
+}
+
+.layout.header {
+  background-image: url('./masthead.jpg');
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  .overlay {
+    background: linear-gradient(rgba(0,18,83,0.9), rgba(0,18,83,0.3) 50%, rgba(255,255,255,1) 100%);
+    padding: 128px 32px;
+  }
+
+  .logo {
+    width: 196px;
+    height: 196px;
+    margin: 0 auto;
+
+    img {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  h2 {
+    text-align: center;
+    color: $color-main-background;
+    font-size: 24px;
+    font-weight: 100;
+  }
+
+  .account.buttons {
+    text-align: center;
+  }
+
+  .account.button {
+    display: inline-block;
+    text-decoration: none;
+    background: $color-main-highlight;
+    box-shadow: 0 0 4px rgba(0,0,0,0.3);
+    border-radius: 4px;
+    color: $color-main-background;
+    font-size: 20px;
+    padding: 12px 32px;
+    margin: 16px;
+  }
+}
+
+.markets.block {
+  position: relative;
+  box-sizing: border-box;
+  z-index: 2;
+  padding: 64px 32px;
+  width: 100%;
+
+  .content {
+    position: relative;
+    background: #FFFFFF;
+    margin: 0 auto;
+    max-width: 960px;
+    padding: 16px 32px;
+    border: 1px solid #26A17B;
+    border-radius: 4px;
+  }
+
+  .quote.logo {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    left: -32px;
+    top: -32px;
+  }
+
+  .search {
+    position: absolute;
+    top: -32px;
+    right: 0;
+    width: 256px;
+
+    i {
+      position: absolute;
+      font-size: 12px;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #26A17B;
+    }
+
+    input[type=text] {
+      appearance: none;
+      box-sizing: border-box;
+      width: 100%;
+      color: $color-main-foreground-light;
+      border: 1px solid #26A17B;
+      border-radius: 16px;
+      font-family: $font-main-mono;
+      font-size: 12px;
+      font-weight: 100;
+      line-height: 24px;
+      padding: 0 8px 0 24px;
+      outline: 0 none;
+      box-shadow: none;
+      background: transparent;
+
+      &:focus {
+        border-color: $color-main-highlight;
+      }
+    }
+  }
+
+  &.bitcoin {
+    .content {
+      border: 1px solid #F7931B;
+    }
+
+    .search input {
+      border: 1px solid #F7931B;
+    }
+
+    .search i {
+      color: #F7931B;
+    }
+  }
+
+  &.mixin {
+    .content {
+      border: 1px solid #2995F2;
+    }
+
+    .search input {
+      border: 1px solid #2995F2;
+    }
+
+    .search i {
+      color: #2995F2;
+    }
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    thead {
+      display: table-header-group;
+      vertical-align: middle;
+    }
+
+    tbody {
+      display: table-row-group;
+      vertical-align: middle;
+    }
+
+    th, td {
+      text-align: right;
+      padding: 16px 0;
+
+      &:first-child,
+      &:nth-child(2) {
+        text-align: left;
+      }
+    }
+
+    th {
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    tr {
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      line-height: 20px;
+
+      .sub {
+        opacity: 0.3;
+      }
+    }
+
+    .logo.cell img {
+      width: 32px;
+      height: 32px;
+      padding-bottom: 4px;
+      display: block;
+    }
+
+    .star.cell i {
+      display: block;
+      padding-left: 8px;
+      cursor: pointer;
+    }
+
+    .up.change.cell {
+      color: $color-side-bid;
+    }
+
+    .down.change.cell {
+      color: $color-side-ask;
+    }
+  }
+}
