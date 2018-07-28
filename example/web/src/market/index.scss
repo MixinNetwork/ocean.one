@@ -1,7 +1,6 @@
 @import '../constant.scss';
 
 .market.layout {
-}
 
 .layout.header {
   background-image: url('./masthead.jpg');
@@ -91,7 +90,7 @@
     background: #FFFFFF;
     margin: 0 auto;
     max-width: 960px;
-    padding: 16px 32px;
+    padding: 16px 0;
     border: 1px solid #26A17B;
     border-radius: 4px;
   }
@@ -185,6 +184,10 @@
 
       tr {
         cursor: pointer;
+
+        &:hover {
+          background: rgba(0,0,0,0.05);
+        }
       }
     }
 
@@ -211,12 +214,25 @@
       }
     }
 
+    thead {
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
     td {
       line-height: 20px;
 
       .sub {
         opacity: 0.3;
       }
+    }
+
+    td:first-child {
+      padding-left: 32px;
+    }
+
+    th:last-child,
+    td:last-child {
+      padding-right: 32px;
     }
 
     .logo.cell img {
@@ -264,15 +280,22 @@
       top: -36px;
     }
 
-    .content {
-      padding: 16px;
-    }
 
     table {
       font-size: 14px;
 
       .logo.cell {
         display: none;
+      }
+
+      th:nth-child(2),
+      td:nth-child(2) {
+        padding-left: 16px;
+      }
+
+      th:last-child,
+      td:last-child {
+        padding-right: 16px;
       }
     }
   }
@@ -307,4 +330,6 @@
       font-size: 12px;
     }
   }
+}
+
 }
