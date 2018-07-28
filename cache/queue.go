@@ -19,7 +19,7 @@ const (
 type Event struct {
 	Market    string                 `json:"market"`
 	Type      string                 `json:"event"`
-	Sequence  int64                  `json:"sequence"`
+	Sequence  string                 `json:"sequence"`
 	Data      map[string]interface{} `json:"data,omitempty"`
 	Timestamp time.Time              `json:"timestamp"`
 }
@@ -59,9 +59,10 @@ func Book(ctx context.Context, market string, limit int) (*Event, error) {
 }
 
 func NewQueue(ctx context.Context, market string) *Queue {
+	base, _ := time.Parse(time.RFC3339Nano, "2017-07-07T07:07:07.777777777Z")
 	return &Queue{
 		market:   market,
-		sequence: time.Now().UnixNano(),
+		sequence: time.Now().UnixNano() - base.UnixNano(),
 		events:   make(chan *Event, 8192),
 	}
 }
@@ -80,7 +81,7 @@ func (queue *Queue) Loop(ctx context.Context) {
 }
 
 func (queue *Queue) handleEvent(ctx context.Context, e *Event) error {
-	e.Sequence = queue.sequence
+	e.Sequence = fmt.Sprint(queue.sequence)
 	data, err := json.Marshal(e)
 	if err != nil {
 		log.Panicln(err)
