@@ -61,7 +61,7 @@ func Book(ctx context.Context, market string, limit int) (*Event, error) {
 func NewQueue(ctx context.Context, market string) *Queue {
 	return &Queue{
 		market:   market,
-		sequence: time.Now().Unix(),
+		sequence: time.Now().UnixNano(),
 		events:   make(chan *Event, 8192),
 	}
 }
