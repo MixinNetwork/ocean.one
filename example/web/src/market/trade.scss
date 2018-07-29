@@ -1,0 +1,23 @@
+@import '../constant.scss';
+
+.market.layout {
+
+.market.detail.container {
+  height: 1960px;
+  width: 100%;
+  background: $color-main-background;
+  box-sizing: border-box;
+  padding-top: 96px;
+
+  &.fixed {
+    position: fixed;
+    top: 0px;
+    z-index: -1;
+  }
+}
+
+.market.detail.spacer {
+  visibility: hidden;
+}
+
+}

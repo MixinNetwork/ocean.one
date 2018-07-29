@@ -78,10 +78,16 @@
   }
 }
 
+.markets.container {
+  width: 100%;
+  background: $color-main-background;
+  box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+}
+
 .markets.nav {
   position: fixed;
   top: 50%;
-  left: 32px;
+  left: 64px;
   margin: 0;
   padding: 0;
   transform: translateY(-50%);
@@ -230,6 +236,7 @@
     th {
       cursor: pointer;
       text-transform: uppercase;
+      font-weight: 500;
     }
 
     tr {
@@ -296,6 +303,14 @@
 }
 
 @media (max-width: 768px) {
+  .layout.header .overlay {
+    padding: 128px 16px;
+  }
+
+  .layout.nav .overlay {
+    padding: 8px 16px;
+  }
+
   .markets.block {
     padding: 48px 16px;
 
@@ -328,10 +343,6 @@
 }
 
 @media (max-width: 640px) {
-  .layout.header .overlay {
-    padding: 128px 16px;
-  }
-
   .markets.block {
     padding: 48px 0;
 
@@ -346,10 +357,14 @@
       right: 16px;
     }
 
-    .content {
-      border-left: none;
-      border-right: none;
-      border-radius: 0;
+    &.bitcoin,
+    &.usdt,
+    &.mixin {
+      .content {
+        border-left: none;
+        border-right: none;
+        border-radius: 0;
+      }
     }
 
     table {
