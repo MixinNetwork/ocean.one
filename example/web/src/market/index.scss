@@ -82,6 +82,7 @@
   width: 100%;
   background: $color-main-background;
   box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+  padding-top: 32px;
 }
 
 .markets.nav {
@@ -255,6 +256,7 @@
       line-height: 20px;
 
       .sub {
+        font-size: 90%;
         opacity: 0.3;
       }
     }
