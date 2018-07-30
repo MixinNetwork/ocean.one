@@ -64,17 +64,42 @@
     background: linear-gradient(rgba(0,18,83,0.9), rgba(0,18,83,0.6) 100%);
     padding: 8px 32px;
     box-shadow: 0 0 4px rgba(0,18,83,0.6);
+    position: relative;
   }
 
   .logo {
-    width: 64px;
-    height: 64px;
+    line-height: 48px;
     margin: 0;
 
     img {
-      width: 100%;
-      height: 100%;
+      width: 64px;
+      height: 30px;
+      vertical-align: middle;
+      padding-bottom: 8px;
     }
+  }
+
+  .title {
+    margin: 0;
+    line-height: 64px;
+    display: inline-block;
+    color: $color-main-background;
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    font-size: 24px;
+    font-weight: 300;
+  }
+
+  .account {
+    color: $color-main-background;
+    font-size: 24px;
+    line-height: 64px;
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    right: 32px;
   }
 }
 
@@ -87,6 +112,7 @@
 
 .markets.nav {
   position: fixed;
+  z-index: 99;
   top: 50%;
   left: 64px;
   margin: 0;

@@ -2,22 +2,143 @@
 
 .market.layout {
 
+.market.detail.spacer {
+  visibility: hidden;
+}
+
 .market.detail.container {
-  height: 1960px;
   width: 100%;
+  height: 100vh;
   background: $color-main-background;
   box-sizing: border-box;
-  padding-top: 96px;
+  padding-top: 64px;
 
   &.fixed {
     position: fixed;
     top: 0px;
     z-index: -1;
   }
+
+  &.hidden {
+    visibility: hidden;
+  }
 }
 
-.market.detail.spacer {
-  visibility: hidden;
+.header.container {
+  width: 100%;
+  height: 64px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  box-sizing: border-box;
+  padding: 16px 32px;
+  display: flex;
+
+  .ticker {
+    margin-right: 32px;
+    line-height: 32px;
+    font-size: 24px;
+
+    .sub {
+      font-size: 70%;
+      opacity: 0.3;
+    }
+  }
+
+  .up .main {
+    color: $color-side-bid;
+  }
+}
+
+.main.container {
+  display: flex;
+  overflow: hidden;
+}
+
+.charts.container {
+  flex: 1;
+  margin: auto;
+  img {
+    width: 100%;
+  }
+}
+
+.order.book {
+  width: 240px;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: $font-main-mono;
+    font-size: 14px;
+    line-height: 1.5em;
+    text-align: right;
+  }
+
+  thead {
+    display: table-header-group;
+    vertical-align: middle;
+  }
+
+  tbody {
+    display: table-row-group;
+    vertical-align: middle;
+
+    tr {
+      cursor: pointer;
+
+      &:hover {
+        background: rgba(0,0,0,0.05);
+      }
+    }
+  }
+
+  .ask .price {
+    color: $color-side-ask;
+  }
+
+  .bid .price {
+    color: $color-side-bid;
+  }
+}
+
+.trade.form {
+  width: 320px;
+}
+
+@media (max-width: 1024px) {
+  .market.detail.container {
+    height: auto;
+  }
+
+  .header.container {
+    .ticker {
+      margin: 0;
+      flex: 1;
+    }
+  }
+
+  .main.container {
+    flex-wrap: wrap;
+  }
+
+  .charts.container {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .header.container {
+    padding: 14px 16px 10px;
+
+    .ticker {
+      line-height: 20px;
+      font-size: 16px;
+      text-align: center;
+
+      span {
+        display: block;
+      }
+    }
+  }
 }
 
 }
