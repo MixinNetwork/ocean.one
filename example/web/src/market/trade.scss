@@ -93,6 +93,7 @@
   font-size: 14px;
   color: #555555;
   border-right: 1px solid rgba(0,0,0,0.1);
+  box-sizing: border-box;
 
   .book.header {
     background: $color-main-background;
@@ -100,7 +101,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 99;
+    z-index: 1;
     font-family: $font-main-title;
     font-size: 12px;
     font-weight: 500;
@@ -178,6 +179,116 @@
   height: calc(100% - 64px);
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
+  color: #555555;
+
+  .tabs {
+    display: flex;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .tab {
+    flex: 1;
+    width: 50%;
+    box-sizing: border-box;
+    text-align: center;
+    text-transform: uppercase;
+    padding: 8px 0;
+    cursor: pointer;
+  }
+
+  .type.tab {
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+
+    &.active {
+      border-bottom: 2px solid $color-main-highlight;
+    }
+  }
+
+  .side.tab {
+    background: rgba(0,0,0,0.1);
+
+    &.buy {
+      border-radius: 4px 0 0 4px;
+
+      &.active {
+        background: $color-side-bid;
+        color: $color-main-background;
+      }
+    }
+
+    &.sell {
+      border-radius: 0 4px 4px 0;
+
+      &.active {
+        background: $color-side-ask;
+        color: $color-main-background;
+      }
+    }
+  }
+
+  .form {
+    display: none;
+    padding: 16px 16px;
+    box-sizing: border-box;
+    font-size: 16px;
+
+    &.active {
+      display: block;
+    }
+
+    .text.field {
+      margin-bottom: 16px;
+      border-bottom: 2px solid $color-main-highlight;
+      display: flex;
+    }
+
+    .label {
+      display: block;
+      line-height: 48px;
+
+      &.right {
+        text-align: right;
+      }
+    }
+
+    input[type="text"] {
+      margin: auto;
+      flex: 1;
+      border: 0 none;
+      outline: 0 none;
+      line-height: 48px;
+      font-family: monospace;
+      text-align: right;
+      display: block;
+      box-sizing: border-box;
+      padding: 0 8px;
+      min-width: 0;
+    }
+
+    input[type="submit"] {
+      border: 0 none;
+      outline: 0 none;
+      margin-top: 32px;
+      line-height: 42px;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 4px;
+      box-shadow: 0 0 2px rgba(0,0,0,0.1);
+      color: $color-main-background;
+      cursor: pointer;
+
+      &.buy {
+        background: $color-side-bid;
+      }
+
+      &.sell {
+        background: $color-side-ask;
+      }
+    }
+  }
 }
 
 @media (max-width: 1024px) {
@@ -208,6 +319,10 @@
   .trade.form {
     height: 512px;
     width: 50%;
+
+    .form {
+      font-size: 14px;
+    }
   }
 }
 

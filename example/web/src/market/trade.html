@@ -45,6 +45,64 @@
       </ul>
     </div>
     <div class="trade form">
+      <div class="type tabs">
+        <div class="limit type tab active">Limit</div>
+        <div class="market type tab">Market</div>
+      </div>
+      <div class="side tabs">
+        <div class="buy side tab active">Buy</div>
+        <div class="sell side tab">Sell</div>
+      </div>
+      <form action="javascript:void(0);" class="limit buy form active">
+        <div class="text field">
+          <span class="price left label">Price</span>
+          <input type="text" name="price" />
+          <span class="price right label">BTC/USDT</span>
+        </div>
+        <div class="text field">
+          <span class="amount left label">Amount</span>
+          <input type="text" name="amount" />
+          <span class="amount right label">BTC</span>
+        </div>
+        <div class="field">
+          <input type="submit" value="Place Buy Order" class="buy button" />
+        </div>
+      </form>
+      <form action="javascript:void(0);" class="limit sell form">
+        <div class="text field">
+          <span class="price left label">Price</span>
+          <input type="text" name="price" />
+          <span class="price right label">BTC/USDT</span>
+        </div>
+        <div class="text field">
+          <span class="amount left label">Amount</span>
+          <input type="text" name="amount" />
+          <span class="amount right label">BTC</span>
+        </div>
+        <div class="field">
+          <input type="submit" value="Place Sell Order" class="sell button" />
+        </div>
+      </form>
+      <form action="javascript:void(0);" class="market buy form">
+        <div class="text field">
+          <span class="amount left label">Amount</span>
+          <input type="text" name="amount" />
+          <span class="amount right label">USDT</span>
+        </div>
+        <div class="field">
+          <input type="submit" value="Place Buy Order" class="buy button" />
+        </div>
+      </form>
+      <form action="javascript:void(0);" class="market sell form">
+        <div class="text field">
+          <span class="amount left label">Amount</span>
+          <input type="text" name="amount" />
+          <span class="amount right label">BTC</span>
+        </div>
+        <div class="field">
+          <input type="submit" value="Place Sell Order" class="sell button" />
+        </div>
+      </form>
     </div>
   </div>
 </div>

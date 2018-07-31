@@ -16,13 +16,19 @@ Home.prototype = {
     var data = require('./depth.json');
     var bids = data.data.bids;
     var asks = data.data.asks;
+    var asksData = [];
+    var bidsData = [];
     for (var i = 0; i < bids.length; i++) {
-      bids[i].price = parseFloat(bids[i].price).toFixed(8);
-      bids[i].amount = parseFloat(bids[i].amount).toFixed(4);
+      bidsData.push({
+        price: parseFloat(bids[i].price).toFixed(8),
+        amount: parseFloat(bids[i].amount).toFixed(4)
+      });
     }
-    for (var i = 0; i < asks.length; i++) {
-      asks[i].price = parseFloat(asks[i].price).toFixed(8);
-      asks[i].amount = parseFloat(asks[i].amount).toFixed(4);
+    for (var i = asks.length; i > 0; i--) {
+      asksData.push({
+        price: parseFloat(asks[i-1].price).toFixed(8),
+        amount: parseFloat(asks[i-1].amount).toFixed(4)
+      });
     }
 
     $('body').attr('class', 'market layout');
@@ -30,8 +36,8 @@ Home.prototype = {
       logoURL: require('./logo.png'),
       symbolURL: require('./symbol.png')
     })).append(self.templateTrade({
-      asks: asks,
-      bids: bids
+      asks: asksData,
+      bids: bidsData
     }));
     $('.market.detail.spacer').height($('.market.detail.container').outerHeight());
     $('.market.detail.container').addClass('fixed');
