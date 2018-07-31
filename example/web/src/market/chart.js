@@ -9,16 +9,12 @@ Chart.prototype = {
     var ohlc = [],
       volume = [],
       dataLength = data.length,
-      groupingUnits = [[
-        'week',             // unit name
-        [1]               // allowed multiples
-      ], [
-        'month',
-        [1, 2, 3, 4, 6]
-      ]],
-      i = 0;
+      groupingUnits = [
+        ['minute', [1, 5, 15, 30]],
+        ['hour', [1, 6, 12, 24]]
+      ];
 
-    for (i; i < dataLength; i += 1) {
+    for (var i = 0; i < dataLength; i += 1) {
       ohlc.push([
         data[i][0], // the date
         data[i][1], // open
@@ -93,7 +89,8 @@ Chart.prototype = {
         yAxis: 1,
         dataGrouping: {
           units: groupingUnits
-        }
+        },
+        color: 'rgba(0,0,0,0.2)'
       }, {
         type: 'candlestick',
         id: 'aapl',
@@ -107,13 +104,17 @@ Chart.prototype = {
         linkedTo: 'aapl',
         params: {
           period: 12
-        }
+        },
+        color: 'rgba(255,155,100,0.5)',
+        lineWidth: 1
       }, {
         type: 'ema',
         linkedTo: 'aapl',
         params: {
           period: 26
-        }
+        },
+        color: 'rgba(100,155,255,0.5)',
+        lineWidth: 1
       }]
     });
   },
