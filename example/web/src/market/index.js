@@ -1,6 +1,7 @@
 import './index.scss';
 import './trade.scss';
 import $ from 'jquery';
+import Chart from './chart.js';
 
 function Home(router, api) {
   this.router = router;
@@ -16,9 +17,7 @@ Home.prototype = {
     $('#layout-container').html(self.templateIndex({
       logoURL: require('./logo.png'),
       symbolURL: require('./symbol.png')
-    })).append(self.templateTrade({
-      chartURL: require('./chart.png')
-    }));
+    })).append(self.templateTrade());
     $('.market.detail.spacer').height($('.market.detail.container').outerHeight());
     $(window).scroll(function (event) {
       var scroll = $(window).scrollTop();
@@ -37,12 +36,12 @@ Home.prototype = {
       } else {
         $('.layout.nav .title').html('USDT MARKETS')
       }
-      if (scroll < height) {
+      if (scroll < height - $('.market.detail .header.container').outerHeight()) {
         $('.market.detail.container').css({'z-index': -1});
       } else {
         $('.market.detail.container').css({'z-index': 1});
       }
-      if (scroll < height) {
+      if (scroll < height - 4) {
         if (scroll < height - $(window).height() * 2 / 3 && $(window).width() > 1200) {
           $('.markets.nav').fadeIn();
         }
@@ -64,6 +63,9 @@ Home.prototype = {
         behavior: 'smooth'
       });
     });
+    var chart = new Chart();
+    chart.renderPrice($('.price.chart')[0]);
+    chart.renderDepth($('.depth.chart')[0]);
     self.api.subscribe('c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa', self.render);
   },
 
