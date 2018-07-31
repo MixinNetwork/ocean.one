@@ -34,6 +34,7 @@ Home.prototype = {
       bids: bids
     }));
     $('.market.detail.spacer').height($('.market.detail.container').outerHeight());
+    $('.market.detail.container').addClass('fixed');
     $(window).scroll(function (event) {
       var scroll = $(window).scrollTop();
       var height = $('.layout.header').outerHeight();
@@ -52,9 +53,9 @@ Home.prototype = {
         $('.layout.nav .title').html('USDT MARKETS')
       }
       if (scroll < height - $('.market.detail .header.container').outerHeight()) {
-        $('.market.detail.container').css({'z-index': -1});
+        $('.market.detail.container').removeClass('visible');
       } else {
-        $('.market.detail.container').css({'z-index': 1});
+        $('.market.detail.container').addClass('visible');
       }
       if (scroll < height - 4) {
         if (scroll < height - $(window).height() * 2 / 3 && $(window).width() > 1200) {
@@ -80,7 +81,7 @@ Home.prototype = {
     });
 
     var total = $('.order.book').height() - $('.order.book .spread').outerHeight();
-    var count = parseInt(total / $('.order.book .ask').outerHeight());
+    var count = parseInt(total / $('.order.book .ask').outerHeight() / 2) * 2;
     var line = (total / count) + 'px';
     $('.order.book .ask').css({'line-height': line, height: line});
     $('.order.book .bid').css({'line-height': line, height: line});

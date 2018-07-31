@@ -90,7 +90,7 @@ Chart.prototype = {
         dataGrouping: {
           units: groupingUnits
         },
-        color: 'rgba(0,0,0,0.2)'
+        color: 'rgba(41,149,242,0.3)'
       }, {
         type: 'candlestick',
         id: 'aapl',
