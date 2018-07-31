@@ -111,7 +111,7 @@
   }
 }
 
-.order.book {
+.orders.trades {
   width: 240px;
   height: calc(100% - 64px);
   position: relative;
@@ -122,11 +122,62 @@
   color: #555555;
   border-right: 1px solid rgba(0,0,0,0.1);
   box-sizing: border-box;
+  display: flex;
+
+  .tabs {
+    z-index: 1;
+    background: $color-main-background;
+    display: flex;
+    padding: 0 16px;
+    font-size: 14px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .tab {
+    flex: 1;
+    width: 50%;
+    box-sizing: border-box;
+    text-align: center;
+    text-transform: uppercase;
+    padding: 8px 0;
+    cursor: pointer;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+
+    &.active {
+      border-bottom: 2px solid $color-main-highlight;
+    }
+  }
+
+  .type.tab {
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+
+    &.active {
+      border-bottom: 2px solid $color-main-highlight;
+    }
+  }
+
+  .order.book {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .trade.history {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+    display: none;
+  }
 
   .book.header {
     background: $color-main-background;
     position: absolute;
-    top: 0;
+    top: 34px;
     left: 0;
     width: 100%;
     z-index: 1;
@@ -146,7 +197,7 @@
 
   .book.data {
     position: absolute;
-    top: 50%;
+    top: calc(50% + 34px);
     transform: translateY(-50%);
     width: 100%;
   }
@@ -366,7 +417,7 @@
     }
   }
 
-  .order.book,
+  .orders.trades,
   .trade.form {
     height: 512px;
     width: 50%;
@@ -402,7 +453,7 @@
     }
   }
 
-  .order.book,
+  .orders.trades,
   .trade.form {
     height: 320px;
   }
@@ -424,7 +475,7 @@
     }
   }
 
-  .order.book {
+  .orders.trades {
     font-size: 12px;
 
     .data {

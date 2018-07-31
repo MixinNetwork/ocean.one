@@ -86,7 +86,7 @@ Home.prototype = {
       });
     });
 
-    var total = $('.order.book').height() - $('.order.book .spread').outerHeight();
+    var total = $('.order.book').height() - $('.order.book .spread').outerHeight() - $('.book.tab').outerHeight();
     var count = parseInt(total / $('.order.book .ask').outerHeight() / 2) * 2;
     var line = (total / count) + 'px';
     $('.order.book .ask').css({'line-height': line, height: line});
