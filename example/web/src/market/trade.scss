@@ -50,14 +50,24 @@
 
 .main.container {
   display: flex;
+  height: 100vh;
+  margin-top: -128px;
+  padding-top: 128px;
+  box-sizing: border-box;
   overflow: hidden;
 }
 
 .charts.container {
   flex: 1;
   margin: auto;
-  img {
-    width: 100%;
+  height: 100%;
+
+  .price.chart {
+    height: 50%;
+  }
+
+  .depth.chart {
+    height: 50%;
   }
 
   .highcharts-point-up {
@@ -128,10 +138,14 @@
 
   .main.container {
     flex-wrap: wrap;
+    height: auto;
+    margin: 0;
+    padding: 0;
   }
 
   .charts.container {
     flex-basis: 100%;
+    height: 512px;
   }
 }
 

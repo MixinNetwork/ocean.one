@@ -47,7 +47,7 @@ Home.prototype = {
         }
         $('.market.detail.spacer').show();
         $('.market.detail.container').addClass('fixed');
-      } else if (scroll > height + 16){
+      } else if (scroll > height + 4){
         $('.market.detail.spacer').hide();
         $('.market.detail.container').removeClass('fixed');
       }
