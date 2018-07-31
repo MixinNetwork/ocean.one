@@ -29,8 +29,10 @@ Chart.prototype = {
       ]);
     }
 
-    Highcharts.stockChart(ele, {
+    var chart = Highcharts.stockChart(ele, {
       chart: {
+        zoomType: null,
+        panning: false,
         spacing: [0, 0, 0, 0]
       },
 
@@ -56,6 +58,7 @@ Chart.prototype = {
 
       plotOptions: {
         series: {
+          stickyTracking: false,
           showInLegend: false
         }
       },
@@ -79,6 +82,8 @@ Chart.prototype = {
       }],
 
       tooltip: {
+        followPointer: true,
+        followTouchMove: true,
         split: true
       },
 
@@ -154,6 +159,8 @@ Chart.prototype = {
 
     var chart = Highcharts.chart(ele, {
       chart: {
+        zoomType: null,
+        panning: false,
         spacing: [0, 0, 0, 0]
       },
 
@@ -207,6 +214,7 @@ Chart.prototype = {
 
       plotOptions: {
         series: {
+          stickyTracking: false,
           animation: true,
           marker: {
             enabled: false,
@@ -220,6 +228,8 @@ Chart.prototype = {
         }
       },
       tooltip: {
+        followPointer: true,
+        followTouchMove: false,
         crosshairs: [true, true],
         formatter: function () {
           return 'Price <b>' + this.x + '</b> <br/>' + this.series.name + '<b>' + this.y + '</b>';

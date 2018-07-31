@@ -91,7 +91,7 @@ Home.prototype = {
     var line = (total / count) + 'px';
     $('.order.book .ask').css({'line-height': line, height: line});
     $('.order.book .bid').css({'line-height': line, height: line});
-    $('.order.book .header').css({'line-height': line, height: line});
+    $('.order.book .header li').css({'line-height': line, height: line});
 
     var chart = new Chart();
     chart.renderPrice($('.price.chart')[0]);
