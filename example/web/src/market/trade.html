@@ -19,149 +19,32 @@
       <div class="depth chart"></div>
     </div>
     <div class="order book">
-      <table class="ask">
-        <thead>
-          <tr>
-            <th>Price (USDT)</th>
-            <th>Amount (BTC)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-        </tbody>
-      </table>
-      <table class="bid">
-        <thead>
-          <tr>
-            <th>USDT Spread</th>
-            <th>0.3578</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-          <tr>
-            <td>1.32838578</td>
-            <td class="price">8130.2887</td>
-          </tr>
-        </tbody>
-      </table>
+      <ul class="book header">
+        <li>
+          <div>Amount (BTC)</div>
+          <div>Price (USDT)</div>
+        </li>
+      </ul>
+      <ul class="book data">
+        {{#each asks}}
+        <li class="ask">
+          <div>{{dimZero this.amount}}</div>
+          <div class="price">{{dimZero this.price}}</div>
+        </li>
+        {{/each}}
+        <li class="spread">
+          <div>8,190</div>
+          <div>$1,325</div>
+        </li>
+        {{#each bids}}
+        <li class="bid">
+          <div>{{dimZero this.amount}}</div>
+          <div class="price">{{dimZero this.price}}</div>
+        </li>
+        {{/each}}
+      </ul>
     </div>
     <div class="trade form">
-      TRADE FORM
     </div>
   </div>
 </div>

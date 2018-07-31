@@ -66,7 +66,7 @@ Chart.prototype = {
           x: -3
         },
         height: '70%',
-        lineWidth: 2
+        lineWidth: 0
       }, {
         labels: {
           align: 'right',
@@ -75,7 +75,7 @@ Chart.prototype = {
         top: '71%',
         height: '29%',
         offset: 0,
-        lineWidth: 2
+        lineWidth: 0
       }],
 
       tooltip: {
@@ -119,11 +119,7 @@ Chart.prototype = {
     });
   },
 
-  renderDepth: function (ele) {
-    var data = require('./depth.json');
-    var bids = data.data.bids;
-    var asks = data.data.asks;
-
+  renderDepth: function (ele, bids, asks) {
     var bidsData = [];
     for(var i = 0; i < bids.length; i++) {
       bids[i].volume = parseFloat(bids[i].amount);
@@ -198,7 +194,7 @@ Chart.prototype = {
           x: -3,
           y: -2
         },
-        lineWidth: 2,
+        lineWidth: 0,
         resize: {
           enabled: true
         },
@@ -211,7 +207,6 @@ Chart.prototype = {
 
       plotOptions: {
         series: {
-          lineWidth: 1,
           animation: true,
           marker: {
             enabled: false,
