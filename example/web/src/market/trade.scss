@@ -3,7 +3,7 @@
 .market.layout {
 
 .market.detail.spacer {
-  visibility: hidden;
+  background: rgba(0,0,0,0.5);
 }
 
 .market.detail.container {
@@ -65,12 +65,39 @@
   height: calc(100% - 64px);
   border-right: 1px solid rgba(0,0,0,0.1);
 
+  .tabs {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+
+    li {
+      flex: 1;
+      list-style: none;
+      margin: auto;
+      padding: 0;
+      line-height: 32px;
+      font-size: 16px;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-align: center;
+
+      &.active {
+        background: rgba(0,0,0,0.1);
+      }
+
+      &.depth {
+        display: none;
+      }
+    }
+  }
+
   .price.chart {
-    height: 50%;
+    height: calc(50% - 16px);
   }
 
   .depth.chart {
-    height: 50%;
+    height: calc(50% - 16px);
   }
 
   .highcharts-point-up {
@@ -274,6 +301,8 @@
       line-height: 42px;
       display: block;
       width: 100%;
+      text-transform: uppercase;
+      font-weight: 300;
       box-sizing: border-box;
       border-radius: 4px;
       box-shadow: 0 0 2px rgba(0,0,0,0.1);
@@ -312,7 +341,20 @@
 
   .charts.container {
     flex-basis: 100%;
-    height: 512px;
+    height: 360px;
+
+    .tabs li.depth {
+      display: block;
+    }
+
+    .price.chart {
+      height: calc(100% - 32px);
+    }
+
+    .depth.chart {
+      height: calc(100% - 32px);
+      display: none;
+    }
   }
 
   .order.book,
