@@ -86,17 +86,31 @@ Home.prototype = {
       });
     });
 
+    self.fixListItemHeight();
+    self.renderChart(bids, asks);
+    self.api.subscribe('c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa', self.render);
+  },
+
+  fixListItemHeight: function () {
     var total = $('.order.book').height() - $('.order.book .spread').outerHeight() - $('.book.tab').outerHeight();
     var count = parseInt(total / $('.order.book .ask').outerHeight() / 2) * 2;
     var line = (total / count) + 'px';
     $('.order.book .ask').css({'line-height': line, height: line});
     $('.order.book .bid').css({'line-height': line, height: line});
     $('.order.book .header li').css({'line-height': line, height: line});
+    $('.order.book .header').css({'top': $('.book.tab').outerHeight()});
 
+    total = $('.trade.history').height() - $('.history.tab').outerHeight();
+    count = parseInt(total / $('.trade.history .ask').outerHeight() / 2) * 2;
+    line = (total / count) + 'px';
+    $('.trade.history .ask').css({'line-height': line, height: line});
+    $('.trade.history .bid').css({'line-height': line, height: line});
+  },
+
+  renderChart: function (bids, asks) {
     var chart = new Chart();
     chart.renderPrice($('.price.chart')[0]);
     chart.renderDepth($('.depth.chart')[0], bids, asks);
-    self.api.subscribe('c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa', self.render);
   },
 
   render: function (msg) {
