@@ -380,6 +380,49 @@
       }
     }
   }
+
+  .account.balances {
+    line-height: 2.5em;
+    font-size: 14px;
+    padding: 16px 0;
+
+    .balance {
+      font-family: $font-main-mono;
+      display: flex;
+      padding: 0 16px;
+
+      .asset {
+        flex: 1;
+        display: block;
+
+        &.amount {
+          text-align: right;
+        }
+      }
+    }
+
+    .actions {
+      display: flex;
+      margin-top: 8px;
+      flex-wrap: wrap;
+
+      .action {
+        flex: 1;
+        cursor: pointer;
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 2px;
+        display: block;
+        text-align: center;
+        text-transform: uppercase;
+        min-width: 120px;
+        margin: 8px 16px;
+
+        i {
+          font-size: 80%;
+        }
+      }
+    }
+  }
 }
 
 @media (min-width: 1600px) {
@@ -481,7 +524,8 @@
 
   .orders.trades,
   .trade.form {
-    height: 320px;
+    height: 400px;
+    min-height: 50vh;
   }
 
   .trade.form .side.tabs {
@@ -496,8 +540,23 @@
       font-size: 12px;
     }
 
+    .label,
+    input[type="text"] {
+      line-height: 36px;
+    }
+
     input[type="submit"] {
       margin-top: 16px;
+      line-height: 36px;
+    }
+  }
+
+  .trade.form .account.balances {
+    font-size: 12px;
+    padding: 8px 0;
+
+    .balance {
+      line-height: 2em;
     }
   }
 
