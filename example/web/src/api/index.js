@@ -1,94 +1,91 @@
-import ReconnectingWebSocket from 'reconnecting-websocket';
-import pako from 'pako';
-import uuidv4 from 'uuid/v4';
+import $ from 'jquery';
+import Noty from 'noty';
+import Account from './account.js';
+import Engine from './engine.js';
 
-function API(endpoint) {
-  const self = this;
-  self.handlers = {};
-  self.ws = new ReconnectingWebSocket(endpoint, [], {
-    maxReconnectionDelay: 5000,
-    minReconnectionDelay: 1000,
-    reconnectionDelayGrowFactor: 1.2,
-    connectionTimeout: 4000,
-    maxRetries: Infinity,
-    debug: true
-  });
-
-  self.ws.addEventListener("message", function(event) {
-    var fileReader = new FileReader();
-    fileReader.onload = function() {
-      var msg = pako.ungzip(new Uint8Array(this.result), { to: 'string' });
-      self.handle(JSON.parse(msg));
-    };
-    fileReader.readAsArrayBuffer(event.data);
-  });
-
-  self.ws.addEventListener("open", function (event) {
-    for (var i in self.handlers) {
-      self.send(self.handlers[i].message);
-    }
-  });
-
-  self.ws.addEventListener('close', () => self.ws._shouldReconnect && self.ws._connect());
+function API(router, root, engine) {
+  this.router = router;
+  this.root = root;
+  this.account = new Account(this);
+  this.engine = new Engine(engine);
+  this.Error404 = require('../404.html');
+  this.ErrorGeneral = require('../error.html');
 }
 
 API.prototype = {
-  reset: function() {
-    try {
-      this.ws.close();
-    } catch (e) {
-      if (e instanceof DOMException) {
-      } else {
-        console.error(e);
+  request: function(method, path, params, callback) {
+    const self = this;
+    $.ajax({
+      type: method,
+      url: self.root + path,
+      contentType: "application/json",
+      data: JSON.stringify(params),
+      beforeSend: function(xhr) {
+        xhr.setRequestHeader("Authorization", "Bearer " + self.account.token());
+      },
+      success: function(resp) {
+        var consumed = false;
+        if (typeof callback === 'function') {
+          consumed = callback(resp);
+        }
+        if (!consumed && resp.error !== null && resp.error !== undefined) {
+          self.error(resp);
+        }
+      },
+      error: function(event) {
+        self.error(event.responseJSON, callback);
+      }
+    });
+  },
+
+  error: function(resp, callback) {
+    if (resp == null || resp == undefined || resp.error === null || resp.error === undefined) {
+      resp = {error: { code: 0, description: 'unknown error' }};
+    }
+
+    var consumed = false;
+    if (typeof callback === 'function') {
+      consumed = callback(resp);
+    }
+    if (!consumed) {
+      switch (resp.error.code) {
+        case 401:
+          this.account.clear();
+          this.router.replace('/sessions/new');
+          break;
+        case 404:
+          $('#layout-container').html(this.Error404());
+          $('body').attr('class', 'error layout');
+          this.router.updatePageLinks();
+          break;
+        default:
+          if ($('#layout-container > .spinner-container').length === 1) {
+            $('#layout-container').html(this.ErrorGeneral());
+            $('body').attr('class', 'error layout');
+            this.router.updatePageLinks();
+          }
+          this.notify('error', i18n.t('general.errors.' + resp.error.code));
+          break;
       }
     }
   },
 
-  send: function (msg) {
-    try {
-      this.ws.send(pako.gzip(JSON.stringify(msg)));
-    } catch (e) {
-      if (e instanceof DOMException) {
-      } else {
-        console.error(e);
+  notify: function(type, text) {
+    new Noty({
+      type: type,
+      layout: 'top',
+      theme: 'nest',
+      text: text,
+      timeout: 3000,
+      progressBar: false,
+      queue: 'api',
+      killer: 'api',
+      force: true,
+      animation: {
+        open: 'animated bounceInDown',
+        close: 'animated slideOutUp noty'
       }
-    }
-  },
-
-  handle: function (msg) {
-    var handler = this.handlers[msg.data.market];
-    if (handler) {
-      handler.callback(msg);
-    }
-  },
-
-  subscribe: function (market, callback) {
-    var handler = this.handlers[market];
-    if (handler) {
-      this.unsubscribe(market);
-    }
-    var msg = {
-      id: uuidv4().toLowerCase(),
-      action: 'SUBSCRIBE_BOOK',
-      params: { market: market }
-    };
-    this.send(msg);
-    this.handlers[market] = {
-      callback: callback,
-      message: msg
-    };
-  },
-
-  unsubscribe: function (market) {
-    var handler = this.handlers[market];
-    if (handler) {
-      delete self.handlers[market];
-      this.send({
-        id: uuidv4().toLowerCase(),
-        action: 'UNSUBSCRIBE_BOOK',
-        params: { market: market }
-      });
-    }
+    }).show();
   }
 };
 

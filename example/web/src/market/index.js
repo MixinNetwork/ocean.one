@@ -3,14 +3,14 @@ import './trade.scss';
 import $ from 'jquery';
 import Chart from './chart.js';
 
-function Home(router, api) {
+function Market(router, api) {
   this.router = router;
   this.api = api;
   this.templateIndex = require('./index.html');
   this.templateTrade = require('./trade.html');
 }
 
-Home.prototype = {
+Market.prototype = {
   index: function () {
     const self = this;
     var data = require('./depth.json');
@@ -91,7 +91,7 @@ Home.prototype = {
 
     self.fixListItemHeight();
     self.renderChart(bids, asks);
-    self.api.subscribe('c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa', self.render);
+    self.api.engine.subscribe('c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa', self.render);
   },
 
   fixListItemHeight: function () {
@@ -121,4 +121,4 @@ Home.prototype = {
   }
 };
 
-export default Home;
+export default Market;
