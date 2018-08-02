@@ -52,6 +52,9 @@ Home.prototype = {
 
       height = $('.layout.header').outerHeight() + $('.markets.container').outerHeight();
       $('.market.detail.spacer').height($('.market.detail.container').outerHeight());
+      if (scroll < $('.layout.header').outerHeight() * 2 / 3) {
+        $('.markets.nav').fadeOut();
+      }
       if (scroll > height - $(window).height() * 2 / 3) {
         $('.markets.nav').fadeOut();
         $('.layout.nav .title').html('BTC-USDT')
@@ -64,7 +67,7 @@ Home.prototype = {
         $('.market.detail.container').addClass('visible');
       }
       if (scroll < height - 4) {
-        if (scroll < height - $(window).height() * 2 / 3 && $(window).width() > 1200) {
+        if (scroll < height - $(window).height() * 2 / 3 && $(window).width() > 1200 && scroll > $('.layout.header').outerHeight() * 2 / 3) {
           $('.markets.nav').fadeIn();
         }
         $('.market.detail.spacer').show();
