@@ -1,4 +1,4 @@
-import KJUR from 'jsrsasign';
+const EC = require('elliptic').ec;
 
 function Account(api) {
   this.api = api;
@@ -17,6 +17,23 @@ Account.prototype = {
     });
   },
 
+  createUser: function (callback, params) {
+    var ec = new EC('p256');
+    var key = ec.genKeyPair();
+    var pub = key.getPublic('hex');
+    var priv = key.getPrivate('hex');
+
+    params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
+    this.api.request('POST', '/users', params, function(resp) {
+      if (resp.data) {
+        window.localStorage.setItem('token.example', priv);
+        window.localStorage.setItem('uid', resp.data.user_id);
+        window.localStorage.setItem('sid', resp.data.session_id);
+      }
+      return callback(resp);
+    });
+  },
+
   check: function (callback) {
     const self = this;
     this.api.request('GET', '/me', undefined, function(resp) {
@@ -27,11 +44,13 @@ Account.prototype = {
   },
 
   token: function () {
-    var priv = window.localStorage.getItem('token');
+    var priv = window.localStorage.getItem('token.example');
     if (!priv) {
       return "";
     }
-    var oHeader = {alg: 'RS512', typ: 'JWT'};
+    var ec = new EC('p256');
+    var key = ec.keyFromPrivate(priv);
+    var oHeader = {alg: 'ES256', typ: 'JWT'};
     var oPayload = {};
     oPayload.sub = window.localStorage.getItem('uid');
     oPayload.jti = window.localStorage.getItem('sid');

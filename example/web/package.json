@@ -11,10 +11,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "elliptic": "^6.4.0",
     "handlebars": "^4.0.11",
     "intl-tel-input": "^13.0.2",
     "jquery": "^3.3.1",
-    "jsrsasign": "^8.0.12",
     "navigo": "^7.1.2",
     "node-polyglot": "^2.3.0",
     "noty": "^3.2.0-beta",

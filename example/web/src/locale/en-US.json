@@ -22,7 +22,8 @@
     },
     "buttons": {
       "get.verification.code": "Get Verification Code",
-      "submit": "Submit"
+      "submit": "Submit",
+      "create.user": "Create Account"
     }
   }
 }
