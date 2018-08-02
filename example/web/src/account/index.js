@@ -143,6 +143,12 @@ Account.prototype = {
         return;
       }
     });
+    self.api.mixin.assets(function (resp) {
+      console.log(resp);
+    });
+    self.api.ocean.orders(function (resp) {
+      console.log(resp);
+    });
   }
 };
 

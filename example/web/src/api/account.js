@@ -83,6 +83,36 @@ Account.prototype = {
       sig: md.digest().toHex()
     };
     return jwt.sign(payload, privateKey, { algorithm: 'ES256'});
+  },
+
+  oceanToken: function (callback) {
+    this.externalToken("OCEAN", "", callback);
+  },
+
+  mixinToken: function (uri, callback) {
+    this.externalToken("MIXIN", uri, callback);
+  },
+
+  externalToken: function (category, uri, callback) {
+    var key = 'token.' + category.toLowerCase();
+    var token = window.localStorage.getItem(key);
+    if (token) {
+      return callback(token);
+    }
+    var params = {
+      category: category,
+      uri: uri
+    };
+    this.api.request('POST', '/tokens', params, function(resp) {
+      if (resp.data) {
+        window.localStorage.setItem(key, resp.data.token);
+        return callback(resp.data.token);
+      }
+    });
+  },
+
+  clear: function () {
+    window.localStorage.clear();
   }
 }
 

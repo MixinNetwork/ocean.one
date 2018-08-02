@@ -2,11 +2,15 @@ import $ from 'jquery';
 import Noty from 'noty';
 import Account from './account.js';
 import Engine from './engine.js';
+import Mixin from './mixin.js';
+import Ocean from './ocean.js';
 
 function API(router, root, engine) {
   this.router = router;
   this.root = root;
   this.account = new Account(this);
+  this.mixin = new Mixin(this);
+  this.ocean = new Ocean(this);
   this.engine = new Engine(engine);
   this.Error404 = require('../404.html');
   this.ErrorGeneral = require('../error.html');
@@ -16,13 +20,33 @@ API.prototype = {
   request: function(method, path, params, callback) {
     const self = this;
     var body = JSON.stringify(params);
+    var url = self.root + path;
+    if (path.indexOf('https://') === 0) {
+      url = path;
+    }
+    if (url.indexOf('https://api.mixin.one') === 0) {
+      var uri = path.slice('https://api.mixin.one'.length);
+      self.account.mixinToken(uri, function (token) {
+        self.send(token, method, url, body, callback);
+      });
+    } else if (url.indexOf('https://events.ocean.one') === 0) {
+      self.account.oceanToken(function (token) {
+        self.send(token, method, url, body, callback);
+      });
+    } else {
+      var token = self.account.token(method, path, body);
+      self.send(token, method, url, body, callback);
+    }
+  },
+
+  send: function (token, method, url, body, callback) {
     $.ajax({
       type: method,
-      url: self.root + path,
+      url: url,
       contentType: "application/json",
       data: body,
       beforeSend: function(xhr) {
-        xhr.setRequestHeader("Authorization", "Bearer " + self.account.token(method, path, body));
+        xhr.setRequestHeader("Authorization", "Bearer " + token);
       },
       success: function(resp) {
         var consumed = false;
