@@ -1,0 +1,28 @@
+{
+  "general": {
+    "errors": {
+      "0": "Network error.",
+      "20110": "Invalid phone number.",
+      "20112": "Invalid invitation code.",
+      "20113": "Invalid phone verification code."
+    }
+  },
+  "account": {
+    "me": {
+      "invitation.network.title": "Invitation Network"
+    },
+    "enroll": {
+      "phone.title": "Enter your mobile number",
+      "verify.title": "Enter the 4-digit verification code sent to you at %{phone}",
+      "profile.title": "What's your name?"
+    },
+    "notifications": {
+      "phone.verification.send.success": "We have sent the verification code to your phone.",
+      "invitation.link.copied": "Your invitation link has been copied to clipboard."
+    },
+    "buttons": {
+      "get.verification.code": "Get Verification Code",
+      "submit": "Submit"
+    }
+  }
+}
