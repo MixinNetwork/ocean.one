@@ -15,13 +15,14 @@ function API(router, root, engine) {
 API.prototype = {
   request: function(method, path, params, callback) {
     const self = this;
+    var body = JSON.stringify(params);
     $.ajax({
       type: method,
       url: self.root + path,
       contentType: "application/json",
-      data: JSON.stringify(params),
+      data: body,
       beforeSend: function(xhr) {
-        xhr.setRequestHeader("Authorization", "Bearer " + self.account.token());
+        xhr.setRequestHeader("Authorization", "Bearer " + self.account.token(method, path, body));
       },
       success: function(resp) {
         var consumed = false;

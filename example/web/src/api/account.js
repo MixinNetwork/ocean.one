@@ -1,4 +1,9 @@
+import forge from 'node-forge';
+import moment from 'moment';
+import jwt from 'jsonwebtoken';
+import uuid from 'uuid/v4';
 const EC = require('elliptic').ec;
+const KeyEncoder = require('key-encoder');
 
 function Account(api) {
   this.api = api;
@@ -34,7 +39,7 @@ Account.prototype = {
     });
   },
 
-  check: function (callback) {
+  me: function (callback) {
     const self = this;
     this.api.request('GET', '/me', undefined, function(resp) {
       if (typeof callback === 'function') {
@@ -43,21 +48,41 @@ Account.prototype = {
     });
   },
 
-  token: function () {
+  token: function (method, uri, body) {
     var priv = window.localStorage.getItem('token.example');
     if (!priv) {
       return "";
     }
-    var ec = new EC('p256');
-    var key = ec.keyFromPrivate(priv);
-    var oHeader = {alg: 'ES256', typ: 'JWT'};
-    var oPayload = {};
-    oPayload.sub = window.localStorage.getItem('uid');
-    oPayload.jti = window.localStorage.getItem('sid');
-    oPayload.exp = KJUR.jws.IntDate.get('now + 1day');;
-    var sHeader = JSON.stringify(oHeader);
-    var sPayload = JSON.stringify(oPayload);
-    return KJUR.jws.JWS.sign("RS512", sHeader, sPayload, priv);
+
+    var encoderOptions = {
+      curveParameters: [1, 2, 840, 10045, 3, 1, 7],
+      privatePEMOptions: {label: 'EC PRIVATE KEY'},
+      publicPEMOptions: {label: 'PUBLIC KEY'},
+      curve: new EC('p256')
+    };
+    var keyEncoder = new KeyEncoder(encoderOptions);
+    var pemPrivateKey = keyEncoder.encodePrivate(priv, 'raw', 'pem');
+
+    var uid = window.localStorage.getItem('uid');
+    var sid = window.localStorage.getItem('sid');
+    return this.sign(uid, sid, pemPrivateKey, method, uri, body);
+  },
+
+  sign: function (uid, sid, privateKey, method, uri, body) {
+    if (typeof body !== 'string') { body = ""; }
+
+    let expire = moment.utc().add(1, 'minutes').unix();
+    let md = forge.md.sha256.create();
+    md.update(method + uri + body);
+    let payload = {
+      uid: uid,
+      sid: sid,
+      iat: moment.utc().unix() ,
+      exp: expire,
+      jti: uuid(),
+      sig: md.digest().toHex()
+    };
+    return jwt.sign(payload, privateKey, { algorithm: 'ES256'});
   }
 }
 

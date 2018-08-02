@@ -45,6 +45,9 @@ router.on({
   },
   '/passwords/new': function () {
     new Account(router, api).resetPassword();
+  },
+  '/me': function () {
+    new Account(router, api).me();
   }
 }).notFound(function () {
   $('#layout-container').html(Error404());

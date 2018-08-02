@@ -9,6 +9,7 @@ function Account(router, api) {
   this.api = api;
   this.templateUser = require('./user.html');
   this.templateSession = require('./session.html');
+  this.templateMe = require('./me.html');
   this.stepCode = require('./step_code.html');
   this.stepUser = require('./step_user.html');
 }
@@ -131,6 +132,17 @@ Account.prototype = {
     const self = this;
     $('body').attr('class', 'account layout');
     $('#layout-container').html(self.templateSession());
+  },
+
+  me: function () {
+    const self = this;
+    $('body').attr('class', 'account layout');
+    $('#layout-container').html(self.templateMe());
+    self.api.account.me(function (resp) {
+      if (resp.error) {
+        return;
+      }
+    });
   }
 };
 
