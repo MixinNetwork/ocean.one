@@ -67,7 +67,7 @@ func (impl *R) marketTicker(w http.ResponseWriter, r *http.Request, params map[s
 	if len(best.Bids) > 0 {
 		ticker["bid"] = best.Bids[0].Price
 	}
-	render.New().JSON(w, http.StatusOK, ticker)
+	render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": ticker})
 }
 
 func (impl *R) marketBook(w http.ResponseWriter, r *http.Request, params map[string]string) {
@@ -75,7 +75,7 @@ func (impl *R) marketBook(w http.ResponseWriter, r *http.Request, params map[str
 	if err != nil {
 		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	} else {
-		render.New().JSON(w, http.StatusOK, book)
+		render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": book})
 	}
 }
 
@@ -98,7 +98,7 @@ func (impl *R) marketTrades(w http.ResponseWriter, r *http.Request, params map[s
 			"created_at": t.CreatedAt,
 		})
 	}
-	render.New().JSON(w, http.StatusOK, data)
+	render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": data})
 }
 
 func (impl *R) orders(w http.ResponseWriter, r *http.Request, params map[string]string) {
@@ -139,7 +139,7 @@ func (impl *R) orders(w http.ResponseWriter, r *http.Request, params map[string]
 			"created_at":       o.CreatedAt,
 		})
 	}
-	render.New().JSON(w, http.StatusOK, data)
+	render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": data})
 }
 
 func authenticateUser(r *http.Request) (string, error) {
