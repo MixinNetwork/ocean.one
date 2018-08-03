@@ -126,6 +126,7 @@
 
   .tabs {
     z-index: 1;
+    font-family: $font-main-content;
     background: $color-main-background;
     display: flex;
     padding: 0 16px;
@@ -356,11 +357,13 @@
       min-width: 0;
     }
 
-    input[type="submit"] {
+    input[type="submit"],
+    .submit-loader {
       border: 0 none;
       outline: 0 none;
       margin-top: 32px;
       line-height: 42px;
+      height: 42px;
       display: block;
       width: 100%;
       text-transform: uppercase;
@@ -378,6 +381,10 @@
       &.sell {
         background: $color-side-ask;
       }
+    }
+
+    .submit-loader {
+      display: none;
     }
   }
 
@@ -422,6 +429,48 @@
           margin-right: 4px;
         }
       }
+    }
+  }
+}
+
+.submit-loader {
+  position: relative;
+  display: none;
+  cursor: wait;
+  background-color: $color-main-background;
+
+  .spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    padding-top: 4px;
+    text-align: center;
+  }
+
+  .spinner > div {
+    width: 12px;
+    height: 12px;
+    background-color: $color-main-background;
+    border-radius: 100%;
+    display: inline-block;
+    animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+  }
+
+  .spinner .bounce1 {
+    animation-delay: -0.32s;
+  }
+
+  .spinner .bounce2 {
+    animation-delay: -0.16s;
+  }
+
+  @keyframes sk-bouncedelay {
+    0%, 80%, 100% {
+      transform: scale(0);
+    } 40% {
+      transform: scale(1.0);
     }
   }
 }

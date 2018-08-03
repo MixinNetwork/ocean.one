@@ -4,6 +4,7 @@ import Account from './account.js';
 import Engine from './engine.js';
 import Mixin from './mixin.js';
 import Ocean from './ocean.js';
+import Order from './order.js';
 
 function API(router, root, engine) {
   this.router = router;
@@ -12,6 +13,7 @@ function API(router, root, engine) {
   this.mixin = new Mixin(this);
   this.ocean = new Ocean(this);
   this.engine = new Engine(engine);
+  this.order = new Order(this);
   this.Error404 = require('../404.html');
   this.ErrorGeneral = require('../error.html');
 }
@@ -40,6 +42,7 @@ API.prototype = {
   },
 
   send: function (token, method, url, body, callback) {
+    const self = this;
     $.ajax({
       type: method,
       url: url,

@@ -1,7 +1,9 @@
 import './index.scss';
 import './trade.scss';
 import $ from 'jquery';
+import uuid from 'uuid/v4';
 import Chart from './chart.js';
+import FormUtils from '../utils/form.js';
 
 function Market(router, api) {
   this.router = router;
@@ -39,6 +41,61 @@ Market.prototype = {
       asks: asksData,
       bids: bidsData
     }));
+    $('.layout.nav .logo a').click(function() {
+      window.scroll({
+        top: $('.layout.header').outerHeight() - $('.layout.nav').outerHeight(),
+        behavior: 'smooth'
+      });
+    });
+
+    self.handlePageScroll();
+    self.fixListItemHeight();
+    self.renderChart(bids, asks);
+    self.api.engine.subscribe('c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa', self.render);
+    self.handleOrderCreate();
+  },
+
+  handleOrderCreate: function () {
+    const self = this;
+
+    $('.trade.form .submit-loader').hide();
+    $('.trade.form :submit').show();
+    $('.trade.form :submit').prop('disabled', false);
+
+    $('.trade.form form').submit(function (event) {
+      event.preventDefault();
+      var form = $(this);
+      var data = FormUtils.serialize(this);
+      data.type = $('.type.tab.active').attr('data-type');
+      data.side = $('.side.tab.active').attr('data-side');
+      data.trace_id = uuid().toLowerCase();
+      data.quote = 'c6d0c728-2624-429b-8e0d-d9d19b6592fa';
+      data.base = 'c94ac88f-4671-3976-b60a-09064f1811e8';
+      if (data.type === 'LIMIT' && data.side === 'BID') {
+        data.funds = (parseFloat(data.amount) * parseFloat(data.price)).toFixed(8);
+      }
+      self.api.order.create(function (resp) {
+        $('.submit-loader', form).hide();
+        $(':submit', form).show();
+        $(':submit', form).prop('disabled', false);
+        if (resp.error) {
+          return;
+        }
+
+        console.log(resp);
+      }, data);
+    });
+    $('.trade.form :submit').click(function (event) {
+      event.preventDefault();
+      $(this).hide();
+      $(this).prop('disabled', true);
+      var form = $(this).parents('.trade.form form');
+      $('.submit-loader', form).show();
+      form.submit();
+    });
+  },
+
+  handlePageScroll: function () {
     $('.market.detail.spacer').height($('.market.detail.container').outerHeight());
     $('.market.detail.container').addClass('fixed');
     $(window).scroll(function (event) {
@@ -82,16 +139,6 @@ Market.prototype = {
         $('.market.detail.container').removeClass('hidden');
       }
     });
-    $('.layout.nav .logo a').click(function() {
-      window.scroll({
-        top: $('.layout.header').outerHeight() - $('.layout.nav').outerHeight(),
-        behavior: 'smooth'
-      });
-    });
-
-    self.fixListItemHeight();
-    self.renderChart(bids, asks);
-    self.api.engine.subscribe('c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa', self.render);
   },
 
   fixListItemHeight: function () {

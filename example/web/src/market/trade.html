@@ -77,12 +77,12 @@
     </div>
     <div class="trade form">
       <div class="type tabs">
-        <div class="limit type tab active">Limit</div>
-        <div class="market type tab">Market</div>
+        <div class="limit type tab active" data-type="LIMIT">Limit</div>
+        <div class="market type tab" data-type="MARKET">Market</div>
       </div>
       <div class="side tabs">
-        <div class="buy side tab active">Buy</div>
-        <div class="sell side tab">Sell</div>
+        <div class="buy side tab active" data-side="BID">Buy</div>
+        <div class="sell side tab" data-side="ASK">Sell</div>
       </div>
       <form action="javascript:void(0);" class="limit buy form active">
         <div class="text field">
@@ -97,6 +97,13 @@
         </div>
         <div class="field">
           <input type="submit" value="Place Buy Order" class="buy button" />
+          <div class="submit-loader buy">
+            <div class="spinner">
+              <div class="bounce1"></div>
+              <div class="bounce2"></div>
+              <div class="bounce3"></div>
+            </div>
+          </div>
         </div>
       </form>
       <form action="javascript:void(0);" class="limit sell form">
@@ -112,16 +119,30 @@
         </div>
         <div class="field">
           <input type="submit" value="Place Sell Order" class="sell button" />
+          <div class="submit-loader sell">
+            <div class="spinner">
+              <div class="bounce1"></div>
+              <div class="bounce2"></div>
+              <div class="bounce3"></div>
+            </div>
+          </div>
         </div>
       </form>
       <form action="javascript:void(0);" class="market buy form">
         <div class="text field">
-          <span class="amount left label">Amount</span>
-          <input type="text" name="amount" />
-          <span class="amount right label">USDT</span>
+          <span class="funds left label">Amount</span>
+          <input type="text" name="funds" />
+          <span class="funds right label">USDT</span>
         </div>
         <div class="field">
           <input type="submit" value="Place Buy Order" class="buy button" />
+          <div class="submit-loader buy">
+            <div class="spinner">
+              <div class="bounce1"></div>
+              <div class="bounce2"></div>
+              <div class="bounce3"></div>
+            </div>
+          </div>
         </div>
       </form>
       <form action="javascript:void(0);" class="market sell form">
@@ -132,6 +153,13 @@
         </div>
         <div class="field">
           <input type="submit" value="Place Sell Order" class="sell button" />
+          <div class="submit-loader sell">
+            <div class="spinner">
+              <div class="bounce1"></div>
+              <div class="bounce2"></div>
+              <div class="bounce3"></div>
+            </div>
+          </div>
         </div>
       </form>
       <div class="account balances">
