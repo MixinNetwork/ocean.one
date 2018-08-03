@@ -10,4 +10,81 @@
   padding: 0 16px;
 }
 
+.orders.list {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  max-width: 640px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0 16px;
+
+  thead {
+    display: table-header-group;
+    vertical-align: middle;
+  }
+
+  tbody {
+    display: table-row-group;
+    vertical-align: middle;
+    font-family: $font-main-mono;
+  }
+
+  th, td {
+    text-align: right;
+    padding: 16px 0;
+
+    &:first-child {
+      text-align: left;
+    }
+  }
+
+  th {
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  tr {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  thead {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+
+  td {
+    line-height: 20px;
+
+    .sub {
+      font-size: 90%;
+      opacity: 0.3;
+    }
+  }
+
+  .ASK.side {
+    color: $color-side-ask;
+  }
+
+  .BID.side {
+    color: $color-side-bid;
+  }
+
+  .filled {
+    opacity: 0.3;
+    margin-left: 4px;
+    font-size: 80%;
+    font-weight: 300;
+  }
+
+  .cancel.action a {
+    color: $color-main-foreground-light;
+    font-size: 11px;
+  }
+}
+
 }

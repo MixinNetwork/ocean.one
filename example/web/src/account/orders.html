@@ -8,10 +8,23 @@
     <div class="orders container">
 
       <table class="orders list">
+        <thead>
+          <tr>
+            <td></td>
+            <td>Price</td>
+            <td>Amount</td>
+            <td>Time</td>
+            <td></td>
+          </tr>
+        </thead>
         <tbody>
           {{#each orders}}
           <tr class="order item" data-id="{{this.order_id}}">
-            <td>{{this.order_id}}</td>
+            <td class="{{this.side}} side">●</td>
+            <td><span>{{this.price}}</span><span class="filled">⌭{{this.filled_price}}</span></td>
+            <td><span>{{this.amount}}</span><span class="filled">⌭{{this.filled_amount}}</span></td>
+            <td>{{this.created_at}}</td>
+            <td class="cancel action"><a href="javascript:void(0);"><i class="icon-close"></i></a></td>
           </tr>
           {{/each}}
         </tbody>

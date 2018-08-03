@@ -238,12 +238,40 @@ Account.prototype = {
       if (resp.error) {
         return;
       }
+      for (var i = 0; i < resp.data.length; i++) {
+        var o = resp.data[i];
+        o.created_at = TimeUtils.short(o.created_at);
+        o.amount = parseFloat((parseFloat(o.filled_amount) + parseFloat(o.remaining_amount)).toFixed(8));
+        o.funds = parseFloat((parseFloat(o.filled_funds) + parseFloat(o.remaining_funds)).toFixed(8));
+        if (o.side === 'BID') {
+          o.amount = parseFloat((o.funds / parseFloat(o.price)).toFixed(8));
+        }
+        o.filled_price = 0;
+        if (o.filled_amount !== '0') {
+          o.filled_price = parseFloat((parseFloat(o.filled_funds) / parseFloat(o.filled_amount)).toFixed(8));
+        }
+      }
       $('body').attr('class', 'account layout');
       $('#layout-container').html(self.templateOrders({
         orders: resp.data
       }));
+      self.handleOrderCancel();
       self.router.updatePageLinks();
     }, market, offset);
+  },
+
+  handleOrderCancel: function () {
+    const self = this;
+    $('.orders.list .cancel.action a').click(function () {
+      var item = $(this).parents('.order.item');
+      var id = $(item).attr('data-id');
+      self.api.order.cancel(function (resp) {
+        if (resp.error) {
+          return;
+        }
+        $(item).fadeOut().remove();
+      }, id);
+    });
   }
 };
 
