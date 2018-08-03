@@ -48,6 +48,15 @@ router.on({
   },
   '/me': function () {
     new Account(router, api).me();
+  },
+  '/accounts': function () {
+    new Account(router, api).assets();
+  },
+  '/accounts/:id/deposit': function (params) {
+    new Account(router, api).asset(params['id'], 'DEPOSIT');
+  },
+  '/accounts/:id/withdrawal': function (params) {
+    new Account(router, api).asset(params['id'], 'WITHDRAWAL');
   }
 }).notFound(function () {
   $('#layout-container').html(Error404());

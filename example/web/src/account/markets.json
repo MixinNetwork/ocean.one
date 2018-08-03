@@ -1,0 +1,58 @@
+[
+  {
+    "chain_id": "c6d0c728-2624-429b-8e0d-d9d19b6592fa",
+    "asset_id": "c6d0c728-2624-429b-8e0d-d9d19b6592fa",
+    "icon_url": "https://images.mixin.one/HvYGJsV5TGeZ-X9Ek3FEQohQZ3fE9LBEBGcOcn4c4BNHovP4fW4YB97Dg5LcXoQ1hUjMEgjbl1DPlKg1TW7kK6XP=s128",
+    "name": "Bitcoin",
+    "symbol": "BTC"
+  },
+  {
+    "chain_id": "fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0",
+    "asset_id": "fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0",
+    "icon_url": "https://images.mixin.one/tqt14x8iwkiCR_vIKIw6gAAVO8XpZH7ku7ZJYB5ArMRA6grN9M1oCI7kKt2QqBODJwr17sZxDCDTjXHOgIixzv6X=s128",
+    "name": "Bitcoin Cash",
+    "symbol": "BCH"
+  },
+  {
+    "chain_id": "6cfe566e-4aad-470b-8c9a-2fd35b49c68d",
+    "asset_id": "6cfe566e-4aad-470b-8c9a-2fd35b49c68d",
+    "icon_url": "https://images.mixin.one/a5dtG-IAg2IO0Zm4HxqJoQjfz-5nf1HWZ0teCyOnReMd3pmB8oEdSAXWvFHt2AJkJj5YgfyceTACjGmXnI-VyRo=s128",
+    "name": "EOS",
+    "symbol": "EOS"
+  },
+  {
+    "chain_id": "43d61dcd-e413-450d-80b8-101d5e903357",
+    "asset_id": "43d61dcd-e413-450d-80b8-101d5e903357",
+    "icon_url": "https://images.mixin.one/zVDjOxNTQvVsA8h2B4ZVxuHoCF3DJszufYKWpd9duXUSbSapoZadC7_13cnWBqg0EmwmRcKGbJaUpA8wFfpgZA=s128",
+    "name": "Ethereum",
+    "symbol": "ETH"
+  },
+  {
+    "chain_id": "2204c1ee-0ea2-4add-bb9a-b3719cfff93a",
+    "asset_id": "2204c1ee-0ea2-4add-bb9a-b3719cfff93a",
+    "icon_url": "https://images.mixin.one/fM9wgyNyB3Uiopx2FRFxhr-sYrvXZtJ-uCpk975wGdpoehoA59rIU-BQ4s_6YFMDEthQ74KCPysOIWSFK4vUG_Y=s128",
+    "name": "Ethereum Classic",
+    "symbol": "ETC"
+  },
+  {
+    "chain_id": "76c802a2-7c88-447f-a93e-c29c9e5dd9c8",
+    "asset_id": "76c802a2-7c88-447f-a93e-c29c9e5dd9c8",
+    "icon_url": "https://images.mixin.one/EoQc9afnnbH9nu5mBa7IUYpow-lXbnD7eoLgwdtKgJzt21dZ_kSwQVyzALxhqDqe-yN9M75KEzstbtAtXylxctLG=s128",
+    "name": "Litecoin",
+    "symbol": "LTC"
+  },
+  {
+    "chain_id": "23dfb5a5-5d7b-48b6-905f-3970e3176e27",
+    "asset_id": "23dfb5a5-5d7b-48b6-905f-3970e3176e27",
+    "icon_url": "https://images.mixin.one/zgBBzgQ8x2XZbNdRhibMlVLyG0x1PEr8ENepLODl_mBDIXJJSCZNoaa2jHCc4VpJ59hPgUVnL6W24v1utEVqb0A=s128",
+    "name": "Ripple",
+    "symbol": "XRP"
+  },
+  {
+    "chain_id": "990c4c29-57e9-48f6-9819-7d986ea44985",
+    "asset_id": "990c4c29-57e9-48f6-9819-7d986ea44985",
+    "icon_url": "https://images.mixin.one/K1qFRFwAn2aJ-SEM4Tya7y_HBelBZsL5J1WEdZX4S3-APXHExcsZUYdyQAMRhgebcto3CF_OLoImx8U9-4-M7C4=s128",
+    "name": "Siacoin",
+    "symbol": "SC"
+  }
+]

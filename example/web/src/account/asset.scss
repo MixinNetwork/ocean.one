@@ -1,0 +1,90 @@
+@import '../constant.scss';
+
+.account.layout {
+
+.management.container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0 16px;
+}
+
+.account.balance {
+  img {
+    width: 64px;
+    height: 64px;
+  }
+
+  h2 {
+    margin: 16px 0 32px;
+  }
+}
+
+.accounts.list {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0 16px;
+
+  tbody {
+    display: table-row-group;
+    vertical-align: middle;
+  }
+
+  th, td {
+    text-align: right;
+    padding: 16px 0;
+
+    &:first-child,
+    &:nth-child(2) {
+      text-align: left;
+    }
+  }
+
+  th {
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  tr {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  td {
+    line-height: 20px;
+  }
+
+  img {
+    width: 32px;
+    height: 32px;
+    padding-bottom: 4px;
+    display: block;
+  }
+
+  .action {
+    flex: 1;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.1);
+    color: $color-main-foreground-light;
+    border-radius: 2px;
+    display: inline-block;
+    text-align: center;
+    margin: 4px;
+    padding: 4px 8px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
+
+}

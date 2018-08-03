@@ -10,6 +10,8 @@ function Account(router, api) {
   this.templateUser = require('./user.html');
   this.templateSession = require('./session.html');
   this.templateMe = require('./me.html');
+  this.templateAssets = require('./assets.html');
+  this.templateAsset = require('./asset.html');
   this.stepCode = require('./step_code.html');
   this.stepUser = require('./step_user.html');
 }
@@ -132,6 +134,43 @@ Account.prototype = {
     const self = this;
     $('body').attr('class', 'account layout');
     $('#layout-container').html(self.templateSession());
+
+    var initialCountry = 'US';
+    if (navigator.language && navigator.language.indexOf('zh') >= 0) {
+      initialCountry = 'CN';
+    }
+    var phoneInput = $('#enroll-phone-form #phone');
+    phoneInput.intlTelInput({
+      "initialCountry": initialCountry
+    });
+    phoneInput.focus();
+
+    $('#enroll-phone-form').submit(function (event) {
+      event.preventDefault();
+      var form = $(this);
+      var phone = phoneInput.val().trim();
+      if (phone.indexOf('+') !== 0) {
+        phone = '+' + phoneInput.intlTelInput("getSelectedCountryData")['dialCode'] + phone;
+      }
+      var params = FormUtils.serialize(form);
+      params.phone = phone;
+      self.api.account.createSession(function (resp) {
+        $('.submit-loader', form).hide();
+        $(':submit', form).show();
+
+        if (resp.error) {
+          return;
+        }
+        self.router.replace('/me');
+      }, params);
+    });
+    $('#enroll-phone-form :submit').click(function (event) {
+      event.preventDefault();
+      var form = $(this).parents('form');
+      $('.submit-loader', form).show();
+      $(this).hide();
+      form.submit();
+    });
   },
 
   me: function () {
@@ -143,12 +182,54 @@ Account.prototype = {
         return;
       }
     });
-    self.api.mixin.assets(function (resp) {
-      console.log(resp);
-    });
     self.api.ocean.orders(function (resp) {
       console.log(resp);
     });
+  },
+
+  assets: function () {
+    const self = this;
+    const base = require('./markets.json');
+    self.api.mixin.assets(function (resp) {
+      if (resp.error) {
+        return;
+      }
+      var filter = {};
+      for (var i = 0; i < resp.data.length; i++) {
+        var a = resp.data[i];
+        filter[a.asset_id] = true;
+        a.depositEnabled = a.asset_id != 'de5a6414-c181-3ecc-b401-ce375d08c399';
+      }
+      for (var i = 0; i < base.length; i++) {
+        if (filter[base[i].asset_id]) {
+          continue;
+        }
+        base[i].balance = '0';
+        base[i].depositEnabled = true;
+        resp.data.push(base[i]);
+      }
+      $('body').attr('class', 'account layout');
+      $('#layout-container').html(self.templateAssets({
+        assets: resp.data,
+      }));
+      self.router.updatePageLinks();
+    });
+  },
+
+  asset: function (id, action) {
+    const self = this;
+    self.api.mixin.asset(function (resp) {
+      if (resp.error) {
+        return;
+      }
+      $('body').attr('class', 'account layout');
+      $('#layout-container').html(self.templateAsset(resp.data));
+      self.router.updatePageLinks();
+      $('.tab').removeClass('active');
+      $('.tab.' + action.toLowerCase()).addClass('active');
+      $('.action.container').hide();
+      $('.action.container.' + action.toLowerCase()).show();
+    }, id);
   }
 };
 

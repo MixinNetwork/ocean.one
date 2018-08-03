@@ -23,6 +23,7 @@
     "node-polyglot": "^2.3.0",
     "noty": "^3.2.0-beta",
     "pako": "^1.0.6",
+    "qrious": "^4.0.2",
     "reconnecting-websocket": "^4.0.0-rc5",
     "simple-line-icons": "^2.4.1",
     "uuid": "^3.3.2"

@@ -1,0 +1,28 @@
+<div class="container">
+  <header class="header">
+    <a class="nav back" href="/accounts"><i class="icon-arrow-left"></i></a>
+    <h1 class="title">{{name}}</h1>
+    <a class="nav power" href="javascript:void(0);"><i class="icon-power"></i></a>
+  </header>
+  <section class="content">
+    <div class="management container">
+
+      <div class="account balance">
+        <div><img src="{{icon_url}}" alt="{{symbol}}" /></div>
+        <h2>{{balance}} {{symbol}}</h2>
+      </div>
+
+      <div class="action tabs">
+        <a href="/accounts/{{asset_id}}/deposit" data-navigo class="deposit tab">Deposit</a>
+        <a href="/accounts/{{asset_id}}/withdrawal" data-navigo class="withdrawal tab">Withdrawal</a>
+      </div>
+
+      <div class="deposit action container">
+      </div>
+
+      <div class="withdrawal action container">
+      </div>
+
+    </div>
+  </section>
+</div>
