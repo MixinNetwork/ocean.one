@@ -39,6 +39,23 @@ Account.prototype = {
     });
   },
 
+  createSession: function (callback, params) {
+    var ec = new EC('p256');
+    var key = ec.genKeyPair();
+    var pub = key.getPublic('hex');
+    var priv = key.getPrivate('hex');
+
+    params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
+    this.api.request('POST', '/sessions', params, function(resp) {
+      if (resp.data) {
+        window.localStorage.setItem('token.example', priv);
+        window.localStorage.setItem('uid', resp.data.user_id);
+        window.localStorage.setItem('sid', resp.data.session_id);
+      }
+      return callback(resp);
+    });
+  },
+
   me: function (callback) {
     const self = this;
     this.api.request('GET', '/me', undefined, function(resp) {
@@ -94,7 +111,7 @@ Account.prototype = {
   },
 
   externalToken: function (category, uri, callback) {
-    var key = 'token.' + category.toLowerCase();
+    var key = 'token.' + category.toLowerCase() + uri;
     var token = window.localStorage.getItem(key);
     if (token) {
       return callback(token);
