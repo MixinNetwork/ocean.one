@@ -108,10 +108,6 @@ func UserOrders(ctx context.Context, userId string, market, state string, offset
 	}
 
 	base, quote := getBaseQuote(market)
-	if base == "" || quote == "" {
-		return nil, nil
-	}
-
 	query := "SELECT order_id FROM orders@{FORCE_INDEX=orders_by_user_created_desc} WHERE user_id=@user_id AND created_at<@offset AND state=@state"
 	params := map[string]interface{}{"user_id": userId, "offset": offset, "state": state}
 	if base != "" && quote != "" {
