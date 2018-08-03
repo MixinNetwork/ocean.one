@@ -3,6 +3,7 @@ import $ from 'jquery';
 import 'intl-tel-input/build/css/intlTelInput.css';
 import 'intl-tel-input';
 import FormUtils from '../utils/form.js';
+import TimeUtils from '../utils/time.js';
 
 function Account(router, api) {
   this.router = router;
@@ -10,6 +11,7 @@ function Account(router, api) {
   this.templateUser = require('./user.html');
   this.templateSession = require('./session.html');
   this.templateMe = require('./me.html');
+  this.templateOrders = require('./orders.html');
   this.templateAssets = require('./assets.html');
   this.templateAsset = require('./asset.html');
   this.stepCode = require('./step_code.html');
@@ -182,9 +184,6 @@ Account.prototype = {
         return;
       }
     });
-    self.api.ocean.orders(function (resp) {
-      console.log(resp);
-    });
   },
 
   assets: function () {
@@ -230,6 +229,21 @@ Account.prototype = {
       $('.action.container').hide();
       $('.action.container.' + action.toLowerCase()).show();
     }, id);
+  },
+
+  orders: function (market) {
+    const self = this;
+    var offset = TimeUtils.rfc3339(new Date());
+    self.api.ocean.orders(function (resp) {
+      if (resp.error) {
+        return;
+      }
+      $('body').attr('class', 'account layout');
+      $('#layout-container').html(self.templateOrders({
+        orders: resp.data
+      }));
+      self.router.updatePageLinks();
+    }, market, offset);
   }
 };
 

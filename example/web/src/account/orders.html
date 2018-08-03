@@ -1,0 +1,22 @@
+<div class="container">
+  <header class="header">
+    <a class="nav back" href="/"><i class="icon-arrow-left"></i></a>
+    <h1 class="title">Orders</h1>
+    <a class="nav power" href="javascript:void(0);"><i class="icon-power"></i></a>
+  </header>
+  <section class="content">
+    <div class="orders container">
+
+      <table class="orders list">
+        <tbody>
+          {{#each orders}}
+          <tr class="order item" data-id="{{this.order_id}}">
+            <td>{{this.order_id}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>

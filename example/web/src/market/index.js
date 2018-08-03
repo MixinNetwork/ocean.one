@@ -38,6 +38,7 @@ Market.prototype = {
       logoURL: require('./logo.png'),
       symbolURL: require('./symbol.png')
     })).append(self.templateTrade({
+      market: 'c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa',
       asks: asksData,
       bids: bidsData
     }));

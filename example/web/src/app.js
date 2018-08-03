@@ -57,6 +57,9 @@ router.on({
   },
   '/accounts/:id/withdrawal': function (params) {
     new Account(router, api).asset(params['id'], 'WITHDRAWAL');
+  },
+  '/orders/:market': function (params) {
+    new Account(router, api).orders(params['market']);
   }
 }).notFound(function () {
   $('#layout-container').html(Error404());
