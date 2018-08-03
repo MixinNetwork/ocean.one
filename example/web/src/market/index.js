@@ -54,6 +54,48 @@ Market.prototype = {
     self.renderChart(bids, asks);
     self.api.engine.subscribe('c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa', self.render);
     self.handleOrderCreate();
+    self.handleFormSwitch();
+    self.handleBookHistorySwitch();
+  },
+
+  handleFormSwitch: function () {
+    $('.type.tab').click(function () {
+      var type = $(this).attr('data-type').toLowerCase();
+      var side = $('.side.tab.active').attr('data-side').toLowerCase();
+      $('.type.tab').removeClass('active');
+      $(this).addClass('active');
+      $('.trade.form form').hide();
+      $('.trade.form .form.' + type + '.' + side).show();
+    });
+    $('.side.tab').click(function () {
+      var side = $(this).attr('data-side').toLowerCase();
+      var type = $('.type.tab.active').attr('data-type').toLowerCase();
+      $('.side.tab').removeClass('active');
+      $(this).addClass('active');
+      $('.trade.form form').hide();
+      $('.trade.form .form.' + type + '.' + side).show();
+    });
+  },
+
+  handleBookHistorySwitch: function () {
+    $('.history.tab').click(function () {
+      if ($('.trade.history').width() + $('.order.book').width() < $('.orders.trades .tabs').width()) {
+        return;
+      }
+      $('.book.tab').removeClass('active');
+      $(this).addClass('active');
+      $('.order.book').hide();
+      $('.trade.history').show();
+    });
+    $('.book.tab').click(function () {
+      if ($('.trade.history').width() + $('.order.book').width() < $('.orders.trades .tabs').width()) {
+        return;
+      }
+      $('.history.tab').removeClass('active');
+      $(this).addClass('active');
+      $('.trade.history').hide();
+      $('.order.book').show();
+    });
   },
 
   handleOrderCreate: function () {
