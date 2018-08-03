@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"time"
@@ -64,6 +65,7 @@ func GeneratePoolKey(ctx context.Context) (*PoolKey, error) {
 
 	data, err := json.Marshal(map[string]string{
 		"session_secret": sessionSecret,
+		"full_name":      fmt.Sprintf("Ocean %x", md5.Sum(publicKeyBytes)),
 	})
 	if err != nil {
 		return nil, session.ServerError(ctx, err)
