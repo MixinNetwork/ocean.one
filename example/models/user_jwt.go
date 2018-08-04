@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"fmt"
-	"strings"
 
 	"github.com/MixinNetwork/ocean.one/example/session"
 	"github.com/dgrijalva/jwt-go"
@@ -13,6 +12,7 @@ import (
 
 func AuthenticateWithToken(ctx context.Context, jwtToken string) (*User, error) {
 	var user *User
+	var queryErr error
 	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
@@ -29,7 +29,8 @@ func AuthenticateWithToken(ctx context.Context, jwtToken string) (*User, error) 
 
 		u, err := readUser(ctx, txn, uid)
 		if err != nil {
-			return nil, session.TransactionError(ctx, err)
+			queryErr = session.TransactionError(ctx, err)
+			return nil, queryErr
 		} else if u == nil {
 			return nil, nil
 		}
@@ -37,7 +38,8 @@ func AuthenticateWithToken(ctx context.Context, jwtToken string) (*User, error) 
 
 		s, err := readSession(ctx, txn, user.UserId, sid)
 		if err != nil {
-			return nil, session.TransactionError(ctx, err)
+			queryErr = session.TransactionError(ctx, err)
+			return nil, queryErr
 		} else if s == nil {
 			return nil, nil
 		}
@@ -45,7 +47,8 @@ func AuthenticateWithToken(ctx context.Context, jwtToken string) (*User, error) 
 
 		k, err := readKey(ctx, txn, user.UserId)
 		if err != nil {
-			return nil, session.TransactionError(ctx, err)
+			queryErr = session.TransactionError(ctx, err)
+			return nil, queryErr
 		}
 		user.Key = k
 
@@ -56,8 +59,8 @@ func AuthenticateWithToken(ctx context.Context, jwtToken string) (*User, error) 
 		return x509.ParsePKIXPublicKey(pkix)
 	})
 
-	if err != nil && strings.Contains(err.Error(), "spanner") {
-		return nil, err
+	if queryErr != nil {
+		return nil, queryErr
 	}
 	if err == nil && token.Valid {
 		return user, nil
