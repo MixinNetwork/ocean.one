@@ -51,7 +51,6 @@ Market.prototype = {
       });
     }
 
-    self.handlePageScroll(market);
 
     $('body').attr('class', 'market layout');
     $('#layout-container').html(self.templateIndex({
@@ -64,15 +63,15 @@ Market.prototype = {
       bids: bidsData
     }));
 
+    self.handlePageScroll(market);
+
     $('.layout.nav .logo a').click(function() {
       var offset = $('.layout.header').outerHeight() - $('.layout.nav').outerHeight();
       window.scrollTo({ top: offset, behavior: 'smooth' });
     });
 
-    var scroll = $(window).scrollTop();
     var offset = $('.layout.header').outerHeight() + $('.markets.container').outerHeight() - $('.layout.nav').outerHeight() + 1;
-    console.log(scroll, offset);
-    if (scroll < offset) {
+    if ($(window).scrollTop() < offset) {
       window.scrollTo({ top: offset, behavior: 'smooth' });
     }
 
@@ -136,11 +135,7 @@ Market.prototype = {
       event.preventDefault();
       var form = $(this);
       var data = FormUtils.serialize(this);
-      data.type = $('.type.tab.active').attr('data-type');
-      data.side = $('.side.tab.active').attr('data-side');
       data.trace_id = uuid().toLowerCase();
-      data.quote = quote.asset_id;
-      data.base = base.asset_id;
       if (data.type === 'LIMIT' && data.side === 'BID') {
         data.funds = (parseFloat(data.amount) * parseFloat(data.price)).toFixed(8);
       }
