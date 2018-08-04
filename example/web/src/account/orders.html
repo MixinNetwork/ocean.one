@@ -1,6 +1,6 @@
 <div class="container">
   <header class="header">
-    <a class="nav back" href="/"><i class="icon-arrow-left"></i></a>
+    <a class="nav back" href="/trade/{{base.symbol}}-{{quote.symbol}}"><i class="icon-arrow-left"></i></a>
     <h1 class="title">Orders</h1>
     <a class="nav power" href="javascript:void(0);"><i class="icon-power"></i></a>
   </header>
@@ -11,8 +11,8 @@
         <thead>
           <tr>
             <td></td>
-            <td>Price</td>
-            <td>Amount</td>
+            <td>Price ({{quote.symbol}})</td>
+            <td>Amount ({{base.symbol}})</td>
             <td>Time</td>
             <td></td>
           </tr>

@@ -232,6 +232,14 @@ Account.prototype = {
   },
 
   orders: function (market) {
+    var pair = this.api.asset.market(market);
+    if (!pair) {
+      this.router.replace('/orders/BTC-USDT');
+      return;
+    }
+    const base = pair[0];
+    const quote = pair[1];
+
     const self = this;
     var offset = TimeUtils.rfc3339(new Date());
     self.api.ocean.orders(function (resp) {
@@ -253,11 +261,13 @@ Account.prototype = {
       }
       $('body').attr('class', 'account layout');
       $('#layout-container').html(self.templateOrders({
+        base: base,
+        quote: quote,
         orders: resp.data
       }));
       self.handleOrderCancel();
       self.router.updatePageLinks();
-    }, market, offset);
+    }, base.asset_id + '-' + quote.asset_id, offset);
   },
 
   handleOrderCancel: function () {

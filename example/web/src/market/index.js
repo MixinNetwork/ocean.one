@@ -15,7 +15,11 @@ function Market(router, api) {
 Market.prototype = {
   index: function (market) {
     if (!market) {
-      this.router.replace('/trade/BTC-USDT');
+      var d = window.localStorage.getItem('market.default');
+      if (!d || d === '') {
+        d = 'BTC-USDT';
+      }
+      this.router.replace('/trade/' + d);
       return;
     }
 
@@ -24,6 +28,7 @@ Market.prototype = {
       this.router.replace('/trade/BTC-USDT');
       return;
     }
+    window.localStorage.setItem('market.default', market);
     const base = pair[0];
     const quote = pair[1];
 

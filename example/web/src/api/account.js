@@ -129,7 +129,11 @@ Account.prototype = {
   },
 
   clear: function () {
+    var d = window.localStorage.getItem('market.default');
     window.localStorage.clear();
+    if (d) {
+      window.localStorage.setItem('market.default', d);
+    }
   }
 }
 
