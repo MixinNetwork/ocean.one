@@ -21,6 +21,68 @@
   }
 }
 
+.account.deposit.container,
+.address.deposit.container {
+  display: none;
+
+  input.account,
+  input.address {
+    margin: 0 0 32px;
+    font-size: 14px;
+    font-family: $font-main-mono;
+    font-weight: 300;
+    background: rgba(0,0,0,0.07);
+    border: 1px solid rgba(0,0,0,0.07);
+    border-top: 0 none;
+    border-radius: 0 0 2px 2px;
+    padding: 8px 16px;
+    box-sizing: border-box;
+  }
+
+  input.account {
+    margin-bottom: 16px;
+  }
+
+  .label {
+    margin: 0;
+    color: $color-main-background;
+    border: 1px solid rgba(0,0,0,0.07);
+    border-bottom: 0 none;
+    border-radius: 2px 2px 0 0;
+    background: rgba(0,0,0,0.07);
+
+    label {
+      margin: 0;
+      display: inline-block;
+      background: $color-side-bid;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+  }
+
+  .label.account.name {
+    margin-top: 32px;
+  }
+
+  .code.container {
+    box-sizing: border-box;
+    max-width: 360px;
+    margin: 0 auto;
+
+    &.account {
+      max-width: 240px;
+    }
+
+    canvas {
+      width: 100%;
+    }
+  }
+}
+
+.deposit.notice {
+  margin: 32px 0;
+}
+
 .accounts.list {
   width: 100%;
   border-collapse: collapse;

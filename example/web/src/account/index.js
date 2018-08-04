@@ -2,6 +2,7 @@ import './index.scss';
 import $ from 'jquery';
 import 'intl-tel-input/build/css/intlTelInput.css';
 import 'intl-tel-input';
+import QRious from 'qrious';
 import FormUtils from '../utils/form.js';
 import TimeUtils from '../utils/time.js';
 
@@ -226,6 +227,31 @@ Account.prototype = {
       $('.tab.' + action.toLowerCase()).addClass('active');
       $('.action.container').hide();
       $('.action.container.' + action.toLowerCase()).show();
+
+      if (action !== 'DEPOSIT') {
+        return;
+      }
+
+      if (resp.data.public_key !== '') {
+        $('.address.deposit.container').show();
+        new QRious({
+          element: $('.deposit.address.code.container canvas')[0],
+          value: resp.data.public_key,
+          size: 500
+        });
+      } else if (resp.data.account_name !== '') {
+        $('.account.deposit.container').show();
+        new QRious({
+          element: $('.deposit.account.name.code.container canvas')[0],
+          value: resp.data.account_name,
+          size: 500
+        });
+        new QRious({
+          element: $('.deposit.account.tag.code.container canvas')[0],
+          value: resp.data.account_tag,
+          size: 500
+        });
+      }
     }, id);
   },
 

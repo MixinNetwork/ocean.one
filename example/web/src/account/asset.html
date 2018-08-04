@@ -18,6 +18,20 @@
       </div>
 
       <div class="deposit action container">
+        <div class="account deposit container">
+          <div class="label"><label>Memo</label></div>
+          <input class="account tag" type="text" value="{{account_tag}}" readonly />
+          <div class="deposit account tag code container"><canvas></canvas></div>
+          <div class="label account name"><label>Account</label></div>
+          <input class="account name" type="text" value="{{account_name}}" readonly />
+          <div class="deposit account name code container"><canvas></canvas></div>
+        </div>
+        <div class="address deposit container">
+          <div class="label"><label>Address</label></div>
+          <input class="address" type="text" value="{{public_key}}" readonly />
+          <div class="deposit address code container"><canvas></canvas></div>
+        </div>
+        <div class="deposit notice">The deposit will arrive after at least {{confirmations}} confirmations.</div>
       </div>
 
       <div class="withdrawal action container">
