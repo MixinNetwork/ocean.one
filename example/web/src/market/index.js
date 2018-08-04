@@ -4,6 +4,7 @@ import $ from 'jquery';
 import uuid from 'uuid/v4';
 import Chart from './chart.js';
 import FormUtils from '../utils/form.js';
+import TimeUtils from '../utils/time.js';
 
 function Market(router, api) {
   this.router = router;
@@ -11,6 +12,7 @@ function Market(router, api) {
   this.templateIndex = require('./index.html');
   this.templateTrade = require('./trade.html');
   this.itemOrder = require('./order_item.html');
+  this.itemTrade = require('./trade_item.html');
 }
 
 Market.prototype = {
@@ -34,34 +36,54 @@ Market.prototype = {
     const quote = pair[1];
     const self = this;
 
-    $('body').attr('class', 'market layout');
-    $('#layout-container').html(self.templateIndex({
-      logoURL: require('./logo.png'),
-      symbolURL: require('./symbol.png')
-    })).append(self.templateTrade({
-      base: base,
-      quote: quote
-    }));
+    self.api.ocean.ticker(function (resp) {
+      if (resp.error) {
+        return;
+      }
+      var ticker = resp.data;
 
-    self.handlePageScroll(market);
+      self.api.ocean.trades(function (resp) {
+        if (resp.error) {
+          return;
+        }
+        var trades = resp.data;
 
-    $('.layout.nav .logo a').click(function() {
-      var offset = $('.layout.header').outerHeight() - $('.layout.nav').outerHeight();
-      window.scrollTo({ top: offset, behavior: 'smooth' });
-    });
+        $('body').attr('class', 'market layout');
+        $('#layout-container').html(self.templateIndex({
+          logoURL: require('./logo.png'),
+          symbolURL: require('./symbol.png')
+        })).append(self.templateTrade({
+          base: base,
+          quote: quote
+        }));
 
-    var offset = $('.layout.header').outerHeight() + $('.markets.container').outerHeight() - $('.layout.nav').outerHeight() + 1;
-    if ($(window).scrollTop() < offset) {
-      window.scrollTo({ top: offset, behavior: 'smooth' });
-    }
+        $('.quote.price').html(ticker.price);
+        for (var i = trades.length; i > 0; i--) {
+          self.addTradeEntry(trades[i-1]);
+        }
 
-    self.handleOrderCreate();
-    self.handleFormSwitch();
-    self.handleBookHistorySwitch();
+        self.handlePageScroll(market);
 
-    self.api.engine.subscribe(base.asset_id + '-' + quote.asset_id, function (msg) {
-      self.render(msg);
-    });
+        $('.layout.nav .logo a').click(function() {
+          var offset = $('.layout.header').outerHeight() - $('.layout.nav').outerHeight();
+          window.scrollTo({ top: offset, behavior: 'smooth' });
+        });
+
+        var offset = $('.layout.header').outerHeight() + $('.markets.container').outerHeight() - $('.layout.nav').outerHeight() + 1;
+        if ($(window).scrollTop() < offset) {
+          window.scrollTo({ top: offset, behavior: 'smooth' });
+        }
+
+        self.handleOrderCreate();
+        self.handleFormSwitch();
+        self.handleBookHistorySwitch();
+        self.fixListItemHeight();
+
+        self.api.engine.subscribe(base.asset_id + '-' + quote.asset_id, function (msg) {
+          self.render(msg);
+        });
+      }, base.asset_id + '-' + quote.asset_id);
+    }, base.asset_id + '-' + quote.asset_id);
   },
 
   handleFormSwitch: function () {
@@ -185,17 +207,13 @@ Market.prototype = {
   },
 
   fixListItemHeight: function () {
-    var itemHeight = $('.order.book .ask').outerHeight();
-    if (!itemHeight) {
-      itemHeight = 21;
-    }
-
+    const itemHeight = 21;
     var total = $('.order.book').height() - $('.order.book .spread').outerHeight() - $('.book.tab').outerHeight();
     var count = parseInt(total / itemHeight / 2) * 2;
     var line = (total / count) + 'px';
     $('.order.book .ask').css({'line-height': line, height: line});
     $('.order.book .bid').css({'line-height': line, height: line});
-    var top = -(itemHeight * $('.order.book .ask').length);
+    var top = -(total / count * $('.order.book .ask').length);
     top = top + $('.book.tab').outerHeight() + total / 2;
     $('.book.data').css({'top': top + 'px'});
 
@@ -239,24 +257,44 @@ Market.prototype = {
         for (var i = 0; i < book.bids.length; i++) {
           self.orderOpenOnPage(book.bids[i]);
         }
+        self.fixListItemHeight();
         break;
       case 'HEARTBEAT':
-        break;
+        return;
       case 'ORDER-OPEN':
         self.orderOpenOnBook(data.data);
         self.orderOpenOnPage(data.data);
+        self.fixListItemHeight();
         break;
       case 'ORDER-CANCEL':
         self.orderRemoveFromBook(data.data);
         self.orderRemoveFromPage(data.data);
+        self.fixListItemHeight();
         break;
       case 'ORDER-MATCH':
+        data.data.created_at = data.timestamp;
+        self.updateTickerPrice(data.data);
+        self.addTradeEntry(data.data);
         self.orderRemoveFromBook(data.data);
         self.orderRemoveFromPage(data.data);
+        self.fixListItemHeight();
         break;
     }
 
     self.renderChart();
+  },
+
+  updateTickerPrice: function (o) {
+    $('.quote.price').html(parseFloat(o.price));
+  },
+
+  addTradeEntry: function (o) {
+    const self = this;
+    o.price = parseFloat(o.price).toFixed(8);
+    o.amount = parseFloat(o.amount).toFixed(4);
+    o.sideClass = o.side.toLowerCase();
+    o.time = TimeUtils.short(o.created_at);
+    $('.history.data').prepend(self.itemTrade(o));
   },
 
   orderOpenOnPage: function (o) {
@@ -288,7 +326,6 @@ Market.prototype = {
       } else {
         bo.before(item);
       }
-      self.fixListItemHeight();
       return;
     }
     if (o.side === 'BID') {
@@ -296,8 +333,6 @@ Market.prototype = {
     } else {
       $('.book.data .spread').before(item);
     }
-
-    self.fixListItemHeight();
   },
 
   orderRemoveFromPage: function (o) {
@@ -321,8 +356,6 @@ Market.prototype = {
     } else {
       bo.remove();
     }
-
-    self.fixListItemHeight();
   },
 
   orderOpenOnBook: function (o) {

@@ -1,8 +1,8 @@
 <div class="market detail container">
   <div class="header container">
     <div class="ticker price">
-      <span class="main">8,100.32 {{quote.symbol}}</span>
-      <span class="sub">$8,109.83</span>
+      <span class="main"><span class="price quote"></span> {{quote.symbol}}</span>
+      <span class="sub"><span class="price fiat"></span></span>
     </div>
     <div class="ticker up change">
       <span class="main">+10.87%</span>
@@ -64,34 +64,13 @@
         </div>
         <ul class="book data">
           <li class="spread">
-            <div>8,190</div>
-            <div>$1,325</div>
+            <div class="price quote"></div>
+            <div class="price fiat"></div>
           </li>
         </ul>
       </div>
       <div class="trade history">
-        <div class="spinner-container">
-          <div class="spinner">
-            <div class="rect1"></div>
-            <div class="rect2"></div>
-            <div class="rect3"></div>
-            <div class="rect4"></div>
-            <div class="rect5"></div>
-          </div>
-        </div>
         <ul class="history data">
-          {{#each asks}}
-          <li class="ask">
-            <div>{{dimZero this.amount}}</div>
-            <div class="price">{{dimZero this.price}}</div>
-          </li>
-          {{/each}}
-          {{#each bids}}
-          <li class="bid">
-            <div>{{dimZero this.amount}}</div>
-            <div class="price">{{dimZero this.price}}</div>
-          </li>
-          {{/each}}
         </ul>
       </div>
     </div>

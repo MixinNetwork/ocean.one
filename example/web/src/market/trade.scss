@@ -179,6 +179,17 @@
   .history.data {
     padding-top: 34px;
     box-sizing: border-box;
+
+    li {
+      div.time {
+        text-align: left;
+        opacity: 0.3;
+      }
+
+      div.amount {
+        padding: 0 8px 0 4px;
+      }
+    }
   }
 
   ul {
@@ -195,7 +206,7 @@
     display: flex;
     text-align: right;
     box-sizing: border-box;
-    padding-right: 16px;
+    padding: 0 16px;
 
     div {
       flex: 1;
