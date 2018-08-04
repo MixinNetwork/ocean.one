@@ -10,7 +10,6 @@ function Account(router, api) {
   this.api = api;
   this.templateUser = require('./user.html');
   this.templateSession = require('./session.html');
-  this.templateMe = require('./me.html');
   this.templateOrders = require('./orders.html');
   this.templateAssets = require('./assets.html');
   this.templateAsset = require('./asset.html');
@@ -120,7 +119,7 @@ Account.prototype = {
         if (resp.error) {
           return;
         }
-        self.router.replace('/me');
+        self.router.replace('/accounts');
       }, params);
     });
     $('#enroll-verify-form :submit').click(function (event) {
@@ -163,7 +162,7 @@ Account.prototype = {
         if (resp.error) {
           return;
         }
-        self.router.replace('/me');
+        self.router.replace('/accounts');
       }, params);
     });
     $('#enroll-phone-form :submit').click(function (event) {
@@ -172,17 +171,6 @@ Account.prototype = {
       $('.submit-loader', form).show();
       $(this).hide();
       form.submit();
-    });
-  },
-
-  me: function () {
-    const self = this;
-    $('body').attr('class', 'account layout');
-    $('#layout-container').html(self.templateMe());
-    self.api.account.me(function (resp) {
-      if (resp.error) {
-        return;
-      }
     });
   },
 

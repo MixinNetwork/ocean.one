@@ -49,9 +49,6 @@ router.on({
   '/passwords/new': function () {
     new Account(router, api).resetPassword();
   },
-  '/me': function () {
-    new Account(router, api).me();
-  },
   '/accounts': function () {
     new Account(router, api).assets();
   },
