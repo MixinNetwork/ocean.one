@@ -24,8 +24,28 @@
         <li>1d</li>
         <li class="depth">Depth</li>
       </ul>
-      <div class="price chart"></div>
-      <div class="depth chart"></div>
+      <div class="price chart">
+        <div class="spinner-container">
+          <div class="spinner">
+            <div class="rect1"></div>
+            <div class="rect2"></div>
+            <div class="rect3"></div>
+            <div class="rect4"></div>
+            <div class="rect5"></div>
+          </div>
+        </div>
+      </div>
+      <div class="depth chart">
+        <div class="spinner-container">
+          <div class="spinner">
+            <div class="rect1"></div>
+            <div class="rect2"></div>
+            <div class="rect3"></div>
+            <div class="rect4"></div>
+            <div class="rect5"></div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="orders trades">
       <div class="tabs">
@@ -33,26 +53,32 @@
         <div class="history tab">History</div>
       </div>
       <div class="order book">
+        <div class="spinner-container">
+          <div class="spinner">
+            <div class="rect1"></div>
+            <div class="rect2"></div>
+            <div class="rect3"></div>
+            <div class="rect4"></div>
+            <div class="rect5"></div>
+          </div>
+        </div>
         <ul class="book data">
-          {{#each asks}}
-          <li class="ask">
-            <div>{{dimZero this.amount}}</div>
-            <div class="price">{{dimZero this.price}}</div>
-          </li>
-          {{/each}}
           <li class="spread">
             <div>8,190</div>
             <div>$1,325</div>
           </li>
-          {{#each bids}}
-          <li class="bid">
-            <div>{{dimZero this.amount}}</div>
-            <div class="price">{{dimZero this.price}}</div>
-          </li>
-          {{/each}}
         </ul>
       </div>
       <div class="trade history">
+        <div class="spinner-container">
+          <div class="spinner">
+            <div class="rect1"></div>
+            <div class="rect2"></div>
+            <div class="rect3"></div>
+            <div class="rect4"></div>
+            <div class="rect5"></div>
+          </div>
+        </div>
         <ul class="history data">
           {{#each asks}}
           <li class="ask">

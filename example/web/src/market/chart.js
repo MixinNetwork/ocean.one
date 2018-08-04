@@ -122,9 +122,15 @@ Chart.prototype = {
         lineWidth: 1
       }]
     });
+
+    return chart;
   },
 
   renderDepth: function (ele, bids, asks) {
+    if (bids.length === 0 || asks.length === 0) {
+      return undefined;
+    }
+
     var bidsData = [];
     for(var i = 0; i < bids.length; i++) {
       bids[i].volume = parseFloat(bids[i].amount);
@@ -215,7 +221,7 @@ Chart.prototype = {
       plotOptions: {
         series: {
           stickyTracking: false,
-          animation: true,
+          animation: false,
           marker: {
             enabled: false,
             symbol: 'circle',
@@ -253,6 +259,7 @@ Chart.prototype = {
       ]
     });
 
+    return chart;
   }
 };
 

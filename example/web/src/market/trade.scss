@@ -94,10 +94,12 @@
 
   .price.chart {
     height: calc(50% - 16px);
+    border-bottom: 1px solid rgba(0,0,0,0.07);
   }
 
   .depth.chart {
     height: calc(50% - 16px);
+    border-bottom: 1px solid rgba(0,0,0,0.07);
   }
 
   .highcharts-point-up {
@@ -169,6 +171,7 @@
   }
 
   .book.data {
+    display: none;
     position: absolute;
     width: 100%;
   }

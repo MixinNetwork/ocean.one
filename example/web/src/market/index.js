@@ -10,6 +10,7 @@ function Market(router, api) {
   this.api = api;
   this.templateIndex = require('./index.html');
   this.templateTrade = require('./trade.html');
+  this.itemOrder = require('./order_item.html');
 }
 
 Market.prototype = {
@@ -31,26 +32,7 @@ Market.prototype = {
     window.localStorage.setItem('market.default', market);
     const base = pair[0];
     const quote = pair[1];
-
     const self = this;
-    var data = require('./depth.json');
-    var bids = data.data.bids;
-    var asks = data.data.asks;
-    var asksData = [];
-    var bidsData = [];
-    for (var i = 0; i < bids.length; i++) {
-      bidsData.push({
-        price: parseFloat(bids[i].price).toFixed(8),
-        amount: parseFloat(bids[i].amount).toFixed(4)
-      });
-    }
-    for (var i = asks.length; i > 0; i--) {
-      asksData.push({
-        price: parseFloat(asks[i-1].price).toFixed(8),
-        amount: parseFloat(asks[i-1].amount).toFixed(4)
-      });
-    }
-
 
     $('body').attr('class', 'market layout');
     $('#layout-container').html(self.templateIndex({
@@ -58,9 +40,7 @@ Market.prototype = {
       symbolURL: require('./symbol.png')
     })).append(self.templateTrade({
       base: base,
-      quote: quote,
-      asks: asksData,
-      bids: bidsData
+      quote: quote
     }));
 
     self.handlePageScroll(market);
@@ -75,13 +55,13 @@ Market.prototype = {
       window.scrollTo({ top: offset, behavior: 'smooth' });
     }
 
-    self.fixListItemHeight();
-    self.renderChart(bids, asks);
     self.handleOrderCreate();
     self.handleFormSwitch();
     self.handleBookHistorySwitch();
 
-    self.api.engine.subscribe(base.asset_id + '-' + quote.asset_id, self.render);
+    self.api.engine.subscribe(base.asset_id + '-' + quote.asset_id, function (msg) {
+      self.render(msg);
+    });
   },
 
   handleFormSwitch: function () {
@@ -146,8 +126,6 @@ Market.prototype = {
         if (resp.error) {
           return;
         }
-
-        console.log(resp);
       }, data);
     });
     $('.trade.form :submit').click(function (event) {
@@ -217,7 +195,7 @@ Market.prototype = {
     var line = (total / count) + 'px';
     $('.order.book .ask').css({'line-height': line, height: line});
     $('.order.book .bid').css({'line-height': line, height: line});
-    var top = -($('.order.book .ask').outerHeight() * $('.order.book .ask').length);
+    var top = -(itemHeight * $('.order.book .ask').length);
     top = top + $('.book.tab').outerHeight() + total / 2;
     $('.book.data').css({'top': top + 'px'});
 
@@ -228,14 +206,181 @@ Market.prototype = {
     $('.trade.history .bid').css({'line-height': line, height: line});
   },
 
-  renderChart: function (bids, asks) {
-    var chart = new Chart();
-    chart.renderPrice($('.price.chart')[0]);
-    chart.renderDepth($('.depth.chart')[0], bids, asks);
+  renderChart: function () {
+    const self = this;
+    const chart = new Chart();
+    if (!self.priceChart) {
+      self.priceChart = chart.renderPrice($('.price.chart')[0]);
+    }
+    self.depthChart = chart.renderDepth($('.depth.chart')[0], self.book.bids, self.book.asks);
   },
 
   render: function (msg) {
     console.log(msg);
+    const self = this;
+    if (msg.action !== 'EMIT_EVENT') {
+      return;
+    }
+    if (!self.book) {
+      self.book = {};
+    }
+
+    var data = msg.data;
+    switch (data.event) {
+      case 'BOOK-T0':
+        var book = data.data;
+        self.book.asks = book.asks;
+        self.book.bids = book.bids;
+        $('.order.book .spinner-container').remove();
+        $('.order.book .book.data').show();
+        for (var i = 0; i < book.asks.length; i++) {
+          self.orderOpenOnPage(book.asks[i]);
+        }
+        for (var i = 0; i < book.bids.length; i++) {
+          self.orderOpenOnPage(book.bids[i]);
+        }
+        break;
+      case 'HEARTBEAT':
+        break;
+      case 'ORDER-OPEN':
+        self.orderOpenOnBook(data.data);
+        self.orderOpenOnPage(data.data);
+        break;
+      case 'ORDER-CANCEL':
+        self.orderRemoveFromBook(data.data);
+        self.orderRemoveFromPage(data.data);
+        break;
+      case 'ORDER-MATCH':
+        self.orderRemoveFromBook(data.data);
+        self.orderRemoveFromPage(data.data);
+        break;
+    }
+
+    self.renderChart();
+  },
+
+  orderOpenOnPage: function (o) {
+    const self = this;
+    const price = parseFloat(o.price);
+    const amount = parseFloat(o.amount);
+
+    o.sideClass = o.side.toLowerCase()
+    o.price = parseFloat(o.price).toFixed(8);
+    o.pricePoint = o.price.replace('.', '');
+    o.amount = amount.toFixed(4);
+    if ($('#order-point-' + o.pricePoint).length > 0) {
+      var bo = $('#order-point-' + o.pricePoint);
+      o.amount = (parseFloat(bo.attr('data-amount')) + amount).toFixed(4);
+      bo.replaceWith(self.itemOrder(o));
+      return;
+    }
+
+    var item = self.itemOrder(o);
+    var list = $('.order.item');
+    for (var i = 0; i < list.length; i++) {
+      var bo = $(list[i]);
+      if (price < parseFloat(bo.attr('data-price'))) {
+        continue;
+      }
+
+      if (o.side !== bo.attr('data-side')) {
+        $('.book.data .spread').before(item);
+      } else {
+        bo.before(item);
+      }
+      self.fixListItemHeight();
+      return;
+    }
+    if (o.side === 'BID') {
+      $('.book.data').append(item);
+    } else {
+      $('.book.data .spread').before(item);
+    }
+
+    self.fixListItemHeight();
+  },
+
+  orderRemoveFromPage: function (o) {
+    const self = this;
+    const price = parseFloat(o.price);
+    const amount = parseFloat(o.amount);
+
+    o.sideClass = o.side.toLowerCase()
+    o.price = parseFloat(o.price).toFixed(8);
+    o.pricePoint = o.price.replace('.', '');
+    o.amount = amount.toFixed(4);
+    if ($('#order-point-' + o.pricePoint).length === 0) {
+      return;
+    }
+
+    var bo = $('#order-point-' + o.pricePoint);
+    o.amount = parseFloat(bo.attr('data-amount')) - amount;
+    if (o.amount > 0) {
+      o.amount = o.amount.toFixed(4);
+      bo.replaceWith(self.itemOrder(o));
+    } else {
+      bo.remove();
+    }
+
+    self.fixListItemHeight();
+  },
+
+  orderOpenOnBook: function (o) {
+    const self = this;
+    const price = parseFloat(o.price);
+    const amount = parseFloat(o.amount);
+
+    if (o.side === 'ASK') {
+      for (var i = 0; i < self.book.asks.length; i++) {
+        var bo = self.book.asks[i];
+        if (bo.price === o.price) {
+          bo.amount = parseFloat((parseFloat(bo.amount) + amount).toFixed(8));
+          return;
+        }
+        if (parseFloat(bo.price) > price) {
+          self.book.asks.splice(i, 0, o);
+          return;
+        }
+      }
+      self.book.asks.push(o);
+    } else if (o.side === 'BID') {
+      for (var i = 0; i < self.book.bids.length; i++) {
+        var bo = self.book.bids[i];
+        if (bo.price === o.price) {
+          bo.amount = parseFloat((parseFloat(bo.amount) + amount).toFixed(8));
+          return;
+        }
+        if (parseFloat(bo.price) < price) {
+          self.book.bids.splice(i, 0, o);
+          return;
+        }
+      }
+      self.book.bids.push(o);
+    }
+  },
+
+  orderRemoveFromBook: function (o) {
+    const self = this;
+    const price = parseFloat(o.price);
+    const amount = parseFloat(o.amount);
+
+    var list = self.book.asks;
+    if (o.side === 'BID') {
+      list = self.book.bids;
+    }
+
+    for (var i = 0; i < list.length; i++) {
+      var bo = list[i];
+      if (bo.price !== o.price) {
+        continue;
+      }
+
+      bo.amount = parseFloat((parseFloat(bo.amount) - amount).toFixed(8));
+      if (bo.amount === 0) {
+        list.splice(i, 1);
+      }
+      return;
+    }
   }
 };
 
