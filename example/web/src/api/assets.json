@@ -7,6 +7,13 @@
     "symbol": "BTC"
   },
   {
+    "chain_id": "c6d0c728-2624-429b-8e0d-d9d19b6592fa",
+    "asset_id": "815b0b1a-2764-3736-8faa-42d694fa620a",
+    "icon_url": "https://images.mixin.one/ndNBEpObYs7450U08oAOMnSEPzN66SL8Mh-f2pPWBDeWaKbXTPUIdrZph7yj8Z93Rl8uZ16m7Qjz-E-9JFKSsJ-F=s128",
+    "name": "Tether USD",
+    "symbol": "USDT"
+  },
+  {
     "chain_id": "fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0",
     "asset_id": "fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0",
     "icon_url": "https://images.mixin.one/tqt14x8iwkiCR_vIKIw6gAAVO8XpZH7ku7ZJYB5ArMRA6grN9M1oCI7kKt2QqBODJwr17sZxDCDTjXHOgIixzv6X=s128",
@@ -54,5 +61,12 @@
     "icon_url": "https://images.mixin.one/K1qFRFwAn2aJ-SEM4Tya7y_HBelBZsL5J1WEdZX4S3-APXHExcsZUYdyQAMRhgebcto3CF_OLoImx8U9-4-M7C4=s128",
     "name": "Siacoin",
     "symbol": "SC"
+  },
+  {
+    "chain_id": "43d61dcd-e413-450d-80b8-101d5e903357",
+    "asset_id": "c94ac88f-4671-3976-b60a-09064f1811e8",
+    "icon_url": "https://images.mixin.one/E2y0BnTopFK9qey0YI-8xV3M82kudNnTaGw0U5SU065864SsewNUo6fe9kDF1HIzVYhXqzws4lBZnLj1lPsjk-0=s128",
+    "name": "Mixin",
+    "symbol": "XIN"
   }
 ]

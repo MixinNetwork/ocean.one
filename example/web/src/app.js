@@ -37,6 +37,9 @@ router.on({
   '/': function () {
     new Market(router, api).index();
   },
+  '/trade/:market': function (params) {
+    new Market(router, api).index(params['market']);
+  },
   '/users/new': function () {
     new Account(router, api).signUp();
   },

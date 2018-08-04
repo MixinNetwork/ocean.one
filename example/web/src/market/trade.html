@@ -1,7 +1,7 @@
 <div class="market detail container">
   <div class="header container">
     <div class="ticker price">
-      <span class="main">8,100.32 USDT</span>
+      <span class="main">8,100.32 {{quote.symbol}}</span>
       <span class="sub">$8,109.83</span>
     </div>
     <div class="ticker up change">
@@ -9,7 +9,7 @@
       <span class="sub">24h Change</span>
     </div>
     <div class="ticker volume">
-      <span class="main">1,083 BTC</span>
+      <span class="main">1,083 {{base.symbol}}</span>
       <span class="sub">24h Volume</span>
     </div>
   </div>
@@ -35,8 +35,8 @@
       <div class="order book">
         <ul class="book header">
           <li>
-            <div>Amount (BTC)</div>
-            <div>Price (USDT)</div>
+            <div>Amount ({{base.symbol}})</div>
+            <div>Price ({{quote.symbol}})</div>
           </li>
         </ul>
         <ul class="book data">
@@ -88,14 +88,16 @@
         <div class="text field">
           <span class="price left label">Price</span>
           <input type="text" name="price" />
-          <span class="price right label">USDT</span>
+          <span class="price right label">{{quote.symbol}}</span>
         </div>
         <div class="text field">
           <span class="amount left label">Amount</span>
           <input type="text" name="amount" />
-          <span class="amount right label">BTC</span>
+          <span class="amount right label">{{base.symbol}}</span>
         </div>
         <div class="field">
+          <input type="hidden" name="base" value="{{base.asset_id}}" />
+          <input type="hidden" name="quote" value="{{quote.asset_id}}" />
           <input type="submit" value="Place Buy Order" class="buy bid button" />
           <div class="submit-loader buy bid">
             <div class="spinner">
@@ -110,14 +112,16 @@
         <div class="text field">
           <span class="price left label">Price</span>
           <input type="text" name="price" />
-          <span class="price right label">USDT</span>
+          <span class="price right label">{{quote.symbol}}</span>
         </div>
         <div class="text field">
           <span class="amount left label">Amount</span>
           <input type="text" name="amount" />
-          <span class="amount right label">BTC</span>
+          <span class="amount right label">{{base.symbol}}</span>
         </div>
         <div class="field">
+          <input type="hidden" name="base" value="{{base.asset_id}}" />
+          <input type="hidden" name="quote" value="{{quote.asset_id}}" />
           <input type="submit" value="Place Sell Order" class="sell ask button" />
           <div class="submit-loader sell ask">
             <div class="spinner">
@@ -132,9 +136,11 @@
         <div class="text field">
           <span class="funds left label">Amount</span>
           <input type="text" name="funds" />
-          <span class="funds right label">USDT</span>
+          <span class="funds right label">{{quote.symbol}}</span>
         </div>
         <div class="field">
+          <input type="hidden" name="base" value="{{base.asset_id}}" />
+          <input type="hidden" name="quote" value="{{quote.asset_id}}" />
           <input type="submit" value="Place Buy Order" class="buy bid button" />
           <div class="submit-loader buy bid">
             <div class="spinner">
@@ -149,9 +155,11 @@
         <div class="text field">
           <span class="amount left label">Amount</span>
           <input type="text" name="amount" />
-          <span class="amount right label">BTC</span>
+          <span class="amount right label">{{base.symbol}}</span>
         </div>
         <div class="field">
+          <input type="hidden" name="base" value="{{base.asset_id}}" />
+          <input type="hidden" name="quote" value="{{quote.asset_id}}" />
           <input type="submit" value="Place Sell Order" class="sell ask button" />
           <div class="submit-loader sell ask">
             <div class="spinner">
@@ -164,16 +172,16 @@
       </form>
       <div class="account balances">
         <div class="base balance">
-          <span class="asset name">BTC</span>
+          <span class="asset name">{{base.symbol}}</span>
           <span class="asset amount">1,003.3242753</span>
         </div>
         <div class="quote balance">
-          <span class="asset name">USDT</span>
+          <span class="asset name">{{quote.symbol}}</span>
           <span class="asset amount">327,683.3242</span>
         </div>
         <div class="account actions">
-          <a href="/orders/{{market}}" data-navigo class="orders action"><i class="icon-notebook"></i> My Orders</a>
-          <a href="/accounts" data-navigo class="deposit action"><i class="icon-wallet"></i> Wallet</a>
+          <a href="/orders/{{base.symbol}}-{{quote.symbol}}" class="orders action"><i class="icon-notebook"></i> My Orders</a>
+          <a href="/accounts" class="deposit action"><i class="icon-wallet"></i> Wallet</a>
         </div>
       </div>
     </div>

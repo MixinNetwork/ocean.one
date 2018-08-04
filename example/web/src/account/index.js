@@ -188,7 +188,7 @@ Account.prototype = {
 
   assets: function () {
     const self = this;
-    const base = require('./markets.json');
+    const preset = self.api.asset.preset();
     self.api.mixin.assets(function (resp) {
       if (resp.error) {
         return;
@@ -199,13 +199,13 @@ Account.prototype = {
         filter[a.asset_id] = true;
         a.depositEnabled = a.asset_id != 'de5a6414-c181-3ecc-b401-ce375d08c399';
       }
-      for (var i = 0; i < base.length; i++) {
-        if (filter[base[i].asset_id]) {
+      for (var i = 0; i < preset.length; i++) {
+        if (filter[preset[i].asset_id]) {
           continue;
         }
-        base[i].balance = '0';
-        base[i].depositEnabled = true;
-        resp.data.push(base[i]);
+        preset[i].balance = '0';
+        preset[i].depositEnabled = true;
+        resp.data.push(preset[i]);
       }
       $('body').attr('class', 'account layout');
       $('#layout-container').html(self.templateAssets({

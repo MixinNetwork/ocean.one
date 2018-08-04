@@ -13,7 +13,20 @@ function Market(router, api) {
 }
 
 Market.prototype = {
-  index: function () {
+  index: function (market) {
+    if (!market) {
+      this.router.replace('/trade/BTC-USDT');
+      return;
+    }
+
+    var pair = this.api.asset.market(market);
+    if (!pair) {
+      this.router.replace('/trade/BTC-USDT');
+      return;
+    }
+    const base = pair[0];
+    const quote = pair[1];
+
     const self = this;
     var data = require('./depth.json');
     var bids = data.data.bids;
@@ -33,29 +46,38 @@ Market.prototype = {
       });
     }
 
+    self.handlePageScroll(market);
+
     $('body').attr('class', 'market layout');
     $('#layout-container').html(self.templateIndex({
       logoURL: require('./logo.png'),
       symbolURL: require('./symbol.png')
     })).append(self.templateTrade({
-      market: 'c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa',
+      base: base,
+      quote: quote,
       asks: asksData,
       bids: bidsData
     }));
+
     $('.layout.nav .logo a').click(function() {
-      window.scroll({
-        top: $('.layout.header').outerHeight() - $('.layout.nav').outerHeight(),
-        behavior: 'smooth'
-      });
+      var offset = $('.layout.header').outerHeight() - $('.layout.nav').outerHeight();
+      window.scrollTo({ top: offset, behavior: 'smooth' });
     });
 
-    self.handlePageScroll();
+    var scroll = $(window).scrollTop();
+    var offset = $('.layout.header').outerHeight() + $('.markets.container').outerHeight() - $('.layout.nav').outerHeight() + 1;
+    console.log(scroll, offset);
+    if (scroll < offset) {
+      window.scrollTo({ top: offset, behavior: 'smooth' });
+    }
+
     self.fixListItemHeight();
     self.renderChart(bids, asks);
-    self.api.engine.subscribe('c94ac88f-4671-3976-b60a-09064f1811e8-c6d0c728-2624-429b-8e0d-d9d19b6592fa', self.render);
     self.handleOrderCreate();
     self.handleFormSwitch();
     self.handleBookHistorySwitch();
+
+    self.api.engine.subscribe(base.asset_id + '-' + quote.asset_id, self.render);
   },
 
   handleFormSwitch: function () {
@@ -112,8 +134,8 @@ Market.prototype = {
       data.type = $('.type.tab.active').attr('data-type');
       data.side = $('.side.tab.active').attr('data-side');
       data.trace_id = uuid().toLowerCase();
-      data.quote = 'c6d0c728-2624-429b-8e0d-d9d19b6592fa';
-      data.base = 'c94ac88f-4671-3976-b60a-09064f1811e8';
+      data.quote = quote.asset_id;
+      data.base = base.asset_id;
       if (data.type === 'LIMIT' && data.side === 'BID') {
         data.funds = (parseFloat(data.amount) * parseFloat(data.price)).toFixed(8);
       }
@@ -138,7 +160,7 @@ Market.prototype = {
     });
   },
 
-  handlePageScroll: function () {
+  handlePageScroll: function (symbol) {
     $('.market.detail.spacer').height($('.market.detail.container').outerHeight());
     $('.market.detail.container').addClass('fixed');
     $(window).scroll(function (event) {
@@ -157,9 +179,9 @@ Market.prototype = {
       }
       if (scroll > height - $(window).height() * 2 / 3) {
         $('.markets.nav').fadeOut();
-        $('.layout.nav .title').html('BTC-USDT')
+        $('.layout.nav .title').html(symbol);
       } else {
-        $('.layout.nav .title').html('USDT MARKETS')
+        $('.layout.nav .title').html('USDT MARKETS');
       }
       if (scroll < height - $('.market.detail .header.container').outerHeight()) {
         $('.market.detail.container').removeClass('visible');

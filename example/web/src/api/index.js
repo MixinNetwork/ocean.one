@@ -5,6 +5,7 @@ import Engine from './engine.js';
 import Mixin from './mixin.js';
 import Ocean from './ocean.js';
 import Order from './order.js';
+import Asset from './asset.js';
 
 function API(router, root, engine) {
   this.router = router;
@@ -14,6 +15,7 @@ function API(router, root, engine) {
   this.ocean = new Ocean(this);
   this.engine = new Engine(engine);
   this.order = new Order(this);
+  this.asset = new Asset(this);
   this.Error404 = require('../404.html');
   this.ErrorGeneral = require('../error.html');
 }
