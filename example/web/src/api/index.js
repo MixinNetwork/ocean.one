@@ -32,14 +32,14 @@ API.prototype = {
       var uri = path.slice('https://api.mixin.one'.length);
       self.account.mixinToken(uri, function (resp) {
         if (resp.error) {
-          return callback(error);
+          return callback(resp);
         }
         return self.send(resp.data.token, method, url, body, callback);
       });
     } else if (url.indexOf('https://events.ocean.one/orders') === 0) {
       self.account.oceanToken(function (resp) {
         if (resp.error) {
-          return callback(error);
+          return callback(resp);
         }
         return self.send(resp.data.token, method, url, body, callback);
       });

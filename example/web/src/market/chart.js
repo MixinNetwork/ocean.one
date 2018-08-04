@@ -146,9 +146,9 @@ Chart.prototype = {
 
     var asksData = [];
     for(var i = 0; i < asks.length; i++) {
-      asks[i].volume = parseFloat(asks[i].amount);
+      asks[i].volume = parseFloat(parseFloat(asks[i].amount).toFixed(4));
       if (i > 0) {
-        asks[i].volume = asks[i-1].volume + asks[i].volume;
+        asks[i].volume = parseFloat((asks[i-1].volume + asks[i].volume).toFixed(4));
       }
       asksData.push({
         x: parseFloat(asks[i].price),

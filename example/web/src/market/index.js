@@ -36,6 +36,8 @@ Market.prototype = {
     const quote = pair[1];
     const self = this;
 
+    self.base = base;
+    self.quote = quote;
     self.api.ocean.ticker(function (resp) {
       if (resp.error) {
         return;
@@ -307,7 +309,11 @@ Market.prototype = {
 
   addTradeEntry: function (o) {
     const self = this;
-    o.price = parseFloat(o.price).toFixed(8);
+    if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
+      o.price = parseFloat(o.price).toFixed(4);
+    } else {
+      o.price = parseFloat(o.price).toFixed(8);
+    }
     o.amount = parseFloat(o.amount).toFixed(4);
     o.sideClass = o.side.toLowerCase();
     o.time = TimeUtils.short(o.created_at);
@@ -321,7 +327,11 @@ Market.prototype = {
     const amount = parseFloat(o.amount);
 
     o.sideClass = o.side.toLowerCase()
-    o.price = parseFloat(o.price).toFixed(8);
+    if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
+      o.price = parseFloat(o.price).toFixed(4);
+    } else {
+      o.price = parseFloat(o.price).toFixed(8);
+    }
     o.pricePoint = o.price.replace('.', '');
     o.amount = amount.toFixed(4);
     if ($('#order-point-' + o.pricePoint).length > 0) {
@@ -359,7 +369,11 @@ Market.prototype = {
     const amount = parseFloat(o.amount);
 
     o.sideClass = o.side.toLowerCase()
-    o.price = parseFloat(o.price).toFixed(8);
+    if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
+      o.price = parseFloat(o.price).toFixed(4);
+    } else {
+      o.price = parseFloat(o.price).toFixed(8);
+    }
     o.pricePoint = o.price.replace('.', '');
     o.amount = amount.toFixed(4);
     if ($('#order-point-' + o.pricePoint).length === 0) {
@@ -386,7 +400,7 @@ Market.prototype = {
         var bo = self.book.asks[i];
         var bp = parseFloat(bo.price);
         if (bp === price) {
-          bo.amount = parseFloat((parseFloat(bo.amount) + amount).toFixed(8));
+          bo.amount = parseFloat((parseFloat(bo.amount) + amount).toFixed(4));
           return;
         }
         if (bp > price) {
@@ -400,7 +414,7 @@ Market.prototype = {
         var bo = self.book.bids[i];
         var bp = parseFloat(bo.price);
         if (bp === price) {
-          bo.amount = parseFloat((parseFloat(bo.amount) + amount).toFixed(8));
+          bo.amount = parseFloat((parseFloat(bo.amount) + amount).toFixed(4));
           return;
         }
         if (bp < price) {
@@ -428,7 +442,7 @@ Market.prototype = {
         continue;
       }
 
-      bo.amount = parseFloat((parseFloat(bo.amount) - amount).toFixed(8));
+      bo.amount = parseFloat((parseFloat(bo.amount) - amount).toFixed(4));
       if (bo.amount === 0) {
         list.splice(i, 1);
       }
