@@ -33,7 +33,7 @@ API.prototype = {
       self.account.mixinToken(uri, function (token) {
         self.send(token, method, url, body, callback);
       });
-    } else if (url.indexOf('https://events.ocean.one') === 0) {
+    } else if (url.indexOf('https://events.ocean.one/orders') === 0) {
       self.account.oceanToken(function (token) {
         self.send(token, method, url, body, callback);
       });

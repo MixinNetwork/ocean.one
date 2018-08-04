@@ -295,6 +295,7 @@ Market.prototype = {
     o.sideClass = o.side.toLowerCase();
     o.time = TimeUtils.short(o.created_at);
     $('.history.data').prepend(self.itemTrade(o));
+    $('.history.data li:nth-of-type(1n+100)').remove();
   },
 
   orderOpenOnPage: function (o) {
@@ -366,11 +367,12 @@ Market.prototype = {
     if (o.side === 'ASK') {
       for (var i = 0; i < self.book.asks.length; i++) {
         var bo = self.book.asks[i];
-        if (bo.price === o.price) {
+        var bp = parseFloat(bo.price);
+        if (bp === price) {
           bo.amount = parseFloat((parseFloat(bo.amount) + amount).toFixed(8));
           return;
         }
-        if (parseFloat(bo.price) > price) {
+        if (bp > price) {
           self.book.asks.splice(i, 0, o);
           return;
         }
@@ -379,11 +381,12 @@ Market.prototype = {
     } else if (o.side === 'BID') {
       for (var i = 0; i < self.book.bids.length; i++) {
         var bo = self.book.bids[i];
-        if (bo.price === o.price) {
+        var bp = parseFloat(bo.price);
+        if (bp === price) {
           bo.amount = parseFloat((parseFloat(bo.amount) + amount).toFixed(8));
           return;
         }
-        if (parseFloat(bo.price) < price) {
+        if (bp < price) {
           self.book.bids.splice(i, 0, o);
           return;
         }
@@ -404,7 +407,7 @@ Market.prototype = {
 
     for (var i = 0; i < list.length; i++) {
       var bo = list[i];
-      if (bo.price !== o.price) {
+      if (parseFloat(bo.price) !== price) {
         continue;
       }
 

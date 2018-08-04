@@ -542,7 +542,8 @@
       font-size: 16px;
       text-align: center;
 
-      span {
+      .main,
+      .sub {
         display: block;
       }
     }
