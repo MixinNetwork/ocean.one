@@ -19,6 +19,11 @@ function Account(router, api) {
 
 Account.prototype = {
   signUp: function () {
+    if (this.api.account.token() !== '') {
+      this.router.replace('/accounts');
+      return;
+    }
+
     const self = this;
     $('body').attr('class', 'account layout');
     $('#layout-container').html(self.templateUser());
@@ -132,6 +137,11 @@ Account.prototype = {
   },
 
   signIn: function () {
+    if (this.api.account.token() !== '') {
+      this.router.replace('/accounts');
+      return;
+    }
+
     const self = this;
     $('body').attr('class', 'account layout');
     $('#layout-container').html(self.templateSession());
