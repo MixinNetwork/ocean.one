@@ -79,6 +79,13 @@ Market.prototype = {
         self.handleBookHistorySwitch();
         self.fixListItemHeight();
 
+        var pollBalance = function () {
+          self.pollAccountBalance(base.asset_id);
+          self.pollAccountBalance(quote.asset_id);
+        };
+        pollBalance();
+        setInterval(pollBalance, 7000);
+
         self.api.engine.subscribe(base.asset_id + '-' + quote.asset_id, function (msg) {
           self.render(msg);
         });
@@ -147,6 +154,11 @@ Market.prototype = {
         $(':submit', form).prop('disabled', false);
         if (resp.error) {
           return;
+        }
+        if (data.side === 'BID') {
+          self.pollAccountBalance($('.trade.form form input[name="quote"]').val());
+        } else {
+          self.pollAccountBalance($('.trade.form form input[name="base"]').val());
         }
       }, data);
     });
@@ -240,7 +252,10 @@ Market.prototype = {
       return;
     }
     if (!self.book) {
-      self.book = {};
+      self.book = {
+        asks: [],
+        bids: []
+      };
     }
 
     var data = msg.data;
@@ -262,6 +277,8 @@ Market.prototype = {
       case 'HEARTBEAT':
         return;
       case 'ORDER-OPEN':
+        $('.order.book .spinner-container').remove();
+        $('.order.book .book.data').show();
         self.orderOpenOnBook(data.data);
         self.orderOpenOnPage(data.data);
         self.fixListItemHeight();
@@ -417,6 +434,23 @@ Market.prototype = {
       }
       return;
     }
+  },
+
+  pollAccountBalance: function (asset) {
+    if (this.api.account.token() === '') {
+      return;
+    }
+
+    const self = this;
+    self.api.mixin.asset(function (resp) {
+      if (resp.error) {
+        return true;
+      }
+
+      var data = resp.data;
+      $('.balance.' + data.symbol).css({display: 'flex'});
+      $('.asset.amount.' + data.symbol).html(data.balance);
+    }, asset);
   }
 };
 

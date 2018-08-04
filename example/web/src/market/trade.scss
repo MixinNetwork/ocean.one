@@ -47,6 +47,18 @@
     }
   }
 
+  .logo {
+    width: 30px;
+    height: 30px;
+    padding-right: 24px;
+    padding-bottom: 2px;
+
+    img {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
   .up .main {
     color: $color-side-bid;
   }
@@ -380,6 +392,7 @@
       font-family: $font-main-mono;
       display: flex;
       padding: 0 16px;
+      display: none;
 
       .asset {
         flex: 1;
@@ -488,6 +501,10 @@
     .ticker {
       margin: 0;
       flex: 1;
+    }
+
+    .logo {
+      display: none;
     }
   }
 

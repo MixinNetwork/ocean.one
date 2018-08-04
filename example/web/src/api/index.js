@@ -30,16 +30,22 @@ API.prototype = {
     }
     if (url.indexOf('https://api.mixin.one') === 0) {
       var uri = path.slice('https://api.mixin.one'.length);
-      self.account.mixinToken(uri, function (token) {
-        self.send(token, method, url, body, callback);
+      self.account.mixinToken(uri, function (resp) {
+        if (resp.error) {
+          return callback(error);
+        }
+        return self.send(resp.data.token, method, url, body, callback);
       });
     } else if (url.indexOf('https://events.ocean.one/orders') === 0) {
-      self.account.oceanToken(function (token) {
-        self.send(token, method, url, body, callback);
+      self.account.oceanToken(function (resp) {
+        if (resp.error) {
+          return callback(error);
+        }
+        return self.send(resp.data.token, method, url, body, callback);
       });
     } else {
       var token = self.account.token(method, path, body);
-      self.send(token, method, url, body, callback);
+      return self.send(token, method, url, body, callback);
     }
   },
 

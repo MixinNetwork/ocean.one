@@ -114,7 +114,7 @@ Account.prototype = {
     var key = 'token.' + category.toLowerCase() + uri;
     var token = window.localStorage.getItem(key);
     if (token) {
-      return callback(token);
+      return callback({data: {token: token}});
     }
     var params = {
       category: category,
@@ -123,8 +123,8 @@ Account.prototype = {
     this.api.request('POST', '/tokens', params, function(resp) {
       if (resp.data) {
         window.localStorage.setItem(key, resp.data.token);
-        return callback(resp.data.token);
       }
+      return callback(resp);
     });
   },
 

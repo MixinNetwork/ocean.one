@@ -1,5 +1,8 @@
 <div class="market detail container">
   <div class="header container">
+    <div class="base logo">
+      <img src="{{base.icon_url}}" alt="{{base.name}}" />
+    </div>
     <div class="ticker price">
       <span class="main"><span class="price quote"></span> {{quote.symbol}}</span>
       <span class="sub"><span class="price fiat"></span></span>
@@ -178,13 +181,13 @@
         </div>
       </form>
       <div class="account balances">
-        <div class="base balance">
+        <div class="{{base.symbol}} base balance">
           <span class="asset name">{{base.symbol}}</span>
-          <span class="asset amount">1,003.3242753</span>
+          <span class="{{base.symbol}} asset amount">0</span>
         </div>
-        <div class="quote balance">
+        <div class="{{quote.symbol}} quote balance">
           <span class="asset name">{{quote.symbol}}</span>
-          <span class="asset amount">327,683.3242</span>
+          <span class="{{quote.symbol}} asset amount">0</span>
         </div>
         <div class="account actions">
           <a href="/orders/{{base.symbol}}-{{quote.symbol}}" class="orders action"><i class="icon-notebook"></i> My Orders</a>
