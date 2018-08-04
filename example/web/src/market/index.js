@@ -207,8 +207,13 @@ Market.prototype = {
   },
 
   fixListItemHeight: function () {
+    var itemHeight = $('.order.book .ask').outerHeight();
+    if (!itemHeight) {
+      itemHeight = 21;
+    }
+
     var total = $('.order.book').height() - $('.order.book .spread').outerHeight() - $('.book.tab').outerHeight();
-    var count = parseInt(total / $('.order.book .ask').outerHeight() / 2) * 2;
+    var count = parseInt(total / itemHeight / 2) * 2;
     var line = (total / count) + 'px';
     $('.order.book .ask').css({'line-height': line, height: line});
     $('.order.book .bid').css({'line-height': line, height: line});
@@ -217,7 +222,7 @@ Market.prototype = {
     $('.book.data').css({'top': top + 'px'});
 
     total = $('.trade.history').height() - $('.history.tab').outerHeight();
-    count = parseInt(total / $('.order.book .ask').outerHeight());
+    count = parseInt(total / itemHeight);
     line = (total / count) + 'px';
     $('.trade.history .ask').css({'line-height': line, height: line});
     $('.trade.history .bid').css({'line-height': line, height: line});
