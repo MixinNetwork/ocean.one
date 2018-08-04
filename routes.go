@@ -34,7 +34,7 @@ func (impl *R) marketTicker(w http.ResponseWriter, r *http.Request, params map[s
 		return
 	}
 	if t == nil {
-		render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": {}})
+		render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": map[string]interface{}{}})
 		return
 	}
 	b, err := cache.Book(r.Context(), params["id"], 1)
