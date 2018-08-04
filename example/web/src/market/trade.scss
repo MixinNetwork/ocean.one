@@ -176,36 +176,13 @@
     border-left: 1px solid rgba(0,0,0,0.1);
   }
 
-  .book.header {
-    background: $color-main-background;
-    position: absolute;
-    top: 34px;
-    left: 0;
-    width: 100%;
-    z-index: 1;
-    font-family: $font-main-title;
-    font-size: 12px;
-    font-weight: 300;
-    color: #AAAAAA;
-
-    li {
-      cursor: auto;
-
-      &:hover {
-        background: $color-main-background;
-      }
-    }
-  }
-
   .book.data {
     position: absolute;
-    top: calc(50% + 34px);
-    transform: translateY(-50%);
     width: 100%;
   }
 
   .history.data {
-    padding-top: 32px;
+    padding-top: 34px;
     box-sizing: border-box;
   }
 

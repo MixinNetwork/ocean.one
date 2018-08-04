@@ -212,11 +212,12 @@ Market.prototype = {
     var line = (total / count) + 'px';
     $('.order.book .ask').css({'line-height': line, height: line});
     $('.order.book .bid').css({'line-height': line, height: line});
-    $('.order.book .header li').css({'line-height': line, height: line});
-    $('.order.book .header').css({'top': $('.book.tab').outerHeight()});
+    var top = -($('.order.book .ask').outerHeight() * $('.order.book .ask').length);
+    top = top + $('.book.tab').outerHeight() + total / 2;
+    $('.book.data').css({'top': top + 'px'});
 
     total = $('.trade.history').height() - $('.history.tab').outerHeight();
-    count = parseInt(total / $('.trade.history .ask').outerHeight() / 2) * 2;
+    count = parseInt(total / $('.order.book .ask').outerHeight());
     line = (total / count) + 'px';
     $('.trade.history .ask').css({'line-height': line, height: line});
     $('.trade.history .bid').css({'line-height': line, height: line});
