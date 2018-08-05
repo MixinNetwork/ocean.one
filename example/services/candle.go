@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/MixinNetwork/bot-api-go-client"
 	"github.com/MixinNetwork/go-number"
+	"github.com/MixinNetwork/ocean.one/example/config"
 	"github.com/MixinNetwork/ocean.one/example/models"
 	"github.com/MixinNetwork/ocean.one/example/session"
 )
@@ -49,7 +51,42 @@ func (service *CandleService) Run(ctx context.Context) error {
 }
 
 func (service *CandleService) handleMarketStats(ctx context.Context, base, quote string) {
-	const interval = 500
+	const interval = 500 * time.Millisecond
+	var quoteUSD = 0.0
+
+	go func() {
+		for {
+			token, err := bot.SignAuthenticationToken(config.ClientId, config.SessionId, config.SessionKey, "GET", "/assets/"+quote, "")
+			if err != nil {
+				session.ServerError(ctx, err)
+				continue
+			}
+			body, err := bot.Request(ctx, "GET", "/assets/"+quote, nil, token)
+			if err != nil {
+				session.ServerError(ctx, err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			var resp struct {
+				Data struct {
+					PriceUSD string `json:"price_usd"`
+				}
+				Error error `json:"error"`
+			}
+			err = json.Unmarshal(body, &resp)
+			if err != nil {
+				session.ServerError(ctx, err)
+				continue
+			}
+			if resp.Error != nil {
+				session.ServerError(ctx, resp.Error)
+				continue
+			}
+			quoteUSD = number.FromString(resp.Data.PriceUSD).Float64()
+			time.Sleep(300 * time.Second)
+		}
+	}()
+
 	for {
 		time.Sleep(interval)
 		m, err := models.AggregateCandlesAsStats(ctx, base, quote)
@@ -58,7 +95,7 @@ func (service *CandleService) handleMarketStats(ctx context.Context, base, quote
 			continue
 		}
 
-		err = models.CreateOrUpdateMarket(ctx, m.Base, m.Quote, m.Price, m.Volume, m.Total, m.Change)
+		err = models.CreateOrUpdateMarket(ctx, m.Base, m.Quote, m.Price, m.Volume, m.Total, m.Change, quoteUSD)
 		if err != nil {
 			session.ServerError(ctx, err)
 		}
@@ -67,7 +104,7 @@ func (service *CandleService) handleMarketStats(ctx context.Context, base, quote
 
 func (service *CandleService) handleMarketCandles(ctx context.Context, base, quote string) {
 	const limit = 100
-	const interval = 500
+	const interval = 500 * time.Millisecond
 	var key = fmt.Sprintf("candles-checkpoint-%s-%s", base, quote)
 	var cache = make(map[string]bool)
 

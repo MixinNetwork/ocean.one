@@ -12,18 +12,19 @@ import (
 )
 
 type Market struct {
-	Base   string
-	Quote  string
-	Price  float64
-	Volume float64
-	Total  float64
-	Change float64
+	Base     string
+	Quote    string
+	Price    float64
+	Volume   float64
+	Total    float64
+	Change   float64
+	QuoteUSD float64
 }
 
-var marketsColumnsFull = []string{"base", "quote", "price", "volume", "total", "change"}
+var marketsColumnsFull = []string{"base", "quote", "price", "volume", "total", "change", "quote_usd"}
 
 func (m *Market) valuesFull() []interface{} {
-	return []interface{}{m.Base, m.Quote, m.Price, m.Volume, m.Total, m.Change}
+	return []interface{}{m.Base, m.Quote, m.Price, m.Volume, m.Total, m.Change, m.QuoteUSD}
 }
 
 func AllMarkets() []*Market {
@@ -82,13 +83,14 @@ func ListMarkets(ctx context.Context) ([]*Market, error) {
 	}
 }
 
-func CreateOrUpdateMarket(ctx context.Context, base, quote string, price, volume, total, change float64) error {
+func CreateOrUpdateMarket(ctx context.Context, base, quote string, price, volume, total, change, quoteUSD float64) error {
 	for _, m := range AllMarkets() {
 		if m.Base == base && m.Quote == quote {
 			m.Price = price
 			m.Volume = volume
 			m.Total = total
 			m.Change = change
+			m.QuoteUSD = quoteUSD
 			err := session.Database(ctx).Apply(ctx, []*spanner.Mutation{
 				spanner.InsertOrUpdate("markets", marketsColumnsFull, m.valuesFull()),
 			}, "markets", "INSERT", "CreateOrUpdateMarket")
@@ -170,7 +172,7 @@ func AggregateCandlesAsStats(ctx context.Context, base, quote string) (*Market, 
 
 func marketFromRow(row *spanner.Row) (*Market, error) {
 	var m Market
-	err := row.Columns(&m.Base, &m.Quote, &m.Price, &m.Volume, &m.Total, &m.Change)
+	err := row.Columns(&m.Base, &m.Quote, &m.Price, &m.Volume, &m.Total, &m.Change, &m.QuoteUSD)
 	return &m, err
 }
 

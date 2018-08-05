@@ -31,12 +31,13 @@ func (impl *marketsImpl) index(w http.ResponseWriter, r *http.Request, params ma
 	data := make([]map[string]interface{}, 0)
 	for _, m := range markets {
 		data = append(data, map[string]interface{}{
-			"base":   m.Base,
-			"quote":  m.Quote,
-			"price":  m.Price,
-			"volume": m.Volume,
-			"total":  m.Total,
-			"change": m.Change,
+			"base":      m.Base,
+			"quote":     m.Quote,
+			"price":     m.Price,
+			"volume":    m.Volume,
+			"total":     m.Total,
+			"change":    m.Change,
+			"quote_usd": m.QuoteUSD,
 		})
 	}
 	views.RenderDataResponse(w, r, data)
@@ -60,12 +61,13 @@ func (impl *marketsImpl) market(w http.ResponseWriter, r *http.Request, params m
 	}
 
 	data := map[string]interface{}{
-		"base":   m.Base,
-		"quote":  m.Quote,
-		"price":  m.Price,
-		"volume": m.Volume,
-		"total":  m.Total,
-		"change": m.Change,
+		"base":      m.Base,
+		"quote":     m.Quote,
+		"price":     m.Price,
+		"volume":    m.Volume,
+		"total":     m.Total,
+		"change":    m.Change,
+		"quote_usd": m.QuoteUSD,
 	}
 	views.RenderDataResponse(w, r, data)
 }

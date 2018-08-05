@@ -92,4 +92,5 @@ CREATE TABLE markets (
   volume      FLOAT64 NOT NULL,
   total       FLOAT64 NOT NULL,
   change      FLOAT64 NOT NULL,
+  quote_usd   FLOAT64 NOT NULL,
 ) PRIMARY KEY(base, quote);
