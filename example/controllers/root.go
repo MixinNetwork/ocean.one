@@ -19,6 +19,7 @@ func RegisterRoutes(router *httptreemux.TreeMux) {
 	registerTokens(router)
 	registerOrders(router)
 	registerWithdrawals(router)
+	registerMarkets(router)
 }
 
 func root(w http.ResponseWriter, r *http.Request, params map[string]string) {

@@ -69,3 +69,17 @@ CREATE TABLE sessions (
 	created_at        TIMESTAMP NOT NULL,
 ) PRIMARY KEY(user_id, session_id),
 INTERLEAVE IN PARENT users ON DELETE CASCADE;
+
+
+CREATE TABLE candles (
+  base        STRING(36) NOT NULL,
+  quote       STRING(36) NOT NULL,
+  granularity INT64 NOT NULL,
+  point       INT64 NOT NULL,
+  open        FLOAT64 NOT NULL,
+  close       FLOAT64 NOT NULL,
+  high        FLOAT64 NOT NULL,
+  low         FLOAT64 NOT NULL,
+  volume      FLOAT64 NOT NULL,
+  total       FLOAT64 NOT NULL,
+) PRIMARY KEY(base, quote, granularity, point);
