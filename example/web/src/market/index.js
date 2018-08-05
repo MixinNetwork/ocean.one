@@ -407,6 +407,7 @@ Market.prototype = {
         self.book.bids = book.bids;
         $('.order.book .spinner-container').remove();
         $('.order.book .book.data').show();
+        $('.order.book .order.item').remove();
         for (var i = 0; i < book.asks.length; i++) {
           self.orderOpenOnPage(book.asks[i]);
         }
