@@ -4,22 +4,17 @@ function Chart() {
 }
 
 Chart.prototype = {
-  renderPrice: function (ele) {
-    var data = require('./appl-ohlcv.json');
+  prepareCandleData: function (data) {
     var ohlc = [],
       volume = [],
-      dataLength = data.length,
-      groupingUnits = [
-        ['minute', [1, 5, 15, 30]],
-        ['hour', [1, 6, 12, 24]]
-      ];
+      dataLength = data.length;
 
     for (var i = 0; i < dataLength; i += 1) {
       ohlc.push([
         data[i][0], // the date
-        data[i][1], // open
+        data[i][3], // open
         data[i][2], // high
-        data[i][3], // low
+        data[i][1], // low
         data[i][4] // close
       ]);
 
@@ -28,6 +23,19 @@ Chart.prototype = {
         data[i][5] // the volume
       ]);
     }
+
+    return [ohlc, volume];
+  },
+
+  renderPrice: function (ele, currency, data) {
+    var groupingUnits = [
+      ['minute', [1, 5, 15, 30]],
+      ['hour', [1, 6, 12, 24]]
+    ];
+
+    data = this.prepareCandleData(data);
+    var ohlc = data[0];
+    var volume = data[1];
 
     var chart = Highcharts.stockChart(ele, {
       chart: {
@@ -98,15 +106,15 @@ Chart.prototype = {
         color: 'rgba(41,149,242,0.3)'
       }, {
         type: 'candlestick',
-        id: 'aapl',
-        name: 'AAPL',
+        id: 'candle',
+        name: currency,
         data: ohlc,
         dataGrouping: {
           units: groupingUnits
         }
       }, {
         type: 'ema',
-        linkedTo: 'aapl',
+        linkedTo: 'candle',
         params: {
           period: 12
         },
@@ -114,7 +122,7 @@ Chart.prototype = {
         lineWidth: 1
       }, {
         type: 'ema',
-        linkedTo: 'aapl',
+        linkedTo: 'candle',
         params: {
           period: 26
         },

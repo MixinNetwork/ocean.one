@@ -123,6 +123,16 @@
     fill: $color-side-ask;
     stroke: $color-side-ask;
   }
+
+  .highcharts-ema-series {
+    .highcharts-point {
+      opacity: 0;
+    }
+
+    .highcharts-point-hover {
+      opacity: 1;
+    }
+  }
 }
 
 .orders.trades {

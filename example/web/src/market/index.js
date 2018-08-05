@@ -90,6 +90,12 @@ Market.prototype = {
         pollBalance();
         setInterval(pollBalance, 7000);
 
+        self.pollCandles(300);
+        self.candleInterval = setInterval(function () {
+          self.pollCandles(300);
+        }, 60000);
+        self.handleCandleSwitch();
+
         self.api.engine.subscribe(base.asset_id + '-' + quote.asset_id, function (msg) {
           self.render(msg);
         });
@@ -236,12 +242,47 @@ Market.prototype = {
     $('.trade.history .bid').css({'line-height': line, height: line});
   },
 
-  renderChart: function () {
+  handleCandleSwitch: function () {
+    const self = this;
+    $('.charts.container .tabs li').click(function () {
+      $('.charts.container .tabs li').removeClass('active');
+      $(this).addClass('active');
+      const granularity = $(this).data('granularity');
+      clearInterval(self.candleInterval);
+      self.pollCandles(granularity);
+      self.candleInterval = setInterval(function () {
+        self.pollCandles(granularity);
+      }, 60000);
+    });
+  },
+
+  pollCandles: function (granularity) {
+    const self = this;
+    self.api.market.candles(function (resp) {
+      if (resp.error) {
+        return true;
+      }
+      self.renderCandleChart(resp.data);
+    }, self.base.asset_id + '-' + self.quote.asset_id, granularity);
+  },
+
+  renderCandleChart: function (data) {
     const self = this;
     const chart = new Chart();
     if (!self.priceChart) {
-      self.priceChart = chart.renderPrice($('.price.chart')[0]);
+      self.priceChart = chart.renderPrice($('.price.chart')[0], self.base.symbol, data);
+    } else {
+      data = chart.prepareCandleData(data);
+      var ohlc = data[0];
+      var volume = data[1];
+      self.priceChart.series[0].setData(volume);
+      self.priceChart.series[1].setData(ohlc);
     }
+  },
+
+  renderDepthChart: function () {
+    const self = this;
+    const chart = new Chart();
     self.depthChart = chart.renderDepth($('.depth.chart')[0], self.book.bids, self.book.asks);
   },
 
@@ -298,7 +339,7 @@ Market.prototype = {
         break;
     }
 
-    self.renderChart();
+    self.renderDepthChart();
   },
 
   updateTickerPrice: function (o) {
