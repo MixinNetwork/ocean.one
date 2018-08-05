@@ -83,3 +83,13 @@ CREATE TABLE candles (
   volume      FLOAT64 NOT NULL,
   total       FLOAT64 NOT NULL,
 ) PRIMARY KEY(base, quote, granularity, point);
+
+
+CREATE TABLE markets (
+  base        STRING(36) NOT NULL,
+  quote       STRING(36) NOT NULL,
+  price       FLOAT64 NOT NULL,
+  volume      FLOAT64 NOT NULL,
+  total       FLOAT64 NOT NULL,
+  change      FLOAT64 NOT NULL,
+) PRIMARY KEY(base, quote);

@@ -36,7 +36,8 @@ func (service *CandleService) Run(ctx context.Context) error {
 		return err
 	}
 	for _, m := range models.AllMarkets() {
-		go service.handleMarket(ctx, m.Base, m.Quote)
+		go service.handleMarketCandles(ctx, m.Base, m.Quote)
+		go service.handleMarketStats(ctx, m.Base, m.Quote)
 	}
 	for {
 		err := standardServiceHealth(ctx)
@@ -47,7 +48,24 @@ func (service *CandleService) Run(ctx context.Context) error {
 	}
 }
 
-func (service *CandleService) handleMarket(ctx context.Context, base, quote string) {
+func (service *CandleService) handleMarketStats(ctx context.Context, base, quote string) {
+	const interval = 500
+	for {
+		time.Sleep(interval)
+		m, err := models.AggregateCandlesAsStats(ctx, base, quote)
+		if err != nil {
+			session.ServerError(ctx, err)
+			continue
+		}
+
+		err = models.CreateOrUpdateMarket(ctx, m.Base, m.Quote, m.Price, m.Volume, m.Total, m.Change)
+		if err != nil {
+			session.ServerError(ctx, err)
+		}
+	}
+}
+
+func (service *CandleService) handleMarketCandles(ctx context.Context, base, quote string) {
 	const limit = 100
 	const interval = 500
 	var key = fmt.Sprintf("candles-checkpoint-%s-%s", base, quote)

@@ -16,7 +16,7 @@ import (
 var whitelist = [][2]string{
 	{"GET", "^/$"},
 	{"GET", "^/_hc$"},
-	{"GET", "^/markets/"},
+	{"GET", "^/markets"},
 	{"POST", "^/verifications"},
 	{"POST", "^/users$"},
 	{"POST", "^/sessions$"},

@@ -1,8 +1,29 @@
 package models
 
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	"cloud.google.com/go/spanner"
+	"github.com/MixinNetwork/ocean.one/example/session"
+	"google.golang.org/api/iterator"
+)
+
 type Market struct {
-	Quote string
-	Base  string
+	Base   string
+	Quote  string
+	Price  float64
+	Volume float64
+	Total  float64
+	Change float64
+}
+
+var marketsColumnsFull = []string{"base", "quote", "price", "volume", "total", "change"}
+
+func (m *Market) valuesFull() []interface{} {
+	return []interface{}{m.Base, m.Quote, m.Price, m.Volume, m.Total, m.Change}
 }
 
 func AllMarkets() []*Market {
@@ -17,6 +38,140 @@ func AllMarkets() []*Market {
 		markets = append(markets, &Market{Quote: "c94ac88f-4671-3976-b60a-09064f1811e8", Base: b})
 	}
 	return markets
+}
+
+func GetMarket(ctx context.Context, base, quote string) (*Market, error) {
+	it := session.Database(ctx).Query(ctx, spanner.Statement{
+		SQL:    fmt.Sprintf("SELECT %s FROM markets WHERE base=@base AND quote=@quote", strings.Join(marketsColumnsFull, ",")),
+		Params: map[string]interface{}{"base": base, "quote": quote},
+	}, "markets", "GetMarket")
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return nil, nil
+	} else if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	m, err := marketFromRow(row)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	return m, nil
+}
+
+func ListMarkets(ctx context.Context) ([]*Market, error) {
+	it := session.Database(ctx).Query(ctx, spanner.Statement{
+		SQL: fmt.Sprintf("SELECT %s FROM markets", strings.Join(marketsColumnsFull, ",")),
+	}, "markets", "ListMarkets")
+	defer it.Stop()
+
+	var markets []*Market
+	for {
+		row, err := it.Next()
+		if err == iterator.Done {
+			return markets, nil
+		} else if err != nil {
+			return nil, session.TransactionError(ctx, err)
+		}
+		m, err := marketFromRow(row)
+		if err != nil {
+			return nil, session.TransactionError(ctx, err)
+		}
+		markets = append(markets, m)
+	}
+}
+
+func CreateOrUpdateMarket(ctx context.Context, base, quote string, price, volume, total, change float64) error {
+	for _, m := range AllMarkets() {
+		if m.Base == base && m.Quote == quote {
+			m.Price = price
+			m.Volume = volume
+			m.Total = total
+			m.Change = change
+			err := session.Database(ctx).Apply(ctx, []*spanner.Mutation{
+				spanner.InsertOrUpdate("markets", marketsColumnsFull, m.valuesFull()),
+			}, "markets", "INSERT", "CreateOrUpdateMarket")
+			if err != nil {
+				return session.TransactionError(ctx, err)
+			}
+			return nil
+		}
+	}
+	return session.BadDataError(ctx)
+}
+
+func AggregateCandlesAsStats(ctx context.Context, base, quote string) (*Market, error) {
+	market := &Market{Base: base, Quote: quote}
+	start := time.Now().Add(-24 * time.Hour).Truncate(CandleGranularity15M).Unix()
+
+	eit := session.Database(ctx).Query(ctx, spanner.Statement{
+		SQL:    "SELECT point,close FROM candles WHERE base=@base AND quote=@quote AND granularity=@granularity ORDER BY base,quote,granularity,point DESC LIMIT 1",
+		Params: map[string]interface{}{"base": base, "quote": quote, "granularity": CandleGranularity15M},
+	}, "candles", "AggregateCandlesAsStats")
+	defer eit.Stop()
+
+	row, err := eit.Next()
+	if err == iterator.Done {
+		return market, nil
+	} else if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	var point int64
+	var close float64
+	err = row.Columns(&point, &close)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	market.Price = close
+	if point < start {
+		return market, nil
+	}
+
+	bit := session.Database(ctx).Query(ctx, spanner.Statement{
+		SQL:    "SELECT point,close FROM candles WHERE base=@base AND quote=@quote AND granularity=@granularity AND point>=@point ORDER BY base,quote,granularity,point LIMIT 1",
+		Params: map[string]interface{}{"base": base, "quote": quote, "granularity": CandleGranularity15M, "point": start},
+	}, "candles", "AggregateCandlesAsStats")
+	defer bit.Stop()
+
+	row, err = bit.Next()
+	if err == iterator.Done {
+		return market, nil
+	} else if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	err = row.Columns(&point, &close)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	market.Change = (market.Price - close) / close
+
+	sit := session.Database(ctx).Query(ctx, spanner.Statement{
+		SQL:    "SELECT SUM(volume) AS volume, SUM(total) AS total FROM candles WHERE base=@base AND quote=@quote AND granularity=@granularity AND point>=@point",
+		Params: map[string]interface{}{"base": base, "quote": quote, "granularity": CandleGranularity15M, "point": start},
+	}, "candles", "AggregateCandlesAsStats")
+	defer sit.Stop()
+
+	row, err = sit.Next()
+	if err == iterator.Done {
+		return market, nil
+	} else if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	var volume, total float64
+	err = row.Columns(&volume, &total)
+	if err != nil {
+		return nil, session.TransactionError(ctx, err)
+	}
+	market.Volume = volume
+	market.Total = total
+	return market, nil
+}
+
+func marketFromRow(row *spanner.Row) (*Market, error) {
+	var m Market
+	err := row.Columns(&m.Base, &m.Quote, &m.Price, &m.Volume, &m.Total, &m.Change)
+	return &m, err
 }
 
 var usdtMarkets = []string{

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/MixinNetwork/ocean.one/example/models"
+	"github.com/MixinNetwork/ocean.one/example/session"
 	"github.com/MixinNetwork/ocean.one/example/views"
 	"github.com/dimfeld/httptreemux"
 	"github.com/satori/go.uuid"
@@ -15,7 +16,58 @@ type marketsImpl struct{}
 func registerMarkets(router *httptreemux.TreeMux) {
 	impl := &marketsImpl{}
 
+	router.GET("/markets", impl.index)
+	router.GET("/markets/:market", impl.market)
 	router.GET("/markets/:market/candles/:granularity", impl.candles)
+}
+
+func (impl *marketsImpl) index(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	markets, err := models.ListMarkets(r.Context())
+	if err != nil {
+		views.RenderErrorResponse(w, r, err)
+		return
+	}
+
+	data := make([]map[string]interface{}, 0)
+	for _, m := range markets {
+		data = append(data, map[string]interface{}{
+			"base":   m.Base,
+			"quote":  m.Quote,
+			"price":  m.Price,
+			"volume": m.Volume,
+			"total":  m.Total,
+			"change": m.Change,
+		})
+	}
+	views.RenderDataResponse(w, r, data)
+}
+
+func (impl *marketsImpl) market(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	base, quote := getBaseQuote(params["market"])
+	if base == "" || quote == "" {
+		views.RenderErrorResponse(w, r, session.NotFoundError(r.Context()))
+		return
+	}
+
+	m, err := models.GetMarket(r.Context(), base, quote)
+	if err != nil {
+		views.RenderErrorResponse(w, r, err)
+		return
+	}
+	if m == nil {
+		views.RenderErrorResponse(w, r, session.NotFoundError(r.Context()))
+		return
+	}
+
+	data := map[string]interface{}{
+		"base":   m.Base,
+		"quote":  m.Quote,
+		"price":  m.Price,
+		"volume": m.Volume,
+		"total":  m.Total,
+		"change": m.Change,
+	}
+	views.RenderDataResponse(w, r, data)
 }
 
 func (impl *marketsImpl) candles(w http.ResponseWriter, r *http.Request, params map[string]string) {
