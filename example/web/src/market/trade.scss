@@ -248,6 +248,14 @@
   .bid .price {
     color: $color-side-bid;
   }
+
+  .trade.ask .price {
+    color: $color-side-bid;
+  }
+
+  .trade.bid .price {
+    color: $color-side-ask;
+  }
 }
 
 .trade.form {

@@ -70,7 +70,8 @@ Market.prototype = {
     $('body').attr('class', 'market layout');
     $('#layout-container').html(self.templateIndex({
       logoURL: require('./logo.png'),
-      symbolURL: require('./symbol.png')
+      symbolURL: require('./symbol.png'),
+      title: self.base.symbol + '-' + self.quote.symbol
     })).append(self.templateTrade({
       base: self.base,
       quote: self.quote,
