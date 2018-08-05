@@ -11,7 +11,7 @@ Chart.prototype = {
 
     for (var i = 0; i < dataLength; i += 1) {
       ohlc.push([
-        data[i][0], // the date
+        data[i][0] * 1000, // the date
         data[i][3], // open
         data[i][2], // high
         data[i][1], // low
@@ -19,7 +19,7 @@ Chart.prototype = {
       ]);
 
       volume.push([
-        data[i][0], // the date
+        data[i][0] * 1000, // the date
         data[i][5] // the volume
       ]);
     }
