@@ -7,6 +7,7 @@
   background-position: center top;
   background-repeat: no-repeat;
   background-size: cover;
+  display: none;
 
   .overlay {
     background: linear-gradient(rgba(0,18,83,0.9), rgba(0,18,83,0.3) 50%, rgba(255,255,255,1) 100%);
@@ -79,7 +80,6 @@
   top: 0;
   width: 100%;
   z-index: 99;
-  display: none;
 
   .overlay {
     background: linear-gradient(rgba(0,18,83,0.9), rgba(0,18,83,0.6) 100%);
@@ -129,6 +129,7 @@
   background: $color-main-background;
   box-shadow: 0 2px 2px rgba(0,0,0,0.1);
   padding-top: 32px;
+  display: none;
 }
 
 .markets.nav {

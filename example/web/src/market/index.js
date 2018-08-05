@@ -78,7 +78,14 @@ Market.prototype = {
     }));
 
     $('.markets.container').on('click', '.market.item', function () {
-      window.location.href = '/trade/' + $(this).data('symbol');
+      if ($(this).data('symbol') === self.base.symbol + '-' + self.quote.symbol) {
+        $('.market.detail.container').slideToggle();
+        $('.markets.container').slideToggle();
+        $('.layout.header').slideToggle();
+        $('.layout.nav').show();
+      } else {
+        window.location.href = '/trade/' + $(this).data('symbol');
+      }
     });
     self.renderMarkets(markets);
     setInterval(function() {
@@ -90,17 +97,14 @@ Market.prototype = {
       self.addTradeEntry(trades[i-1]);
     }
 
-    self.handlePageScroll(self.base.symbol + '-' + self.quote.symbol);
+    self.handlePageScroll();
 
     $('.layout.nav .logo a').click(function() {
-      var offset = $('.layout.header').outerHeight() - $('.layout.nav').outerHeight();
-      window.scrollTo({ top: offset, behavior: 'smooth' });
+      $('.market.detail.container').slideToggle();
+      $('.markets.container').slideToggle();
+      $('.layout.header').slideToggle();
+      $('.layout.nav').hide();
     });
-
-    var offset = $('.layout.header').outerHeight() + $('.markets.container').outerHeight() - $('.layout.nav').outerHeight() + 1;
-    if ($(window).scrollTop() < offset) {
-      window.scrollTo({ top: offset, behavior: 'smooth' });
-    }
 
     $('.order.book').on('click', 'li', function () {
       $('.trade.form input[name="price"]').val(parseFloat($(this).data('price')));
@@ -268,48 +272,18 @@ Market.prototype = {
     });
   },
 
-  handlePageScroll: function (symbol) {
-    $('.market.detail.spacer').height($('.market.detail.container').outerHeight());
-    $('.market.detail.container').addClass('fixed');
+  handlePageScroll: function () {
     $(window).scroll(function (event) {
+      if (!$('.markets.container').is(':visible')) {
+        return;
+      }
+
       var scroll = $(window).scrollTop();
       var height = $('.layout.header').outerHeight();
       if (scroll - height > -128) {
         $('.layout.nav').fadeIn();
       } else if (scroll - height < -256) {
         $('.layout.nav').fadeOut();
-      }
-
-      height = $('.layout.header').outerHeight() + $('.markets.container').outerHeight();
-      $('.market.detail.spacer').height($('.market.detail.container').outerHeight());
-      if (scroll < $('.layout.header').outerHeight() * 2 / 3) {
-        $('.markets.nav').fadeOut();
-      }
-      if (scroll > height - $(window).height() * 2 / 3) {
-        $('.markets.nav').fadeOut();
-        $('.layout.nav .title').html(symbol);
-      } else {
-        $('.layout.nav .title').html('USDT MARKETS');
-      }
-      if (scroll < height - $('.market.detail .header.container').outerHeight()) {
-        $('.market.detail.container').removeClass('visible');
-      } else {
-        $('.market.detail.container').addClass('visible');
-      }
-      if (scroll < height - 4) {
-        if (scroll < height - $(window).height() * 2 / 3 && $(window).width() > 1200 && scroll > $('.layout.header').outerHeight() * 2 / 3) {
-          $('.markets.nav').fadeIn();
-        }
-        $('.market.detail.spacer').show();
-        $('.market.detail.container').addClass('fixed');
-      } else if (scroll > height + 4){
-        $('.market.detail.spacer').hide();
-        $('.market.detail.container').removeClass('fixed');
-      }
-      if (scroll < 256) {
-        $('.market.detail.container').addClass('hidden');
-      } else {
-        $('.market.detail.container').removeClass('hidden');
       }
     });
   },
