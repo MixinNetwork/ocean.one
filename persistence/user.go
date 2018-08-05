@@ -163,6 +163,10 @@ func UserOrders(ctx context.Context, userId string, market, state string, offset
 		}
 		orders = append(orders, &o)
 	}
-	sort.Slice(orders, func(i, j int) bool { return orders[i].CreatedAt.After(orders[j].CreatedAt) })
+	if order == "DESC" {
+		sort.Slice(orders, func(i, j int) bool { return orders[i].CreatedAt.After(orders[j].CreatedAt) })
+	} else {
+		sort.Slice(orders, func(i, j int) bool { return orders[i].CreatedAt.Before(orders[j].CreatedAt) })
+	}
 	return orders, nil
 }

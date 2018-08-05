@@ -99,7 +99,11 @@ func MarketTrades(ctx context.Context, market string, offset time.Time, order st
 		}
 		trades = append(trades, &t)
 	}
-	sort.Slice(trades, func(i, j int) bool { return trades[i].CreatedAt.After(trades[j].CreatedAt) })
+	if order == "DESC" {
+		sort.Slice(trades, func(i, j int) bool { return trades[i].CreatedAt.After(trades[j].CreatedAt) })
+	} else {
+		sort.Slice(trades, func(i, j int) bool { return trades[i].CreatedAt.Before(trades[j].CreatedAt) })
+	}
 	return trades, nil
 }
 
