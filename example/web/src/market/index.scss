@@ -220,7 +220,7 @@
     }
   }
 
-  &.bitcoin {
+  &.btc {
     .content {
       border: 1px solid #F7931B;
     }
@@ -234,7 +234,7 @@
     }
   }
 
-  &.mixin {
+  &.xin {
     .content {
       border: 1px solid #2995F2;
     }
@@ -406,9 +406,9 @@
       right: 16px;
     }
 
-    &.bitcoin,
+    &.btc,
     &.usdt,
-    &.mixin {
+    &.xin {
       .content {
         border-left: none;
         border-right: none;

@@ -62,6 +62,10 @@
   .up .main {
     color: $color-side-bid;
   }
+
+  .down .main {
+    color: $color-side-ask;
+  }
 }
 
 .main.container {

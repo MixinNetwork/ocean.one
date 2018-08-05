@@ -7,7 +7,17 @@ Asset.prototype = {
     return require('./assets.json');
   },
 
-  get: function (sym) {
+  getById: function (id) {
+    var assets = this.preset();
+    for (var i = 0; i < assets.length; i++) {
+      if (assets[i].asset_id === id) {
+        return assets[i];
+      }
+    }
+    return undefined;
+  },
+
+  getBySym: function (sym) {
     var assets = this.preset();
     for (var i = 0; i < assets.length; i++) {
       if (assets[i].symbol === sym) {
@@ -42,8 +52,8 @@ Asset.prototype = {
       default:
         return undefined;
     }
-    var base = this.get(b);
-    var quote = this.get(q);
+    var base = this.getBySym(b);
+    var quote = this.getBySym(q);
     if (base && quote) {
       return [base, quote];
     }

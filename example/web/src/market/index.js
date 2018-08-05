@@ -13,6 +13,7 @@ function Market(router, api) {
   this.templateTrade = require('./trade.html');
   this.itemOrder = require('./order_item.html');
   this.itemTrade = require('./trade_item.html');
+  this.itemMarket = require('./market_item.html');
 }
 
 Market.prototype = {
@@ -51,56 +52,124 @@ Market.prototype = {
         }
         var trades = resp.data;
 
-        $('body').attr('class', 'market layout');
-        $('#layout-container').html(self.templateIndex({
-          logoURL: require('./logo.png'),
-          symbolURL: require('./symbol.png')
-        })).append(self.templateTrade({
-          base: base,
-          quote: quote,
-          trace: uuid().toLowerCase()
-        }));
+        self.api.market.index(function (resp) {
+          if (resp.error) {
+            return;
+          }
+          var markets = resp.data;
 
-        $('.quote.price').html(ticker.price);
-        for (var i = trades.length; i > 0; i--) {
-          self.addTradeEntry(trades[i-1]);
-        }
-
-        self.handlePageScroll(market);
-
-        $('.layout.nav .logo a').click(function() {
-          var offset = $('.layout.header').outerHeight() - $('.layout.nav').outerHeight();
-          window.scrollTo({ top: offset, behavior: 'smooth' });
-        });
-
-        var offset = $('.layout.header').outerHeight() + $('.markets.container').outerHeight() - $('.layout.nav').outerHeight() + 1;
-        if ($(window).scrollTop() < offset) {
-          window.scrollTo({ top: offset, behavior: 'smooth' });
-        }
-
-        self.handleOrderCreate();
-        self.handleFormSwitch();
-        self.handleBookHistorySwitch();
-        self.fixListItemHeight();
-
-        var pollBalance = function () {
-          self.pollAccountBalance(base.asset_id);
-          self.pollAccountBalance(quote.asset_id);
-        };
-        pollBalance();
-        setInterval(pollBalance, 7000);
-
-        self.pollCandles(300);
-        self.candleInterval = setInterval(function () {
-          self.pollCandles(300);
-        }, 60000);
-        self.handleCandleSwitch();
-
-        self.api.engine.subscribe(base.asset_id + '-' + quote.asset_id, function (msg) {
-          self.render(msg);
+          self.do(ticker, trades, markets);
         });
       }, base.asset_id + '-' + quote.asset_id, offset);
     }, base.asset_id + '-' + quote.asset_id);
+  },
+
+  do: function (ticker, trades, markets) {
+    const self = this;
+
+    $('body').attr('class', 'market layout');
+    $('#layout-container').html(self.templateIndex({
+      logoURL: require('./logo.png'),
+      symbolURL: require('./symbol.png')
+    })).append(self.templateTrade({
+      base: self.base,
+      quote: self.quote,
+      trace: uuid().toLowerCase()
+    }));
+
+    $('.quote.price').html(ticker.price);
+    for (var i = trades.length; i > 0; i--) {
+      self.addTradeEntry(trades[i-1]);
+    }
+
+    self.renderMarkets(markets);
+    setInterval(function() {
+      self.pollMarkets();
+    }, 5000);
+
+    self.handlePageScroll(self.base.symbol + '-' + self.quote.symbol);
+
+    $('.layout.nav .logo a').click(function() {
+      var offset = $('.layout.header').outerHeight() - $('.layout.nav').outerHeight();
+      window.scrollTo({ top: offset, behavior: 'smooth' });
+    });
+
+    var offset = $('.layout.header').outerHeight() + $('.markets.container').outerHeight() - $('.layout.nav').outerHeight() + 1;
+    if ($(window).scrollTop() < offset) {
+      window.scrollTo({ top: offset, behavior: 'smooth' });
+    }
+
+    self.handleOrderCreate();
+    self.handleFormSwitch();
+    self.handleBookHistorySwitch();
+    self.fixListItemHeight();
+
+    var pollBalance = function () {
+      self.pollAccountBalance(self.base.asset_id);
+      self.pollAccountBalance(self.quote.asset_id);
+    };
+    pollBalance();
+    setInterval(pollBalance, 7000);
+
+    self.pollCandles(300);
+    self.candleInterval = setInterval(function () {
+      self.pollCandles(300);
+    }, 60000);
+    self.handleCandleSwitch();
+
+    self.api.engine.subscribe(self.base.asset_id + '-' + self.quote.asset_id, function (msg) {
+      self.render(msg);
+    });
+  },
+
+  renderMarkets: function (inputs) {
+    const self = this;
+    var markets = [];
+    for (var i = 0; i < inputs.length; i++) {
+      var m = inputs[i];
+      m.base = self.api.asset.getById(m.base);
+      m.quote = self.api.asset.getById(m.quote);
+      if (m.base && m.quote) {
+        markets.push(m);
+      }
+    }
+
+    for (var i = 0; i < markets.length; i++) {
+      var m = markets[i];
+      m.direction = m.change < 0 ? 'down' : 'up';
+      m.change = (m.change < 0 ? '' : '+') + Number(m.change * 100).toFixed(2) + '%';
+      m.volume = parseFloat(m.volume.toFixed(2));
+      m.total = parseFloat(m.total.toFixed(2));
+      if (self.base.asset_id === m.base.asset_id && self.quote.asset_id === m.quote.asset_id) {
+        $('.ticker.change').removeClass('up');
+        $('.ticker.change').removeClass('down');
+        $('.ticker.change').addClass(m.direction);
+        $('.ticker.change .value').html(m.change);
+        $('.ticker.volume .value').html(m.volume);
+      }
+
+      var item = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol);
+      if (item.length > 0) {
+        item.replaceWith(self.itemMarket(m));
+      } else {
+        $('.' + m.quote.symbol.toLowerCase() + '.markets.block table tbody').append(self.itemMarket(m));
+        var cell = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol + ' .change.cell');
+        cell.removeClass('up');
+        cell.removeClass('down');
+        cell.addClass(m.direction);
+      }
+    }
+  },
+
+  pollMarkets: function () {
+    const self = this;
+    self.api.market.index(function (resp) {
+      if (resp.error) {
+        return true;
+      }
+
+      self.renderMarkets(resp.data);
+    });
   },
 
   handleFormSwitch: function () {

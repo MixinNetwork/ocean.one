@@ -3,6 +3,18 @@ function Market(api) {
 }
 
 Market.prototype = {
+  index: function (callback) {
+    this.api.request('GET', '/markets', undefined, function (resp) {
+      return callback(resp);
+    });
+  },
+
+  market: function (callback, market) {
+    this.api.request('GET', '/markets/' + market, undefined, function (resp) {
+      return callback(resp);
+    });
+  },
+
   candles: function (callback, market, granularity) {
     this.api.request('GET', '/markets/' + market + '/candles/' + granularity, undefined, function (resp) {
       return callback(resp);
