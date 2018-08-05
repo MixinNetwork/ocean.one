@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/spanner"
@@ -34,12 +35,17 @@ func LastTrade(ctx context.Context, market string) (*Trade, error) {
 	return &t, err
 }
 
-func MarketTrades(ctx context.Context, market string, offset time.Time, limit int) ([]*Trade, error) {
+func MarketTrades(ctx context.Context, market string, offset time.Time, order string, limit int) ([]*Trade, error) {
 	txn := Spanner(ctx).ReadOnlyTransaction()
 	defer txn.Close()
 
 	if limit > 100 {
 		limit = 100
+	}
+	cmp := "<"
+	if order != "DESC" {
+		order = "ASC"
+		cmp = ">"
 	}
 
 	base, quote := getBaseQuote(market)
@@ -47,8 +53,9 @@ func MarketTrades(ctx context.Context, market string, offset time.Time, limit in
 		return nil, nil
 	}
 
-	query := "SELECT trade_id FROM trades@{FORCE_INDEX=trades_by_base_quote_created_desc} WHERE base_asset_id=@base AND quote_asset_id=@quote AND created_at<@offset AND liquidity=@liquidity"
-	query = query + " ORDER BY base_asset_id,quote_asset_id,created_at DESC"
+	query := "SELECT trade_id FROM trades@{FORCE_INDEX=trades_by_base_quote_created_%s} WHERE base_asset_id=@base AND quote_asset_id=@quote AND created_at%s=@offset AND liquidity=@liquidity"
+	query = fmt.Sprintf(query, strings.ToLower(order), cmp)
+	query = query + " ORDER BY base_asset_id,quote_asset_id,created_at " + order
 	query = fmt.Sprintf("%s LIMIT %d", query, limit)
 	params := map[string]interface{}{"base": base, "quote": quote, "offset": offset, "liquidity": TradeLiquidityMaker}
 

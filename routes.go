@@ -80,7 +80,10 @@ func (impl *R) marketBook(w http.ResponseWriter, r *http.Request, params map[str
 }
 
 func (impl *R) marketTrades(w http.ResponseWriter, r *http.Request, params map[string]string) {
-	trades, err := persistence.MarketTrades(r.Context(), params["id"], time.Now(), 100)
+	order := r.URL.Query().Get("order")
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	offset, _ := time.Parse(time.RFC3339Nano, r.URL.Query().Get("offset"))
+	trades, err := persistence.MarketTrades(r.Context(), params["id"], offset, order, limit)
 	if err != nil {
 		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
@@ -113,10 +116,11 @@ func (impl *R) orders(w http.ResponseWriter, r *http.Request, params map[string]
 	}
 
 	market := r.URL.Query().Get("market")
+	order := r.URL.Query().Get("order")
 	state := r.URL.Query().Get("state")
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := time.Parse(time.RFC3339Nano, r.URL.Query().Get("offset"))
-	orders, err := persistence.UserOrders(r.Context(), userId, market, state, offset, limit)
+	orders, err := persistence.UserOrders(r.Context(), userId, market, state, offset, order, limit)
 	if err != nil {
 		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
