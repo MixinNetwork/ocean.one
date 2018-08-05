@@ -102,6 +102,10 @@ Market.prototype = {
       window.scrollTo({ top: offset, behavior: 'smooth' });
     }
 
+    $('.order.book').on('click', 'li', function () {
+      $('.trade.form input[name="price"]').val(parseFloat($(this).data('price')));
+    });
+
     self.handleOrderCreate();
     self.handleFormSwitch();
     self.handleBookHistorySwitch();
@@ -139,7 +143,10 @@ Market.prototype = {
 
     for (var i = 0; i < markets.length; i++) {
       var m = markets[i];
-      m.change_amount = m.price - (m.price / (m.change + 1));
+      m.change_amount = parseFloat((m.price - (m.price / (m.change + 1))).toFixed(8));
+      if (m.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
+        m.change_amount = parseFloat(m.change_amount.toFixed(4));
+      }
       m.direction = m.change < 0 ? 'down' : 'up';
       m.change = (m.change < 0 ? '' : '+') + Number(m.change * 100).toFixed(2) + '%';
       m.volume = parseFloat(m.volume.toFixed(2));
@@ -240,6 +247,9 @@ Market.prototype = {
         if (resp.error) {
           return;
         }
+
+        $('.trade.form input[name="amount"]').val('');
+        $('.trade.form input[name="funds"]').val('');
         $('.trade.form input[name="trace_id"]').val(uuid().toLowerCase());
         if (data.side === 'BID') {
           self.pollAccountBalance($('.trade.form form input[name="quote"]').val());
@@ -434,6 +444,7 @@ Market.prototype = {
 
   updateTickerPrice: function (o) {
     const self = this;
+    $('.book.data .spread').attr('data-price', o.price);
     $('.quote.price').html(parseFloat(o.price));
     var price_usd = parseFloat(o.price) * self.quote_usd;
     if (parseFloat(price_usd.toFixed(2)) === 0) {
