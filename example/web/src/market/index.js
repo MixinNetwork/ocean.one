@@ -247,6 +247,16 @@ Market.prototype = {
     $('.charts.container .tabs li').click(function () {
       $('.charts.container .tabs li').removeClass('active');
       $(this).addClass('active');
+      if ($(this).hasClass('depth')) {
+        $('.price.chart').hide();
+        $('.depth.chart').show();
+        return;
+      }
+
+      if (($('.price.chart').outerHeight() * 3 / 2) > $('.charts.container').outerHeight()) {
+        $('.depth.chart').hide();
+      }
+      $('.price.chart').show();
       const granularity = $(this).data('granularity');
       clearInterval(self.candleInterval);
       self.pollCandles(granularity);
