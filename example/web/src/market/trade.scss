@@ -602,7 +602,8 @@
       line-height: 36px;
     }
 
-    input[type="submit"] {
+    input[type="submit"],
+    .submit-loader {
       margin-top: 16px;
       line-height: 36px;
     }

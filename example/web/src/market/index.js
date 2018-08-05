@@ -56,7 +56,8 @@ Market.prototype = {
           symbolURL: require('./symbol.png')
         })).append(self.templateTrade({
           base: base,
-          quote: quote
+          quote: quote,
+          trace: uuid().toLowerCase()
         }));
 
         $('.quote.price').html(ticker.price);
@@ -138,15 +139,10 @@ Market.prototype = {
   handleOrderCreate: function () {
     const self = this;
 
-    $('.trade.form .submit-loader').hide();
-    $('.trade.form :submit').show();
-    $('.trade.form :submit').prop('disabled', false);
-
     $('.trade.form form').submit(function (event) {
       event.preventDefault();
       var form = $(this);
       var data = FormUtils.serialize(this);
-      data.trace_id = uuid().toLowerCase();
       if (data.type === 'LIMIT' && data.side === 'BID') {
         data.funds = (parseFloat(data.amount) * parseFloat(data.price)).toFixed(8);
       }
@@ -157,6 +153,7 @@ Market.prototype = {
         if (resp.error) {
           return;
         }
+        $('.trade.form input[name="trace_id"]').val(uuid().toLowerCase());
         if (data.side === 'BID') {
           self.pollAccountBalance($('.trade.form form input[name="quote"]').val());
         } else {
