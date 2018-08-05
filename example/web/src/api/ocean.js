@@ -4,7 +4,7 @@ function Ocean(api) {
 
 Ocean.prototype = {
   orders: function (callback, market, offset) {
-    this.api.request('GET', 'https://events.ocean.one/orders?state=PENDING&limit=100&market=' + market + '&offset=' + offset, undefined, function (resp) {
+    this.api.request('GET', 'https://events.ocean.one/orders?state=PENDING&order=DESC&limit=100&market=' + market + '&offset=' + offset, undefined, function (resp) {
       return callback(resp);
     });
   },
@@ -15,8 +15,8 @@ Ocean.prototype = {
     });
   },
 
-  trades: function (callback, market) {
-    this.api.request('GET', 'https://events.ocean.one/markets/' + market + '/trades', undefined, function (resp) {
+  trades: function (callback, market, offset) {
+    this.api.request('GET', 'https://events.ocean.one/markets/' + market + '/trades?order=DESC&limit=100&offset=' + offset, undefined, function (resp) {
       return callback(resp);
     });
   }

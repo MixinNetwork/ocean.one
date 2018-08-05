@@ -44,6 +44,7 @@ Market.prototype = {
       }
       var ticker = resp.data;
 
+      var offset = TimeUtils.rfc3339(new Date());
       self.api.ocean.trades(function (resp) {
         if (resp.error) {
           return;
@@ -92,7 +93,7 @@ Market.prototype = {
         self.api.engine.subscribe(base.asset_id + '-' + quote.asset_id, function (msg) {
           self.render(msg);
         });
-      }, base.asset_id + '-' + quote.asset_id);
+      }, base.asset_id + '-' + quote.asset_id, offset);
     }, base.asset_id + '-' + quote.asset_id);
   },
 
