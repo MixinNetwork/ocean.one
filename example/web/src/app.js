@@ -66,3 +66,8 @@ router.on({
   $('body').attr('class', 'error layout');
   router.updatePageLinks();
 }).resolve();
+
+$('body').on('click', '.account.sign.out.button', function () {
+  api.account.clear();
+  window.location.href = '/';
+});
