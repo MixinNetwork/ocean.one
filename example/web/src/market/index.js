@@ -77,11 +77,6 @@ Market.prototype = {
       trace: uuid().toLowerCase()
     }));
 
-    $('.quote.price').html(ticker.price);
-    for (var i = trades.length; i > 0; i--) {
-      self.addTradeEntry(trades[i-1]);
-    }
-
     $('.markets.container').on('click', '.market.item', function () {
       window.location.href = '/trade/' + $(this).data('symbol');
     });
@@ -89,6 +84,11 @@ Market.prototype = {
     setInterval(function() {
       self.pollMarkets();
     }, 5000);
+
+    self.updateTickerPrice(ticker);
+    for (var i = trades.length; i > 0; i--) {
+      self.addTradeEntry(trades[i-1]);
+    }
 
     self.handlePageScroll(self.base.symbol + '-' + self.quote.symbol);
 
@@ -139,11 +139,19 @@ Market.prototype = {
 
     for (var i = 0; i < markets.length; i++) {
       var m = markets[i];
+      m.change_amount = m.price - (m.price / (m.change + 1));
       m.direction = m.change < 0 ? 'down' : 'up';
       m.change = (m.change < 0 ? '' : '+') + Number(m.change * 100).toFixed(2) + '%';
       m.volume = parseFloat(m.volume.toFixed(2));
       m.total = parseFloat(m.total.toFixed(2));
+      m.price_usd = m.price * m.quote_usd;
+      if (parseFloat(m.price_usd.toFixed(2)) === 0) {
+        m.price_usd = parseFloat(m.price_usd.toFixed(4));
+      } else {
+        m.price_usd = parseFloat(m.price_usd.toFixed(2));
+      }
       if (self.base.asset_id === m.base.asset_id && self.quote.asset_id === m.quote.asset_id) {
+        self.quote_usd = m.quote_usd;
         $('.ticker.change').removeClass('up');
         $('.ticker.change').removeClass('down');
         $('.ticker.change').addClass(m.direction);
@@ -425,7 +433,15 @@ Market.prototype = {
   },
 
   updateTickerPrice: function (o) {
+    const self = this;
     $('.quote.price').html(parseFloat(o.price));
+    var price_usd = parseFloat(o.price) * self.quote_usd;
+    if (parseFloat(price_usd.toFixed(2)) === 0) {
+      price_usd = parseFloat(price_usd.toFixed(4));
+    } else {
+      price_usd = parseFloat(price_usd.toFixed(2));
+    }
+    $('.fiat.price').html('$' + price_usd);
   },
 
   addTradeEntry: function (o) {
