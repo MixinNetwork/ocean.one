@@ -82,6 +82,9 @@ Market.prototype = {
       self.addTradeEntry(trades[i-1]);
     }
 
+    $('.markets.container').on('click', '.market.item', function () {
+      window.location.href = '/trade/' + $(this).data('symbol');
+    });
     self.renderMarkets(markets);
     setInterval(function() {
       self.pollMarkets();
@@ -153,11 +156,11 @@ Market.prototype = {
         item.replaceWith(self.itemMarket(m));
       } else {
         $('.' + m.quote.symbol.toLowerCase() + '.markets.block table tbody').append(self.itemMarket(m));
-        var cell = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol + ' .change.cell');
-        cell.removeClass('up');
-        cell.removeClass('down');
-        cell.addClass(m.direction);
       }
+      var cell = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol + ' .change.cell');
+      cell.removeClass('up');
+      cell.removeClass('down');
+      cell.addClass(m.direction);
     }
   },
 
