@@ -176,6 +176,7 @@ Market.prototype = {
         $('.ticker.change').addClass(m.direction);
         $('.ticker.change .value').html(m.change);
         $('.ticker.volume .value').html(m.volume);
+        $('.ticker.total .value').html(m.total);
       }
 
       var item = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol);
