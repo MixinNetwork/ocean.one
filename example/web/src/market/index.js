@@ -1,6 +1,7 @@
 import './index.scss';
 import './trade.scss';
 import $ from 'jquery';
+import jQueryColor from '../jquery-color-plus-names.js';
 import uuid from 'uuid/v4';
 import Chart from './chart.js';
 import FormUtils from '../utils/form.js';
@@ -14,6 +15,7 @@ function Market(router, api) {
   this.itemOrder = require('./order_item.html');
   this.itemTrade = require('./trade_item.html');
   this.itemMarket = require('./market_item.html');
+  jQueryColor($);
 }
 
 Market.prototype = {
@@ -477,6 +479,10 @@ Market.prototype = {
     const self = this;
     const price = parseFloat(o.price);
     const amount = parseFloat(o.amount);
+    var bgColor = 'rgba(0, 181, 110, 0.3)';
+    if (o.side === 'ASK') {
+      bgColor = 'rgba(229, 85, 65, 0.3)';
+    }
 
     o.sideClass = o.side.toLowerCase()
     if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
@@ -489,7 +495,7 @@ Market.prototype = {
     if ($('#order-point-' + o.pricePoint).length > 0) {
       var bo = $('#order-point-' + o.pricePoint);
       o.amount = (parseFloat(bo.attr('data-amount')) + amount).toFixed(4);
-      bo.replaceWith(self.itemOrder(o));
+      bo.replaceWith($(self.itemOrder(o)).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
       return;
     }
 
@@ -502,16 +508,16 @@ Market.prototype = {
       }
 
       if (o.side !== bo.attr('data-side')) {
-        $('.book.data .spread').before(item);
+        $('.book.data .spread').before($(item).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
       } else {
-        bo.before(item);
+        bo.before($(item).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
       }
       return;
     }
     if (o.side === 'BID') {
-      $('.book.data').append(item);
+      $('.book.data').append($(item).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
     } else {
-      $('.book.data .spread').before(item);
+      $('.book.data .spread').before($(item).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
     }
   },
 
@@ -533,10 +539,14 @@ Market.prototype = {
     }
 
     var bo = $('#order-point-' + o.pricePoint);
+    var bgColor = 'rgba(0, 181, 110, 0.3)';
+    if (o.side === 'ASK') {
+      bgColor = 'rgba(229, 85, 65, 0.3)';
+    }
     o.amount = parseFloat(bo.attr('data-amount')) - amount;
     if (o.amount > 0) {
       o.amount = o.amount.toFixed(4);
-      bo.replaceWith(self.itemOrder(o));
+      bo.replaceWith($(self.itemOrder(o)).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
     } else {
       bo.remove();
     }
