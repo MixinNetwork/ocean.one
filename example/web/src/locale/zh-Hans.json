@@ -25,5 +25,33 @@
       "submit": "Submit",
       "create.user": "Create Account"
     }
+  },
+  "home": {
+    "headline": "一个开源的分布式交易所，用于交易所有数字资产。",
+    "sign.up": "注册",
+    "log.in": "登录",
+    "search.markets": "搜索 %{market} 市场",
+    "table.name": "名字",
+    "table.price": "价格",
+    "table.change": "24 时涨跌",
+    "table.volume": "24 时成交量"
+  },
+  "market": {
+    "ticker.change": "24 时涨跌",
+    "ticker.volume": "24 时成交量",
+    "ticker.total": "24 时成交额",
+    "chart.depth": "深度图",
+    "table.book": "挂单簙",
+    "table.history": "成交记录",
+    "form.limit": "限价单",
+    "form.market": "市价单",
+    "form.buy": "买入",
+    "form.sell": "卖出",
+    "form.price": "价格",
+    "form.amount": "数量",
+    "form.button.buy": "下单买入",
+    "form.button.sell": "下单卖出",
+    "account.wallet": "钱包",
+    "account.orders": "我的挂单"
   }
 }

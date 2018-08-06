@@ -25,5 +25,33 @@
       "submit": "Submit",
       "create.user": "Create Account"
     }
+  },
+  "home": {
+    "headline": "An open source decentralized exchange to trade all digital assets.",
+    "sign.up": "Sign Up",
+    "log.in": "Log In",
+    "search.markets": "Search %{market} markets",
+    "table.name": "Name",
+    "table.price": "Price",
+    "table.change": "24h Change",
+    "table.volume": "24h volume"
+  },
+  "market": {
+    "ticker.change": "24h Change",
+    "ticker.volume": "24h Volume",
+    "ticker.total": "24h Total",
+    "chart.depth": "Depth",
+    "table.book": "Book",
+    "table.history": "History",
+    "form.limit": "Limit",
+    "form.market": "Market",
+    "form.buy": "Buy",
+    "form.sell": "Sell",
+    "form.price": "Price",
+    "form.amount": "Amount",
+    "form.button.buy": "Place Buy Order",
+    "form.button.sell": "Place Sell Order",
+    "account.wallet": "Wallet",
+    "account.orders": "My Orders"
   }
 }
