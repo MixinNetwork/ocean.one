@@ -14,10 +14,10 @@ import (
 type withdrawalsImpl struct{}
 
 type withdrawalRequest struct {
-	TraceId string
-	AssetId string
-	Amount  string
-	Memo    string
+	TraceId string `json:"trace_id"`
+	AssetId string `json:"asset_id"`
+	Amount  string `json:"amount"`
+	Memo    string `json:"memo"`
 }
 
 func registerWithdrawals(router *httptreemux.TreeMux) {
