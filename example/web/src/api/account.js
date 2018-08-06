@@ -92,10 +92,10 @@ Account.prototype = {
     var sPayload = JSON.stringify(oPayload);
     try {
       KJUR.KEYUTIL.getKey(privateKey);
-    } catch {
-      return "";
+    } catch (e) {
+      return '';
     }
-    return KJUR.jws.JWS.sign("ES256", sHeader, sPayload, privateKey);
+    return KJUR.jws.JWS.sign('ES256', sHeader, sPayload, privateKey);
   },
 
   oceanToken: function (callback) {

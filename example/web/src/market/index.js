@@ -78,6 +78,11 @@ Market.prototype = {
       trace: uuid().toLowerCase()
     }));
 
+    if (self.api.account.token() === '') {
+      $('.account.sign.out.button').hide();
+      $('.account.sign.in.button').show();
+    }
+
     $('.markets.container').on('click', '.market.item', function () {
       if ($(this).data('symbol') === self.base.symbol + '-' + self.quote.symbol) {
         $('.market.detail.container').slideToggle();

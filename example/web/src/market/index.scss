@@ -121,6 +121,10 @@
     position: absolute;
     top: 0;
     right: 32px;
+
+    &.in {
+      display: none;
+    }
   }
 }
 
