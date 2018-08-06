@@ -62,6 +62,13 @@ Market.prototype = {
     if (self.api.account.token() === '') {
       $('.account.sign.out.button').hide();
       $('.account.sign.in.button').show();
+      $('.account.in.actions').hide();
+      $('.account.out.actions').show();
+    } else {
+      $('.account.sign.in.button').hide();
+      $('.account.sign.out.button').show();
+      $('.account.in.actions').show();
+      $('.account.out.actions').hide();
     }
 
     $('.markets.container').on('click', '.market.item', function (event) {
@@ -597,8 +604,12 @@ Market.prototype = {
 
   pollAccountBalance: function (asset) {
     if (this.api.account.token() === '') {
+      $('.account.in.actions').hide();
+      $('.account.out.actions').show();
       return;
     }
+    $('.account.in.actions').show();
+    $('.account.out.actions').hide();
 
     const self = this;
     self.api.mixin.asset(function (resp) {

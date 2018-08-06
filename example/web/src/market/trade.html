@@ -206,9 +206,13 @@
           <span class="asset name">{{quote.symbol}}</span>
           <span class="{{quote.symbol}} asset amount">0</span>
         </div>
-        <div class="account actions">
+        <div class="account in actions">
           <a href="/orders/{{base.symbol}}-{{quote.symbol}}" class="orders action"><i class="icon-notebook"></i> {{t 'market.account.orders'}}</a>
           <a href="/accounts" class="deposit action"><i class="icon-wallet"></i> {{t 'market.account.wallet'}}</a>
+        </div>
+        <div class="account out actions">
+          <a href="/users/new" class="orders action">{{t 'home.sign.up'}}</a>
+          <a href="/sessions/new" class="deposit action">{{t 'home.log.in'}}</a>
         </div>
       </div>
     </div>

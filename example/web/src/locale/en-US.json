@@ -30,6 +30,8 @@
     "headline": "An open source decentralized exchange to trade all digital assets.",
     "sign.up": "Sign Up",
     "log.in": "Log In",
+    "link.api": "API Reference",
+    "link.fees": "Fees",
     "search.markets": "Search %{market} markets",
     "table.name": "Name",
     "table.price": "Price",

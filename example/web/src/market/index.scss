@@ -68,6 +68,18 @@
     padding: 12px 32px;
     margin: 16px;
   }
+
+  .external.links {
+    margin-top: 64px;
+    text-align: center;
+
+    .link {
+      color: rgba(0,0,0,0.5);
+      text-decoration: none;
+      display: inline-block;
+      margin: 16px 8px;
+    }
+  }
 }
 
 .layout.nav {
