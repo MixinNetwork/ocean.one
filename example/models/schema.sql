@@ -34,7 +34,7 @@ CREATE TABLE users (
 	user_id	           STRING(36) NOT NULL,
 	email              STRING(512),
 	phone              STRING(512),
-	mixin_id           STRING(36),
+	mixin_id           STRING(72),
 	identity_id        STRING(36),
 	full_name          STRING(512) NOT NULL,
 	encrypted_password STRING(1024) NOT NULL,
