@@ -4,6 +4,7 @@ import $ from 'jquery';
 import Navigo from 'navigo';
 import Locale from './locale';
 import API from './api';
+import Auth from './auth';
 import Market from './market';
 import Account from './account';
 
@@ -36,6 +37,9 @@ router.hooks({
 router.on({
   '/': function () {
     new Market(router, api).index();
+  },
+  '/auth/callback': function () {
+    new Auth(router, api).render();
   },
   '/trade/:market': function (params) {
     new Market(router, api).index(params['market']);

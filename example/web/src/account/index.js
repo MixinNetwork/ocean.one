@@ -2,6 +2,7 @@ import './index.scss';
 import $ from 'jquery';
 import 'intl-tel-input/build/css/intlTelInput.css';
 import 'intl-tel-input';
+import uuid from 'uuid/v4';
 import QRious from 'qrious';
 import FormUtils from '../utils/form.js';
 import TimeUtils from '../utils/time.js';
@@ -218,12 +219,14 @@ Account.prototype = {
     });
   },
 
-  asset: function (id, action) {
+  assetDo: function (id, action, me) {
     const self = this;
     self.api.mixin.asset(function (resp) {
       if (resp.error) {
         return;
       }
+      resp.data.me = me;
+      resp.data.trace_id = uuid().toLowerCase();
       $('body').attr('class', 'account layout');
       $('#layout-container').html(self.templateAsset(resp.data));
       self.router.updatePageLinks();
@@ -232,8 +235,8 @@ Account.prototype = {
       $('.action.container').hide();
       $('.action.container.' + action.toLowerCase()).show();
 
-      if (action !== 'DEPOSIT') {
-        return;
+      if (action === 'WITHDRAWAL') {
+        return self.handleWithdrawal(me, resp.data);
       }
 
       if (resp.data.public_key !== '') {
@@ -257,6 +260,51 @@ Account.prototype = {
         });
       }
     }, id);
+  },
+
+  handleWithdrawal: function (me, asset) {
+    const self = this;
+    if (me.mixin_id && me.mixin_id !== '') {
+      $('.mixin.connected').show();
+      $('.mixin.disconnected').hide();
+    } else {
+      $('.mixin.connected').hide();
+      $('.mixin.disconnected').show();
+    }
+    $('.withdrawal.form').submit(function (event) {
+      event.preventDefault();
+      var form = $(this);
+      var params = FormUtils.serialize(form);
+      self.api.withdrawal.create(function (resp) {
+        $('.submit-loader', form).hide();
+        $(':submit', form).show();
+
+        if (resp.error) {
+          return;
+        }
+        self.api.router.replace('/accounts');
+      }, params);
+    });
+    $('.withdrawal.form :submit').click(function (event) {
+      event.preventDefault();
+      var form = $(this).parents('form');
+      $('.submit-loader', form).show();
+      $(this).hide();
+      form.submit();
+    });
+  },
+
+  asset: function (id, action) {
+    const self = this;
+    if (action === "DEPOSIT") {
+      return self.assetDo(id, action);
+    }
+    self.api.account.me(function (resp) {
+      if (resp.error) {
+        return;
+      }
+      return self.assetDo(id, action, resp.data);
+    });
   },
 
   orders: function (market) {

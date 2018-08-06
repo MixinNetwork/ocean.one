@@ -149,4 +149,54 @@
   }
 }
 
+.withdrawal.action.container {
+  .steps,
+  .steps li {
+    margin: 0;
+    padding: 0;
+    list-style: circle;
+    text-align: left;
+    line-height: 1.3em;
+  }
+
+  .steps li {
+    margin: 0 0 8px 16px;
+
+    a {
+      color: $color-main-highlight;
+      text-decoration: underline;
+    }
+  }
+
+  .mixin.connect.button a {
+    display: inline-block;
+    text-decoration: none;
+    background: $color-main-highlight;
+    box-shadow: 0 0 4px rgba(0,0,0,0.3);
+    border-radius: 4px;
+    color: $color-main-background;
+    font-size: 20px;
+    padding: 12px 32px;
+    margin: 32px 0 16px;
+  }
+
+  .mixin.connected {
+    text-align: left;
+    line-height: 1.5em;
+
+    div {
+      margin-bottom: 16px;
+    }
+
+    input {
+      margin: 16px 0;
+    }
+
+    input[type="text"] {
+      font-size: 20px;
+      letter-spacing: 2px;
+    }
+  }
+}
+
 }

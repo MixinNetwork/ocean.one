@@ -53,11 +53,16 @@ Account.prototype = {
   },
 
   me: function (callback) {
-    const self = this;
     this.api.request('GET', '/me', undefined, function(resp) {
       if (typeof callback === 'function') {
         return callback(resp);
       }
+    });
+  },
+
+  connectMixin: function (callback, code) {
+    this.api.request('POST', '/me/mixin', {code: code}, function(resp) {
+      return callback(resp);
     });
   },
 
