@@ -124,6 +124,7 @@ Market.prototype = {
         for (var i = trades.length; i > 0; i--) {
           self.addTradeEntry(trades[i-1]);
         }
+        $('.trade.history .spinner-container').remove();
         self.fixListItemHeight();
       }, self.base.asset_id + '-' + self.quote.asset_id, offset);
     };
@@ -451,6 +452,7 @@ Market.prototype = {
     if (items.length > 0 && new Date($(items[0]).attr('data-time')) > new Date(o.created_at)) {
       return;
     }
+    $('.trade.history .spinner-container').remove();
     if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
       o.price = parseFloat(o.price).toFixed(4);
     } else {
