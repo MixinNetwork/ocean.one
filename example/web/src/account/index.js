@@ -207,10 +207,28 @@ Account.prototype = {
         if (filter[preset[i].asset_id]) {
           continue;
         }
+        preset[i].price_usd = '0';
         preset[i].balance = '0';
         preset[i].depositEnabled = true;
         resp.data.push(preset[i]);
       }
+      resp.data.sort(function (a, b) {
+        var at = parseFloat(a.price_usd) * parseFloat(a.balance);
+        var bt = parseFloat(b.price_usd) * parseFloat(b.balance);
+        if (at > bt) {
+          return -1;
+        }
+        if (at < bt) {
+          return 1;
+        }
+        if (a.symbol < b.symbol) {
+          return -1;
+        }
+        if (a.symbol > b.symbol) {
+          return 1;
+        }
+        return 0;
+      });
       $('body').attr('class', 'account layout');
       $('#layout-container').html(self.templateAssets({
         assets: resp.data,
