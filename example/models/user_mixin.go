@@ -41,7 +41,7 @@ func (current *User) ConnectMixin(ctx context.Context, authorizationCode string)
 
 func (current *User) MixinIdentityNumber() string {
 	pair := strings.Split(current.MixinId.StringVal, ":")
-	if len(pair) == 0 {
+	if len(pair) == 1 {
 		return ""
 	}
 	return pair[1]
