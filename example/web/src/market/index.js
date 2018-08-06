@@ -162,6 +162,30 @@ Market.prototype = {
       }
     }
 
+    markets.sort(function (a, b) {
+      if (a.quote.symbol < b.quote.symbol) {
+        return -1;
+      }
+      if (a.quote.symbol > b.quote.symbol) {
+        return 1;
+      }
+      var at = parseFloat(a.total);
+      var bt = parseFloat(b.total);
+      if (at > bt) {
+        return -1;
+      }
+      if (at < bt) {
+        return 1;
+      }
+      if (a.base.symbol < b.base.symbol) {
+        return -1;
+      }
+      if (a.base.symbol > b.base.symbol) {
+        return 1;
+      }
+      return 0;
+    });
+
     for (var i = 0; i < markets.length; i++) {
       var m = markets[i];
       m.change_amount = parseFloat((m.price - (m.price / (m.change + 1))).toFixed(8));
