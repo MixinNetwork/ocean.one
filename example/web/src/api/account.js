@@ -1,9 +1,7 @@
 import forge from 'node-forge';
 import moment from 'moment';
-import jwt from 'jsonwebtoken';
+import KJUR from 'jsrsasign';
 import uuid from 'uuid/v4';
-const EC = require('elliptic').ec;
-const KeyEncoder = require('key-encoder');
 
 function Account(api) {
   this.api = api;
@@ -23,10 +21,9 @@ Account.prototype = {
   },
 
   createUser: function (callback, params) {
-    var ec = new EC('p256');
-    var key = ec.genKeyPair();
-    var pub = key.getPublic('hex');
-    var priv = key.getPrivate('hex');
+    var ec = new KJUR.crypto.ECDSA({'curve': 'secp256r1'});
+    var pub = ec.generateKeyPairHex().ecpubhex;
+    var priv = KJUR.KEYUTIL.getPEM(ec, 'PKCS8PRV');
 
     params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
     this.api.request('POST', '/users', params, function(resp) {
@@ -40,10 +37,9 @@ Account.prototype = {
   },
 
   createSession: function (callback, params) {
-    var ec = new EC('p256');
-    var key = ec.genKeyPair();
-    var pub = key.getPublic('hex');
-    var priv = key.getPrivate('hex');
+    var ec = new KJUR.crypto.ECDSA({'curve': 'secp256r1'});
+    var pub = ec.generateKeyPairHex().ecpubhex;
+    var priv = KJUR.KEYUTIL.getPEM(ec, 'PKCS8PRV');
 
     params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
     this.api.request('POST', '/sessions', params, function(resp) {
@@ -71,18 +67,9 @@ Account.prototype = {
       return "";
     }
 
-    var encoderOptions = {
-      curveParameters: [1, 2, 840, 10045, 3, 1, 7],
-      privatePEMOptions: {label: 'EC PRIVATE KEY'},
-      publicPEMOptions: {label: 'PUBLIC KEY'},
-      curve: new EC('p256')
-    };
-    var keyEncoder = new KeyEncoder(encoderOptions);
-    var pemPrivateKey = keyEncoder.encodePrivate(priv, 'raw', 'pem');
-
     var uid = window.localStorage.getItem('uid');
     var sid = window.localStorage.getItem('sid');
-    return this.sign(uid, sid, pemPrivateKey, method, uri, body);
+    return this.sign(uid, sid, priv, method, uri, body);
   },
 
   sign: function (uid, sid, privateKey, method, uri, body) {
@@ -91,7 +78,9 @@ Account.prototype = {
     let expire = moment.utc().add(1, 'minutes').unix();
     let md = forge.md.sha256.create();
     md.update(method + uri + body);
-    let payload = {
+
+    var oHeader = {alg: 'ES256', typ: 'JWT'};
+    var oPayload = {
       uid: uid,
       sid: sid,
       iat: moment.utc().unix() ,
@@ -99,7 +88,14 @@ Account.prototype = {
       jti: uuid(),
       sig: md.digest().toHex()
     };
-    return jwt.sign(payload, privateKey, { algorithm: 'ES256'});
+    var sHeader = JSON.stringify(oHeader);
+    var sPayload = JSON.stringify(oPayload);
+    try {
+      KJUR.KEYUTIL.getKey(privateKey);
+    } catch {
+      return "";
+    }
+    return KJUR.jws.JWS.sign("ES256", sHeader, sPayload, privateKey);
   },
 
   oceanToken: function (callback) {
