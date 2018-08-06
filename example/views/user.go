@@ -22,6 +22,6 @@ func RenderUserWithAuthentication(w http.ResponseWriter, r *http.Request, user *
 		FullName:  user.FullName,
 		Email:     user.Email.StringVal,
 		Phone:     user.Phone.StringVal,
-		MixinId:   user.MixinId.StringVal,
+		MixinId:   user.MixinIdentityNumber(),
 	})
 }

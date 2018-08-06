@@ -26,6 +26,20 @@ func registerUsers(router *httptreemux.TreeMux) {
 	router.POST("/users", impl.create)
 	router.GET("/me", impl.me)
 	router.POST("/me", impl.update)
+	router.POST("/me/mixin", impl.mixin)
+}
+
+func (impl *usersImpl) mixin(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	var body struct {
+		Code string `json:"code"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		views.RenderErrorResponse(w, r, session.BadRequestError(r.Context()))
+	} else if user, err := middlewares.CurrentUser(r).ConnectMixin(r.Context(), body.Code); err != nil {
+		views.RenderErrorResponse(w, r, err)
+	} else {
+		views.RenderUserWithAuthentication(w, r, user)
+	}
 }
 
 func (impl *usersImpl) create(w http.ResponseWriter, r *http.Request, _ map[string]string) {
