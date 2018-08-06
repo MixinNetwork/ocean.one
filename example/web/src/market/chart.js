@@ -77,6 +77,7 @@ Chart.prototype = {
           x: -3
         },
         height: '70%',
+        gridLineWidth: 0.5,
         lineWidth: 0
       }, {
         labels: {
@@ -86,6 +87,7 @@ Chart.prototype = {
         top: '71%',
         height: '29%',
         offset: 0,
+        gridLineWidth: 0.5,
         lineWidth: 0
       }],
 

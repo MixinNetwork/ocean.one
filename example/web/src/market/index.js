@@ -83,7 +83,8 @@ Market.prototype = {
       $('.account.sign.in.button').show();
     }
 
-    $('.markets.container').on('click', '.market.item', function () {
+    $('.markets.container').on('click', '.market.item', function (event) {
+      event.preventDefault();
       if ($(this).data('symbol') === self.base.symbol + '-' + self.quote.symbol) {
         $('.market.detail.container').slideToggle();
         $('.markets.container').slideToggle();
@@ -105,14 +106,16 @@ Market.prototype = {
 
     self.handlePageScroll();
 
-    $('.layout.nav .logo a').click(function() {
+    $('.layout.nav .logo a').click(function(event) {
+      event.preventDefault();
       $('.market.detail.container').slideToggle();
       $('.markets.container').slideToggle();
       $('.layout.header').slideToggle();
       $('.layout.nav').hide();
     });
 
-    $('.order.book').on('click', 'li', function () {
+    $('.order.book').on('click', 'li', function (event) {
+      event.preventDefault();
       $('.trade.form input[name="price"]').val(parseFloat($(this).data('price')));
     });
 
@@ -201,7 +204,8 @@ Market.prototype = {
   },
 
   handleFormSwitch: function () {
-    $('.type.tab').click(function () {
+    $('.type.tab').click(function (event) {
+      event.preventDefault();
       var type = $(this).attr('data-type').toLowerCase();
       var side = $('.side.tab.active').attr('data-side').toLowerCase();
       $('.type.tab').removeClass('active');
@@ -209,7 +213,8 @@ Market.prototype = {
       $('.trade.form form').hide();
       $('.trade.form .form.' + type + '.' + side).show();
     });
-    $('.side.tab').click(function () {
+    $('.side.tab').click(function (event) {
+      event.preventDefault();
       var side = $(this).attr('data-side').toLowerCase();
       var type = $('.type.tab.active').attr('data-type').toLowerCase();
       $('.side.tab').removeClass('active');
@@ -220,7 +225,8 @@ Market.prototype = {
   },
 
   handleBookHistorySwitch: function () {
-    $('.history.tab').click(function () {
+    $('.history.tab').click(function (event) {
+      event.preventDefault();
       if ($('.trade.history').width() + $('.order.book').width() < $('.orders.trades .tabs').width()) {
         return;
       }
@@ -229,7 +235,8 @@ Market.prototype = {
       $('.order.book').hide();
       $('.trade.history').show();
     });
-    $('.book.tab').click(function () {
+    $('.book.tab').click(function (event) {
+      event.preventDefault();
       if ($('.trade.history').width() + $('.order.book').width() < $('.orders.trades .tabs').width()) {
         return;
       }
@@ -314,7 +321,8 @@ Market.prototype = {
 
   handleCandleSwitch: function () {
     const self = this;
-    $('.charts.container .tabs li').click(function () {
+    $('.charts.container .tabs li').click(function (event) {
+      event.preventDefault();
       $('.charts.container .tabs li').removeClass('active');
       $(this).addClass('active');
       if ($(this).hasClass('depth')) {
