@@ -33,38 +33,19 @@ Market.prototype = {
       return;
     }
     window.localStorage.setItem('market.default', market);
-    const base = pair[0];
-    const quote = pair[1];
-    const self = this;
 
-    self.base = base;
-    self.quote = quote;
-    self.api.ocean.ticker(function (resp) {
+    const self = this;
+    self.base = pair[0];
+    self.quote = pair[1];
+    self.api.market.index(function (resp) {
       if (resp.error) {
         return;
       }
-      var ticker = resp.data;
-
-      var offset = TimeUtils.rfc3339(new Date());
-      self.api.ocean.trades(function (resp) {
-        if (resp.error) {
-          return;
-        }
-        var trades = resp.data;
-
-        self.api.market.index(function (resp) {
-          if (resp.error) {
-            return;
-          }
-          var markets = resp.data;
-
-          self.do(ticker, trades, markets);
-        });
-      }, base.asset_id + '-' + quote.asset_id, offset);
-    }, base.asset_id + '-' + quote.asset_id);
+      self.do(resp.data);
+    });
   },
 
-  do: function (ticker, trades, markets) {
+  do: function (markets) {
     const self = this;
 
     $('body').attr('class', 'market layout');
@@ -99,9 +80,11 @@ Market.prototype = {
       self.pollMarkets();
     }, 5000);
 
-    self.updateTickerPrice(ticker);
-    for (var i = trades.length; i > 0; i--) {
-      self.addTradeEntry(trades[i-1]);
+    for (var i = 0; i < markets.length; i++) {
+      var m = markets[i];
+      if (m.base.asset_id === self.base.asset_id && m.quote.asset_id === self.quote.asset_id) {
+        self.updateTickerPrice(m.price);
+      }
     }
 
     self.handlePageScroll();
@@ -130,6 +113,21 @@ Market.prototype = {
     };
     pollBalance();
     setInterval(pollBalance, 7000);
+
+    var fetchTrades = function () {
+      var offset = TimeUtils.rfc3339(new Date());
+      self.api.ocean.trades(function (resp) {
+        if (resp.error) {
+          return true;
+        }
+        var trades = resp.data;
+        for (var i = trades.length; i > 0; i--) {
+          self.addTradeEntry(trades[i-1]);
+        }
+        self.fixListItemHeight();
+      }, self.base.asset_id + '-' + self.quote.asset_id, offset);
+    };
+    setTimeout(function() { fetchTrades(); }, 500);
 
     self.pollCandles(300);
     self.candleInterval = setInterval(function () {
@@ -420,7 +418,7 @@ Market.prototype = {
         break;
       case 'ORDER-MATCH':
         data.data.created_at = data.timestamp;
-        self.updateTickerPrice(data.data);
+        self.updateTickerPrice(data.data.price);
         self.addTradeEntry(data.data);
         self.orderRemoveFromBook(data.data);
         self.orderRemoveFromPage(data.data);
@@ -431,11 +429,11 @@ Market.prototype = {
     self.renderDepthChart();
   },
 
-  updateTickerPrice: function (o) {
+  updateTickerPrice: function (price) {
     const self = this;
-    $('.book.data .spread').attr('data-price', o.price);
-    $('.quote.price').html(parseFloat(o.price));
-    var price_usd = parseFloat(o.price) * self.quote_usd;
+    $('.book.data .spread').attr('data-price', price);
+    $('.quote.price').html(parseFloat(price));
+    var price_usd = parseFloat(price) * self.quote_usd;
     if (parseFloat(price_usd.toFixed(2)) === 0) {
       price_usd = parseFloat(price_usd.toFixed(4));
     } else {
@@ -446,6 +444,13 @@ Market.prototype = {
 
   addTradeEntry: function (o) {
     const self = this;
+    if ($('#trade-item-' + o.trade_id).length > 0) {
+      return;
+    }
+    var items = $('.trade.item');
+    if (items.length > 0 && new Date($(items[0]).attr('data-time')) > new Date(o.created_at)) {
+      return;
+    }
     if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
       o.price = parseFloat(o.price).toFixed(4);
     } else {
