@@ -8,23 +8,39 @@
     }
   },
   "account": {
-    "me": {
-      "invitation.network.title": "Invitation Network"
+    "tabs": {
+      "phone": "Phone",
+      "email": "Email"
     },
-    "enroll": {
-      "phone.title": "Enter your mobile number",
-      "verify.title": "Enter the 4-digit verification code sent to you at %{phone}",
-      "profile.title": "What's your name?"
+    "code": {
+      "title": "Enter the 6-digit verification code sent to you at %{phone}."
     },
     "notifications": {
-      "phone.verification.send.success": "We have sent the verification code to your phone.",
-      "invitation.link.copied": "Your invitation link has been copied to clipboard."
+      "password.mismatch": "Password mismatch.",
+      "phone.verification.send.success": "We have sent the verification code to your phone."
     },
     "buttons": {
-      "get.verification.code": "Get Verification Code",
+      "get.code": "Get Verification Code",
       "submit": "Submit",
       "create.user": "Create Account"
-    }
+    },
+    "placeholder.password": "Password"
+  },
+  "orders": {
+    "title": "My Orders",
+    "table.price": "Price",
+    "table.amount": "Amount",
+    "table.time": "Time"
+  },
+  "deposit": {
+    "title": "Deposit",
+    "address": "Address",
+    "account.name": "Account",
+    "account.tag": "Memo",
+    "confirmations": "The deposit will arrive after at least %{confirmations} confirmations."
+  },
+  "withdrawal": {
+    "title": "Withdrawal"
   },
   "home": {
     "headline": "An open source decentralized exchange to trade all digital assets.",

@@ -1,7 +1,7 @@
 <div class="container">
   <header class="header">
     <a class="nav back" href="/trade/{{base.symbol}}-{{quote.symbol}}"><i class="icon-arrow-left"></i></a>
-    <h1 class="title">Orders</h1>
+    <h1 class="title">{{t 'orders.title'}}</h1>
     <a class="nav power account sign out button" href="javascript:void(0);"><i class="icon-power"></i></a>
   </header>
   <section class="content">
@@ -11,9 +11,9 @@
         <thead>
           <tr>
             <td></td>
-            <td>Price ({{quote.symbol}})</td>
-            <td>Amount ({{base.symbol}})</td>
-            <td>Time</td>
+            <td>{{t 'orders.table.price'}} ({{quote.symbol}})</td>
+            <td>{{t 'orders.table.amount'}} ({{base.symbol}})</td>
+            <td>{{t 'orders.table.time'}}</td>
             <td></td>
           </tr>
         </thead>

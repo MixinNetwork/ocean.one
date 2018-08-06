@@ -1,20 +1,20 @@
 <div class="container">
   <header class="header">
     <a class="nav back" href="/"><i class="icon-arrow-left"></i></a>
-    <h1 class="title">Sign Up</h1>
+    <h1 class="title">{{t 'home.sign.up'}}</h1>
     <a class="nav support" href="javascript:void(0);"><i class="icon-question"></i></a>
   </header>
   <section class="content">
     <div class="form container">
       <div class="identity tabs">
-        <div class="phone tab active">Phone</div>
-        <div class="email tab">Email</div>
+        <div class="phone tab active">{{t 'account.tabs.phone'}}</div>
+        <div class="email tab">{{t 'account.tabs.email'}}</div>
       </div>
       <form action="javascript:void(0)" id="enroll-phone-form">
         <div class="field">
           <input type="tel" id="phone" />
         </div>
-        <input type="submit" value="Get Verification Code">
+        <input type="submit" value="{{t 'account.buttons.get.code'}}">
         <div class="submit-loader">
           <div class="spinner">
             <div class="bounce1"></div>

@@ -1,7 +1,7 @@
 <div class="container">
   <header class="header">
     <a class="nav back" href="/"><i class="icon-arrow-left"></i></a>
-    <h1 class="title">Accounts</h1>
+    <h1 class="title">{{t 'market.account.wallet'}}</h1>
     <a class="nav power account sign out button" href="javascript:void(0);"><i class="icon-power"></i></a>
   </header>
   <section class="content">
@@ -14,8 +14,8 @@
           <td>{{this.balance}} {{this.symbol}}</td>
           <td>
             {{#if depositEnabled}}
-            <a class="action" href="/accounts/{{this.asset_id}}/deposit" data-navigo>Deposit</a>
-            <a class="action" href="/accounts/{{this.asset_id}}/withdrawal" data-navigo>Withdrawal</a>
+            <a class="action" href="/accounts/{{this.asset_id}}/deposit" data-navigo>{{t 'deposit.title'}}</a>
+            <a class="action" href="/accounts/{{this.asset_id}}/withdrawal" data-navigo>{{t 'withdrawal.title'}}</a>
             {{/if}}
           </td>
         </tr>

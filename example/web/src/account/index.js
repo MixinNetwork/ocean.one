@@ -130,6 +130,10 @@ Account.prototype = {
     });
     $('#enroll-verify-form :submit').click(function (event) {
       event.preventDefault();
+      if ($('#password').val() !== $('#password-confirmation').val()) {
+        self.api.notify('error', i18n.t('account.notifications.password.mismatch'));
+        return;
+      }
       var form = $(this).parents('form');
       $('.submit-loader', form).show();
       $(this).hide();
