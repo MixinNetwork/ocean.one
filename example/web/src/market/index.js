@@ -98,12 +98,12 @@ Market.prototype = {
 
     self.handlePageScroll();
 
-    $('.layout.nav .logo a').click(function(event) {
+    $('.layout.nav .logo a, .layout.nav .title').click(function(event) {
       event.preventDefault();
       $('.market.detail.container').slideToggle();
-      $('.markets.container').slideToggle();
+      $('.markets.container').toggle();
       $('.layout.header').slideToggle();
-      $('.layout.nav').hide();
+      window.scrollTo({top: $('.layout.header').outerHeight() - $('.layout.nav').outerHeight(), behavior: 'instant'});
     });
 
     $('.order.book').on('click', 'li', function (event) {
