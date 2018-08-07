@@ -18,7 +18,7 @@ func RenderDataResponse(w http.ResponseWriter, r *http.Request, view interface{}
 }
 
 func RenderErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
-	sessionError, ok := err.(session.Error)
+	sessionError, ok := session.ParseError(err.Error())
 	if !ok {
 		sessionError = session.ServerError(r.Context(), err)
 	}
