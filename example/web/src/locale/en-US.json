@@ -2,9 +2,20 @@
   "general": {
     "errors": {
       "0": "Network error.",
+      "400": "Invalid data.",
+      "404": "Not found.",
+      "401": "Unauthorized, maybe invalid email or password.",
+      "403": "Access denied.",
+      "500": "Internal server error.",
+      "10001": "Internal server error.",
+      "10002": "Invalid data.",
       "20110": "Invalid phone number.",
-      "20112": "Invalid invitation code.",
-      "20113": "Invalid phone verification code."
+      "20111": "Too many users registered, please wait.",
+      "20113": "Invalid phone verification code.",
+      "20114": "Expired phone verification code.",
+      "20117": "Insufficient balance.",
+      "20118": "Password too simple, at least 8 characters required.",
+      "20122": "This phone is already registered, please log in."
     }
   },
   "account": {
