@@ -92,6 +92,11 @@
   margin: 32px 0;
 }
 
+.link.field a {
+  color: $color-main-foreground-light;
+  text-decoration: underline;
+}
+
 h2 {
   font-size: 20px;
   font-weight: 300;
