@@ -1,7 +1,11 @@
 package main
 
 import (
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -9,8 +13,10 @@ import (
 	"time"
 
 	"github.com/MixinNetwork/ocean.one/cache"
+	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/MixinNetwork/ocean.one/persistence"
 	"github.com/bugsnag/bugsnag-go/errors"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/dimfeld/httptreemux"
 	"github.com/unrolled/render"
 )
@@ -23,8 +29,45 @@ func NewRouter() *httptreemux.TreeMux {
 	router.GET("/markets/:id/book", impl.marketBook)
 	router.GET("/markets/:id/trades", impl.marketTrades)
 	router.GET("/orders", impl.orders)
+	router.POST("/tokens", impl.tokens)
 	registerHanders(router)
 	return router
+}
+
+func (impl *R) tokens(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	var body struct {
+		URI string `json:"uri"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		render.New().JSON(w, http.StatusBadGateway, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	if !strings.HasPrefix(body.URI, "/network/snapshots") {
+		render.New().JSON(w, http.StatusForbidden, map[string]interface{}{"error": "403"})
+		return
+	}
+
+	sum := sha256.Sum256([]byte("GET" + body.URI))
+	token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
+		"uid": config.ClientId,
+		"sid": config.SessionId,
+		"scp": "ASSETS:READ",
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"sig": hex.EncodeToString(sum[:]),
+	})
+
+	block, _ := pem.Decode([]byte(config.SessionKey))
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	tokenString, err := token.SignedString(privateKey)
+	if err != nil {
+		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": map[string]interface{}{"token": tokenString}})
 }
 
 func (impl *R) marketTicker(w http.ResponseWriter, r *http.Request, params map[string]string) {
