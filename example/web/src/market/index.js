@@ -76,9 +76,10 @@ Market.prototype = {
     $('.markets.container').on('click', '.market.item', function (event) {
       event.preventDefault();
       if ($(this).data('symbol') === self.base.symbol + '-' + self.quote.symbol) {
+        $('.layout.header').toggleClass('invisible');
         $('.market.detail.container').slideToggle();
-        $('.markets.container').slideToggle();
-        $('.layout.header').slideToggle();
+        $('.markets.container').toggle();
+        $('.layout.header').toggle();
         $('.layout.nav').show();
       } else {
         window.location.href = '/trade/' + $(this).data('symbol');
@@ -100,10 +101,18 @@ Market.prototype = {
 
     $('.layout.nav .logo a, .layout.nav .title').click(function(event) {
       event.preventDefault();
-      $('.market.detail.container').slideToggle();
-      $('.markets.container').toggle();
-      $('.layout.header').slideToggle();
-      window.scrollTo({top: $('.layout.header').outerHeight() - $('.layout.nav').outerHeight(), behavior: 'instant'});
+      $('.layout.header').toggleClass('invisible');
+      if ($('.layout.header').hasClass('invisible')) {
+        $('.market.detail.container').slideToggle();
+        $('.markets.container').toggle();
+        $('.layout.header').toggle();
+        $('.layout.nav').show();
+      } else {
+        $('.market.detail.container').slideToggle();
+        $('.markets.container').toggle();
+        $('.layout.header').slideToggle();
+        window.scrollTo({top: $('.layout.header').outerHeight() - $('.layout.nav').outerHeight(), behavior: 'instant'});
+      }
     });
 
     $('.order.book').on('click', 'li', function (event) {
