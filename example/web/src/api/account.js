@@ -2,6 +2,7 @@ import forge from 'node-forge';
 import moment from 'moment';
 import KJUR from 'jsrsasign';
 import uuid from 'uuid/v4';
+import Cookies from 'js-cookie';
 
 function Account(api) {
   this.api = api;
@@ -21,13 +22,15 @@ Account.prototype = {
   },
 
   createUser: function (callback, params) {
+    var pwd = uuid().toLowerCase();
     var ec = new KJUR.crypto.ECDSA({'curve': 'secp256r1'});
     var pub = ec.generateKeyPairHex().ecpubhex;
-    var priv = KJUR.KEYUTIL.getPEM(ec, 'PKCS8PRV');
+    var priv = KJUR.KEYUTIL.getPEM(ec, 'PKCS8PRV', pwd);
 
     params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
     this.api.request('POST', '/users', params, function(resp) {
       if (resp.data) {
+        Cookies.set('sid', pwd);
         window.localStorage.setItem('token.example', priv);
         window.localStorage.setItem('uid', resp.data.user_id);
         window.localStorage.setItem('sid', resp.data.session_id);
@@ -37,13 +40,15 @@ Account.prototype = {
   },
 
   createSession: function (callback, params) {
+    var pwd = uuid().toLowerCase();
     var ec = new KJUR.crypto.ECDSA({'curve': 'secp256r1'});
     var pub = ec.generateKeyPairHex().ecpubhex;
-    var priv = KJUR.KEYUTIL.getPEM(ec, 'PKCS8PRV');
+    var priv = KJUR.KEYUTIL.getPEM(ec, 'PKCS8PRV', pwd);
 
     params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
     this.api.request('POST', '/sessions', params, function(resp) {
       if (resp.data) {
+        Cookies.set('sid', pwd);
         window.localStorage.setItem('token.example', priv);
         window.localStorage.setItem('uid', resp.data.user_id);
         window.localStorage.setItem('sid', resp.data.session_id);
@@ -68,7 +73,8 @@ Account.prototype = {
 
   token: function (method, uri, body) {
     var priv = window.localStorage.getItem('token.example');
-    if (!priv) {
+    var pwd = Cookies.get('sid');
+    if (!priv || !pwd) {
       return "";
     }
 
@@ -95,12 +101,13 @@ Account.prototype = {
     };
     var sHeader = JSON.stringify(oHeader);
     var sPayload = JSON.stringify(oPayload);
+    var pwd = Cookies.get('sid');
     try {
-      KJUR.KEYUTIL.getKey(privateKey);
+      var k = KJUR.KEYUTIL.getKey(privateKey, pwd);
     } catch (e) {
       return '';
     }
-    return KJUR.jws.JWS.sign('ES256', sHeader, sPayload, privateKey);
+    return KJUR.jws.JWS.sign('ES256', sHeader, sPayload, privateKey, pwd);
   },
 
   oceanToken: function (callback) {
