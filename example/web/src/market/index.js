@@ -647,6 +647,7 @@ Market.prototype = {
 
   pollAccountBalance: function (asset) {
     if (this.api.account.token() === '') {
+      $('.account.balances .balance').hide();
       $('.account.in.actions').hide();
       $('.account.out.actions').show();
       return;
@@ -657,6 +658,9 @@ Market.prototype = {
     const self = this;
     self.api.mixin.asset(function (resp) {
       if (resp.error) {
+        if (resp.error.code === 401) {
+          self.api.account.clear();
+        }
         return true;
       }
 
