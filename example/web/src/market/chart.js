@@ -152,7 +152,8 @@ Chart.prototype = {
         y: bids[i].volume
       });
     }
-    bidsData = bidsData.splice(50).reverse();
+    bidsData.splice(50);
+    bidsData = bidsData.reverse();
 
 
     var asksInput = [];

@@ -344,6 +344,12 @@ Market.prototype = {
   },
 
   fixListItemHeight: function () {
+    var mass = $('.book.data .ask').length - 30;
+    if (mass > 0) {
+      $('.book.data li.ask:nth-of-type(-n+' + mass + ')').remove();
+    }
+    $('.book.data li.bid:nth-of-type(1n+50)').remove();
+
     const itemHeight = 21;
     var total = $('.order.book').height() - $('.order.book .spread').outerHeight() - $('.book.tab').outerHeight();
     var count = parseInt(total / itemHeight / 2) * 2;
