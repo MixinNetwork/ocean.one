@@ -57,6 +57,7 @@
     "headline": "一个开源的分布式交易所，用于交易所有数字资产。",
     "sign.up": "注册",
     "log.in": "登录",
+    "forgot.password": "忘记密码?",
     "link.api": "API 文档",
     "link.fees": "手续费",
     "search.markets": "搜索 %{market} 市场",

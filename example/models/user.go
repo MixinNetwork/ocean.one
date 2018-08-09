@@ -129,6 +129,63 @@ func (current *User) UpdateName(ctx context.Context, name string) (*User, error)
 	return current, nil
 }
 
+func ResetPassword(ctx context.Context, verificationId, password, sessionSecret string) (*User, error) {
+	pkix, err := hex.DecodeString(sessionSecret)
+	if err != nil {
+		return nil, session.BadDataError(ctx)
+	}
+	_, err = x509.ParsePKIXPublicKey(pkix)
+	if err != nil {
+		return nil, session.BadDataError(ctx)
+	}
+
+	password, err = ValidateAndEncryptPassword(ctx, password)
+	if err != nil {
+		return nil, err
+	}
+
+	var user *User
+	_, err = session.Database(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+		vf, err := readVerification(ctx, txn, verificationId)
+		if err != nil {
+			return err
+		}
+		if vf == nil {
+			return session.VerificationCodeInvalidError(ctx)
+		}
+		if !vf.VerifiedAt.Valid {
+			return session.VerificationCodeInvalidError(ctx)
+		}
+		if vf.Category != VerificationCategoryPhone {
+			return session.BadDataError(ctx)
+		}
+
+		old, err := readUserIdByIndexKey(ctx, txn, "users_by_phone", vf.Receiver)
+		if err != nil {
+			return err
+		}
+		if old == "" {
+			return session.PhoneNonExistError(ctx)
+		}
+		user, err = readUser(ctx, txn, old)
+		if err != nil {
+			return err
+		}
+		user.EncryptedPassword = password
+		return txn.BufferWrite([]*spanner.Mutation{
+			spanner.Delete("verifications", spanner.Key{vf.VerificationId}),
+			spanner.Update("users", []string{"user_id", "encrypted_password"}, []interface{}{user.UserId, user.EncryptedPassword}),
+		})
+	}, "users", "UPDATE", "ResetPassword")
+	if err != nil {
+		if se, ok := session.ParseError(spanner.ErrDesc(err)); ok {
+			return nil, se
+		}
+		return nil, session.TransactionError(ctx, err)
+	}
+	return user, nil
+}
+
 func readUserIdByIndexKey(ctx context.Context, txn durable.Transaction, index, key string) (string, error) {
 	it := txn.ReadUsingIndex(ctx, "users", index, spanner.Key{key}, []string{"user_id"})
 	defer it.Stop()
