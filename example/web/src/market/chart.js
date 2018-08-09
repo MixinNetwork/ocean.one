@@ -152,9 +152,10 @@ Chart.prototype = {
         y: bids[i].volume
       });
     }
-    bidsData.splice(50);
     bidsData = bidsData.reverse();
-
+    if (bidsData.length > 20) {
+      bidsData = bidsData.splice(bidsData.length / 2);
+    }
 
     var asksInput = [];
     for(var i = 0; i < asks.length; i++) {
@@ -168,7 +169,7 @@ Chart.prototype = {
       });
     }
     var asksData = [];
-    var priceThreshold = bidsData[bidsData.length - 1].x + asksInput[0].x;
+    var priceThreshold = bidsData[bidsData.length - 1].x + asksInput[0].x - bidsData[0].x;
     for (var i = 0; i < asksInput.length; i++) {
       var point = asksInput[i];
       if (point.x > priceThreshold) {
