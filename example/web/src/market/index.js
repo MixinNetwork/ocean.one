@@ -417,7 +417,6 @@ Market.prototype = {
   },
 
   render: function (msg) {
-    console.log(msg);
     const self = this;
     if (msg.action !== 'EMIT_EVENT') {
       return;
