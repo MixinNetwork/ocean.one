@@ -25,7 +25,6 @@ type OrderAction struct {
 	Side    string `json:"side"`
 	Price   string `json:"price"`
 	Amount  string `json:"amount"`
-	Funds   string `json:"funds"`
 	Type    string `json:"type"`
 }
 
@@ -52,7 +51,7 @@ func (current *User) CreateOrder(ctx context.Context, o *OrderAction) error {
 		return session.ForbiddenError(ctx)
 	}
 
-	price := number.FromString(o.Price)
+	price := number.FromString(o.Price).RoundFloor(8)
 	switch o.Type {
 	case engine.OrderTypeLimit:
 		o.Type = "L"
@@ -68,12 +67,12 @@ func (current *User) CreateOrder(ctx context.Context, o *OrderAction) error {
 		return session.BadDataError(ctx)
 	}
 
-	amount := number.FromString(o.Amount)
+	amount := number.FromString(o.Amount).RoundFloor(4)
 	sent, get := o.Quote, o.Base
 	switch o.Side {
 	case engine.PageSideBid:
 		o.Side = "B"
-		amount = number.FromString(o.Funds)
+		amount = price.Mul(amount)
 	case engine.PageSideAsk:
 		o.Side = "A"
 		sent, get = o.Base, o.Quote
