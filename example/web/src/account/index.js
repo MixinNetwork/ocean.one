@@ -17,6 +17,7 @@ function Account(router, api) {
   this.templateAsset = require('./asset.html');
   this.stepCode = require('./step_code.html');
   this.stepUser = require('./step_user.html');
+  this.stepPassword = require('./step_password.html');
 }
 
 Account.prototype = {
@@ -26,6 +27,19 @@ Account.prototype = {
       return;
     }
 
+    this.sendVerification('USER');
+  },
+
+  resetPassword: function () {
+    if (this.api.account.token() !== '') {
+      this.router.replace('/accounts');
+      return;
+    }
+
+    this.sendVerification('PASSWORD');
+  },
+
+  sendVerification: function (purpose) {
     const self = this;
     $('body').attr('class', 'account layout');
     $('#layout-container').html(self.templateUser());
@@ -59,7 +73,7 @@ Account.prototype = {
           return;
         }
         self.api.notify('success', i18n.t('account.notifications.phone.verification.send.success'));
-        self.renderCodeStep(phone, resp.data.verification_id, 'USER');
+        self.renderCodeStep(phone, resp.data.verification_id, purpose);
       }, params);
     });
     $('#enroll-phone-form :submit').click(function (event) {
@@ -95,6 +109,9 @@ Account.prototype = {
           case 'USER':
             self.renderUserStep(verificationId);
             break;
+          case 'PASSWORD':
+            self.renderResetPassword(verificationId);
+            break;
         }
       }, params);
     });
@@ -120,6 +137,41 @@ Account.prototype = {
       var form = $(this);
       var params = FormUtils.serialize(form);
       self.api.account.createUser(function (resp) {
+        $('.submit-loader', form).hide();
+        $(':submit', form).show();
+
+        if (resp.error) {
+          return;
+        }
+        self.router.replace('/accounts');
+      }, params);
+    });
+    $('#enroll-verify-form :submit').click(function (event) {
+      event.preventDefault();
+      if ($('#password').val() !== $('#password-confirmation').val()) {
+        self.api.notify('error', i18n.t('account.notifications.password.mismatch'));
+        return;
+      }
+      var form = $(this).parents('form');
+      $('.submit-loader', form).show();
+      $(this).hide();
+      form.submit();
+    });
+  },
+
+  renderResetPassword: function (verificationId) {
+    const self = this;
+    $('body').attr('class', 'account layout');
+    $('#layout-container').html(self.stepPassword({
+      verificationId: verificationId
+    }));
+    $('#enroll-verify-form #password').focus();
+
+    $('#enroll-verify-form').submit(function (event) {
+      event.preventDefault();
+      var form = $(this);
+      var params = FormUtils.serialize(form);
+      self.api.account.resetPassword(function (resp) {
         $('.submit-loader', form).hide();
         $(':submit', form).show();
 

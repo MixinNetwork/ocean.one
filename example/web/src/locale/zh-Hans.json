@@ -33,7 +33,8 @@
     "buttons": {
       "get.code": "获取验证码",
       "submit": "提交",
-      "create.user": "创建账户"
+      "create.user": "创建账户",
+      "reset.password": "重置密码"
     },
     "placeholder.password": "密码"
   },

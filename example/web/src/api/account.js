@@ -39,6 +39,25 @@ Account.prototype = {
     });
   },
 
+  resetPassword: function (callback, params) {
+    var pwd = uuid().toLowerCase();
+    var ec = new KJUR.crypto.ECDSA({'curve': 'secp256r1'});
+    var pub = ec.generateKeyPairHex().ecpubhex;
+    var priv = KJUR.KEYUTIL.getPEM(ec, 'PKCS8PRV', pwd);
+
+    params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
+    console.info(params);
+    this.api.request('POST', '/passwords', params, function(resp) {
+      if (resp.data) {
+        Cookies.set('sid', pwd, {secure: true});
+        window.localStorage.setItem('token.example', priv);
+        window.localStorage.setItem('uid', resp.data.user_id);
+        window.localStorage.setItem('sid', resp.data.session_id);
+      }
+      return callback(resp);
+    });
+  },
+
   createSession: function (callback, params) {
     var pwd = uuid().toLowerCase();
     var ec = new KJUR.crypto.ECDSA({'curve': 'secp256r1'});
