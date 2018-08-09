@@ -1,6 +1,5 @@
 ocean.one
 config.go
-config.go
 
 # Binaries for programs and plugins
 *.exe

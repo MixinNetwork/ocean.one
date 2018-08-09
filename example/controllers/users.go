@@ -67,9 +67,9 @@ func (impl *usersImpl) reset(w http.ResponseWriter, r *http.Request, _ map[strin
 	user, err := models.ResetPassword(r.Context(), body.VerificationId, body.Password, body.SessionSecret)
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
-		return
+	} else {
+		views.RenderUserWithAuthentication(w, r, user)
 	}
-	views.RenderUserWithAuthentication(w, r, user)
 }
 
 func (impl *usersImpl) me(w http.ResponseWriter, r *http.Request, _ map[string]string) {
