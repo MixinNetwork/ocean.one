@@ -502,6 +502,9 @@ Market.prototype = {
       o.price = parseFloat(o.price).toFixed(8);
     }
     o.amount = parseFloat(o.amount).toFixed(4);
+    if (o.amount === '0.0000') {
+      o.amount = '0.0001';
+    }
     o.sideClass = o.side.toLowerCase();
     o.time = TimeUtils.short(o.created_at);
     $('.history.data').prepend(self.itemTrade(o));
@@ -525,6 +528,9 @@ Market.prototype = {
     }
     o.pricePoint = o.price.replace('.', '');
     o.amount = amount.toFixed(4);
+    if (o.amount === '0.0000') {
+      o.amount = '0.0001';
+    }
     if ($('#order-point-' + o.pricePoint).length > 0) {
       var bo = $('#order-point-' + o.pricePoint);
       o.amount = (parseFloat(bo.attr('data-amount')) + amount).toFixed(4);
@@ -566,7 +572,6 @@ Market.prototype = {
       o.price = parseFloat(o.price).toFixed(8);
     }
     o.pricePoint = o.price.replace('.', '');
-    o.amount = amount.toFixed(4);
     if ($('#order-point-' + o.pricePoint).length === 0) {
       return;
     }
@@ -577,11 +582,15 @@ Market.prototype = {
       bgColor = 'rgba(229, 85, 65, 0.3)';
     }
     o.amount = parseFloat(bo.attr('data-amount')) - amount;
-    if (o.amount > 0) {
-      o.amount = o.amount.toFixed(4);
-      bo.replaceWith($(self.itemOrder(o)).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
-    } else {
+    o.funds = parseFloat(bo.attr('data-funds')) - parseFloat(o.funds);
+    if (o.amount <= 0 || o.funds <= 0) {
       bo.remove();
+    } else {
+      o.amount = o.amount.toFixed(4);
+      if (o.amount === '0.0000') {
+        o.amount = '0.0001';
+      }
+      bo.replaceWith($(self.itemOrder(o)).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
     }
   },
 

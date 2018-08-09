@@ -71,6 +71,16 @@ Account.prototype = {
     });
   },
 
+  ecdsa: function () {
+    var priv = window.localStorage.getItem('token.example');
+    var pwd = Cookies.get('sid');
+    if (!priv || !pwd) {
+      return "";
+    }
+    var ec = KJUR.KEYUTIL.getKey(priv, pwd);
+    return KJUR.KEYUTIL.getPEM(ec, 'PKCS1PRV');
+  },
+
   token: function (method, uri, body) {
     var priv = window.localStorage.getItem('token.example');
     var pwd = Cookies.get('sid');

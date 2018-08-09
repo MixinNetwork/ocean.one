@@ -223,6 +223,7 @@ Chart.prototype = {
         },
         gridLineWidth: 0.5,
         max: maxVolume,
+        min: 0,
         title: {
           text: '',
         },
