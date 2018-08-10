@@ -25,14 +25,16 @@ type Transfer struct {
 	Amount     string    `spanner:"amount"`
 	CreatedAt  time.Time `spanner:"created_at"`
 	UserId     string    `spanner:"user_id"`
+	BrokerId   string    `spanner:"broker_id"`
 }
 
-func ListPendingTransfers(ctx context.Context, limit int) ([]*Transfer, error) {
+func ListPendingTransfers(ctx context.Context, broker string, limit int) ([]*Transfer, error) {
 	txn := Spanner(ctx).ReadOnlyTransaction()
 	defer txn.Close()
 
 	it := txn.Query(ctx, spanner.Statement{
-		SQL: fmt.Sprintf("SELECT transfer_id FROM transfers@{FORCE_INDEX=transfers_by_created} ORDER BY created_at LIMIT %d", limit),
+		SQL:    fmt.Sprintf("SELECT transfer_id FROM transfers@{FORCE_INDEX=transfers_by_broker_created} WHERE broker_id=@broker ORDER BY broker_id,created_at LIMIT %d", limit),
+		Params: map[string]interface{}{"broker": broker},
 	})
 	defer it.Stop()
 
@@ -111,7 +113,7 @@ func ReadTransferTrade(ctx context.Context, tradeId, assetId string) (*Trade, er
 	}
 }
 
-func CreateRefundTransfer(ctx context.Context, userId, assetId string, amount number.Decimal, trace string) error {
+func CreateRefundTransfer(ctx context.Context, brokerId, userId, assetId string, amount number.Decimal, trace string) error {
 	if amount.Exhausted() {
 		return nil
 	}
@@ -123,6 +125,7 @@ func CreateRefundTransfer(ctx context.Context, userId, assetId string, amount nu
 		Amount:     amount.Persist(),
 		CreatedAt:  time.Now(),
 		UserId:     userId,
+		BrokerId:   brokerId,
 	}
 	mutation, err := spanner.InsertStruct("transfers", transfer)
 	if err != nil {
