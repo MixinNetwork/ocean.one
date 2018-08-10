@@ -102,7 +102,7 @@ func (current *User) CreateOrder(ctx context.Context, o *OrderAction) error {
 		return session.ServerError(ctx, err)
 	}
 
-	return current.Key.sendTransfer(ctx, config.EngineUserId, sent, amount, o.TraceId, base64.StdEncoding.EncodeToString(memo))
+	return current.Key.sendTransfer(ctx, config.RandomBrokerId(), sent, amount, o.TraceId, base64.StdEncoding.EncodeToString(memo))
 }
 
 func (current *User) CancelOrder(ctx context.Context, id string) error {
@@ -119,7 +119,7 @@ func (current *User) CancelOrder(ctx context.Context, id string) error {
 		return session.ServerError(ctx, err)
 	}
 
-	return current.Key.sendTransfer(ctx, config.EngineUserId, config.OOOAssetId, number.FromString("0.00000001"), uuid.NewV4().String(), base64.StdEncoding.EncodeToString(memo))
+	return current.Key.sendTransfer(ctx, config.RandomBrokerId(), config.OOOAssetId, number.FromString("0.00000001"), uuid.NewV4().String(), base64.StdEncoding.EncodeToString(memo))
 }
 
 func validateQuoteBase(quote, base string) bool {

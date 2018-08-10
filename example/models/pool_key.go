@@ -177,7 +177,7 @@ func (k *PoolKey) setupOceanKey(ctx context.Context) error {
 
 	input := &bot.TransferInput{
 		AssetId:     config.OOOAssetId,
-		RecipientId: config.EngineUserId,
+		RecipientId: config.RandomBrokerId(),
 		Amount:      number.FromString("0.00000001"),
 		TraceId:     getSettlementId(k.UserId, "USER|SIG|REGISTER"),
 		Memo:        base64.StdEncoding.EncodeToString(sig),
