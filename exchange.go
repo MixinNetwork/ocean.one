@@ -60,6 +60,7 @@ func NewExchange() *Exchange {
 		codec:     new(codec.MsgpackHandle),
 		books:     make(map[string]*engine.Book),
 		snapshots: make(map[string]bool),
+		brokers:   make(map[string]*persistence.Broker),
 	}
 }
 
