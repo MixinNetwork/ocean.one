@@ -1,6 +1,11 @@
 import $ from 'jquery';
 
 function Chart() {
+  Highcharts.setOptions({
+    time: {
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    }
+  });
 }
 
 Chart.prototype = {
