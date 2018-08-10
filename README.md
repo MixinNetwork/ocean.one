@@ -231,3 +231,8 @@ GET https://events.ocean.one/markets/:id/trades
 ## References
 
 - Coinbase Pro API https://docs.pro.coinbase.com/
+
+
+## Join the Team
+
+Please contact Mixin 25566
