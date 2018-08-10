@@ -42,7 +42,11 @@ Account.prototype = {
   sendVerification: function (purpose) {
     const self = this;
     $('body').attr('class', 'account layout');
-    $('#layout-container').html(self.templateUser());
+    var title = 'home.sign.up';
+    if (purpose === 'PASSWORD') {
+      title = 'account.buttons.reset.password';
+    }
+    $('#layout-container').html(self.templateUser({title: window.i18n.t(title)}));
 
     var initialCountry = 'US';
     if (navigator.language && navigator.language.indexOf('zh') >= 0) {
@@ -87,8 +91,13 @@ Account.prototype = {
 
   renderCodeStep: function (phone, verificationId, purpose) {
     const self = this;
+    var title = 'home.sign.up';
+    if (purpose === 'PASSWORD') {
+      title = 'account.buttons.reset.password';
+    }
     $('body').attr('class', 'account layout');
     $('#layout-container').html(self.stepCode({
+      title: window.i18n.t(title),
       phone: phone,
       verificationId: verificationId
     }));

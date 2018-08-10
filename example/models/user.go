@@ -129,8 +129,8 @@ func (current *User) UpdateName(ctx context.Context, name string) (*User, error)
 	return current, nil
 }
 
-func ResetPassword(ctx context.Context, verificationId, password, sessionSecret string) (*User, error) {
-	pkix, err := hex.DecodeString(sessionSecret)
+func ResetPassword(ctx context.Context, verificationId, password, secret string) (*User, error) {
+	pkix, err := hex.DecodeString(secret)
 	if err != nil {
 		return nil, session.BadDataError(ctx)
 	}
@@ -171,10 +171,17 @@ func ResetPassword(ctx context.Context, verificationId, password, sessionSecret 
 		if err != nil {
 			return err
 		}
+		s, err := addSession(ctx, txn, user.UserId, secret)
+		if err != nil {
+			return err
+		}
 		user.EncryptedPassword = password
+		user.SessionId = s.SessionId
+		user.ActiveAt = s.ActiveAt
+		user.CreatedAt = s.CreatedAt
 		return txn.BufferWrite([]*spanner.Mutation{
 			spanner.Delete("verifications", spanner.Key{vf.VerificationId}),
-			spanner.Update("users", []string{"user_id", "encrypted_password"}, []interface{}{user.UserId, user.EncryptedPassword}),
+			spanner.Update("users", []string{"user_id", "encrypted_password", "active_at", "created_at"}, []interface{}{user.UserId, user.EncryptedPassword, user.ActiveAt, user.CreatedAt}),
 		})
 	}, "users", "UPDATE", "ResetPassword")
 	if err != nil {
