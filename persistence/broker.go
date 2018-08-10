@@ -37,7 +37,7 @@ type Broker struct {
 	DecryptedPIN string
 }
 
-func AllBrokers(ctx context.Context) ([]*Broker, error) {
+func AllBrokers(ctx context.Context, decryptPIN bool) ([]*Broker, error) {
 	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{SQL: "SELECT * FROM brokers"})
 	defer it.Stop()
 
@@ -63,7 +63,12 @@ func AllBrokers(ctx context.Context) ([]*Broker, error) {
 		if err != nil {
 			return brokers, err
 		}
-		broker.decryptPIN()
+		if decryptPIN {
+			err = broker.decryptPIN()
+			if err != nil {
+				return brokers, err
+			}
+		}
 		brokers = append(brokers, &broker)
 	}
 }
@@ -123,10 +128,15 @@ func AddBroker(ctx context.Context) (*Broker, error) {
 	}
 
 	err = broker.setupPIN(ctx)
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
-	return broker, nil
+	insertBroker, err := spanner.InsertStruct("brokers", broker)
+	if err != nil {
+		return nil, err
+	}
+	_, err = Spanner(ctx).Apply(ctx, []*spanner.Mutation{insertBroker})
+	return broker, err
 }
 
 func (b *Broker) decryptPIN() error {

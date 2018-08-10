@@ -36,7 +36,7 @@ func NewRouter() *httptreemux.TreeMux {
 }
 
 func (impl *R) brokers(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	brokers, err := persistence.AllBrokers(r.Context())
+	brokers, err := persistence.AllBrokers(r.Context(), false)
 	if err != nil {
 		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return

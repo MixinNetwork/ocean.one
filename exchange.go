@@ -65,7 +65,7 @@ func NewExchange() *Exchange {
 }
 
 func (ex *Exchange) Run(ctx context.Context) {
-	brokers, err := persistence.AllBrokers(ctx)
+	brokers, err := persistence.AllBrokers(ctx, true)
 	if err != nil {
 		log.Panicln(err)
 	}
