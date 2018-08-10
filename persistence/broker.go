@@ -34,7 +34,7 @@ type Broker struct {
 	EncryptionHeader []byte    `spanner:"encryption_header"`
 	CreatedAt        time.Time `spanner:"created_at"`
 
-	DecryptedPIN string
+	DecryptedPIN string `spanner:"-"`
 }
 
 func AllBrokers(ctx context.Context, decryptPIN bool) ([]*Broker, error) {
