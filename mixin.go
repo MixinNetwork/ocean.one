@@ -71,7 +71,7 @@ func (ex *Exchange) ensureProcessSnapshot(ctx context.Context, s *Snapshot) {
 }
 
 func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
-	if s.UserId != config.ClientId {
+	if ex.brokers[s.UserId] == nil {
 		return nil
 	}
 	if s.OpponentId == "" || s.TraceId == "" {
@@ -189,7 +189,7 @@ func (ex *Exchange) refundSnapshot(ctx context.Context, s *Snapshot) error {
 	if amount.Exhausted() {
 		return nil
 	}
-	return persistence.CreateRefundTransfer(ctx, s.OpponentId, s.Asset.AssetId, amount, s.TraceId)
+	return persistence.CreateRefundTransfer(ctx, s.UserId, s.OpponentId, s.Asset.AssetId, amount, s.TraceId)
 }
 
 func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) *OrderAction {
@@ -242,12 +242,13 @@ func (ex *Exchange) requestMixinNetwork(ctx context.Context, checkpoint time.Tim
 	return resp.Data, nil
 }
 
-func (ex *Exchange) sendTransfer(ctx context.Context, recipientId, assetId string, amount number.Decimal, traceId, memo string) error {
+func (ex *Exchange) sendTransfer(ctx context.Context, brokerId, recipientId, assetId string, amount number.Decimal, traceId, memo string) error {
+	broker := ex.brokers[brokerId]
 	return bot.CreateTransfer(ctx, &bot.TransferInput{
 		AssetId:     assetId,
 		RecipientId: recipientId,
 		Amount:      amount,
 		TraceId:     traceId,
 		Memo:        memo,
-	}, config.ClientId, config.SessionId, config.SessionKey, config.SessionAssetPIN, config.PinToken)
+	}, broker.BrokerId, broker.SessionId, broker.SessionKey, broker.DecryptedPIN, broker.PINToken)
 }

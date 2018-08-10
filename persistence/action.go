@@ -30,6 +30,7 @@ type Order struct {
 	CreatedAt       time.Time `spanner:"created_at"`
 	State           string    `spanner:"state"`
 	UserId          string    `spanner:"user_id"`
+	BrokerId        string    `spanner:"broker_id"`
 }
 
 type Action struct {

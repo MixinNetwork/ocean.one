@@ -24,6 +24,7 @@ type Exchange struct {
 	books     map[string]*engine.Book
 	codec     codec.Handle
 	snapshots map[string]bool
+	brokers   map[string]*persistence.Broker
 }
 
 func QuotePrecision(assetId string) uint8 {
@@ -59,13 +60,21 @@ func NewExchange() *Exchange {
 		codec:     new(codec.MsgpackHandle),
 		books:     make(map[string]*engine.Book),
 		snapshots: make(map[string]bool),
+		brokers:   make(map[string]*persistence.Broker),
 	}
 }
 
 func (ex *Exchange) Run(ctx context.Context) {
+	brokers, err := persistence.AllBrokers(ctx)
+	if err != nil {
+		log.Panicln(err)
+	}
+	for _, b := range brokers {
+		ex.brokers[b.BrokerId] = b
+		go ex.PollTransfers(ctx, b.BrokerId)
+	}
 	go ex.PollMixinMessages(ctx)
 	go ex.PollMixinNetwork(ctx)
-	go ex.PollTransfers(ctx)
 	ex.PollOrderActions(ctx)
 }
 
@@ -88,12 +97,12 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 	}
 }
 
-func (ex *Exchange) PollTransfers(ctx context.Context) {
+func (ex *Exchange) PollTransfers(ctx context.Context, brokerId string) {
 	limit := 500
 	for {
-		transfers, err := persistence.ListPendingTransfers(ctx, limit)
+		transfers, err := persistence.ListPendingTransfers(ctx, brokerId, limit)
 		if err != nil {
-			log.Println("ListPendingTransfers", err)
+			log.Println("ListPendingTransfers", brokerId, err)
 			time.Sleep(PollInterval)
 			continue
 		}
@@ -163,7 +172,7 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 	if len(memo) > 140 {
 		log.Panicln(transfer, memo)
 	}
-	return ex.sendTransfer(ctx, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
+	return ex.sendTransfer(ctx, transfer.BrokerId, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
 }
 
 func (ex *Exchange) buildBook(ctx context.Context, market string) *engine.Book {
@@ -216,6 +225,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 		Quote:           order.QuoteAssetId,
 		Base:            order.BaseAssetId,
 		UserId:          order.UserId,
+		BrokerId:        order.BrokerId,
 	}, action.Action)
 }
 

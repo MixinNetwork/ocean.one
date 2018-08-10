@@ -1,8 +1,19 @@
 CREATE TABLE properties (
-	key         STRING(512) NOT NULL,
-	value       STRING(8192) NOT NULL,
-	updated_at  TIMESTAMP NOT NULL,
+  key         STRING(512) NOT NULL,
+  value       STRING(8192) NOT NULL,
+  updated_at  TIMESTAMP NOT NULL,
 ) PRIMARY KEY(key);
+
+
+CREATE TABLE brokers (
+  broker_id         STRING(36) NOT NULL,
+  session_id        STRING(36) NOT NULL,
+  session_key       STRING(1024) NOT NULL,
+  pin_token         STRING(512) NOT NULL,
+  encrypted_pin     STRING(512) NOT NULL,
+  encryption_header BYTES(1024) NOT NULL,
+  created_at        TIMESTAMP NOT NULL,
+) PRIMARY KEY(broker_id);
 
 
 CREATE TABLE orders (
@@ -19,6 +30,7 @@ CREATE TABLE orders (
   created_at        TIMESTAMP NOT NULL,
   state             STRING(36) NOT NULL,
   user_id           STRING(36) NOT NULL,
+  broker_id         STRING(36) NOT NULL,
 ) PRIMARY KEY(order_id);
 
 CREATE INDEX orders_by_user_created_desc ON orders(user_id, created_at DESC) STORING(quote_asset_id,base_asset_id,state);
@@ -63,9 +75,10 @@ CREATE TABLE transfers (
   amount            STRING(128) NOT NULL,
   created_at        TIMESTAMP NOT NULL,
   user_id           STRING(36) NOT NULL,
+  broker_id         STRING(36) NOT NULL,
 ) PRIMARY KEY(transfer_id);
 
-CREATE INDEX transfers_by_created ON transfers(created_at);
+CREATE INDEX transfers_by_broker_created ON transfers(broker_id,created_at);
 
 
 CREATE TABLE users (

@@ -38,7 +38,7 @@ type Trade struct {
 
 func Transact(ctx context.Context, taker, maker *engine.Order, amount, funds number.Integer) (string, error) {
 	askTrade, bidTrade := makeTrades(taker, maker, amount.Decimal())
-	askTransfer, bidTransfer := handleFees(askTrade, bidTrade)
+	askTransfer, bidTransfer := handleFees(askTrade, bidTrade, taker, maker)
 
 	askTradeMutation, err := spanner.InsertStruct("trades", askTrade)
 	if err != nil {
@@ -82,6 +82,7 @@ func CancelOrder(ctx context.Context, order *engine.Order) error {
 		Amount:     order.RemainingAmount.Persist(),
 		CreatedAt:  time.Now(),
 		UserId:     order.UserId,
+		BrokerId:   order.BrokerId,
 	}
 	if order.Side == engine.PageSideBid {
 		transfer.AssetId = order.Quote
@@ -167,7 +168,7 @@ func makeTrades(taker, maker *engine.Order, amount number.Decimal) (*Trade, *Tra
 	return askTrade, bidTrade
 }
 
-func handleFees(ask, bid *Trade) (*Transfer, *Transfer) {
+func handleFees(ask, bid *Trade, taker, maker *engine.Order) (*Transfer, *Transfer) {
 	total := number.FromString(ask.Amount).Mul(number.FromString(ask.Price))
 	askFee := total.Mul(number.FromString(TakerFeeRate))
 	bidFee := number.FromString(bid.Amount).Mul(number.FromString(MakerFeeRate))
@@ -198,6 +199,13 @@ func handleFees(ask, bid *Trade) (*Transfer, *Transfer) {
 		Amount:     number.FromString(bid.Amount).Sub(bidFee).Persist(),
 		CreatedAt:  time.Now(),
 		UserId:     bid.UserId,
+	}
+	if taker.Side == engine.PageSideAsk {
+		askTransfer.BrokerId = maker.BrokerId
+		bidTransfer.BrokerId = taker.BrokerId
+	} else {
+		askTransfer.BrokerId = taker.BrokerId
+		bidTransfer.BrokerId = maker.BrokerId
 	}
 	return askTransfer, bidTransfer
 }

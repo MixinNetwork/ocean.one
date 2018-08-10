@@ -25,6 +25,7 @@ type R struct{}
 
 func NewRouter() *httptreemux.TreeMux {
 	router, impl := httptreemux.New(), &R{}
+	router.GET("/brokers", impl.brokers)
 	router.GET("/markets/:id/ticker", impl.marketTicker)
 	router.GET("/markets/:id/book", impl.marketBook)
 	router.GET("/markets/:id/trades", impl.marketTrades)
@@ -32,6 +33,42 @@ func NewRouter() *httptreemux.TreeMux {
 	router.POST("/tokens", impl.tokens)
 	registerHanders(router)
 	return router
+}
+
+func (impl *R) brokers(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	brokers, err := persistence.AllBrokers(r.Context())
+	if err != nil {
+		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	data := make([]map[string]interface{}, 0)
+	for _, b := range brokers {
+		sum := sha256.Sum256([]byte("GET/assets"))
+		token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
+			"uid": b.BrokerId,
+			"sid": b.SessionId,
+			"scp": "ASSETS:READ",
+			"exp": time.Now().Add(time.Hour * 24).Unix(),
+			"sig": hex.EncodeToString(sum[:]),
+		})
+
+		block, _ := pem.Decode([]byte(b.SessionKey))
+		privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+		tokenString, err := token.SignedString(privateKey)
+		if err != nil {
+			render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+		data = append(data, map[string]interface{}{
+			"broker_id": b.BrokerId,
+			"token":     tokenString,
+		})
+	}
+	render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": data})
 }
 
 func (impl *R) tokens(w http.ResponseWriter, r *http.Request, _ map[string]string) {
