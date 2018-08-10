@@ -30,6 +30,7 @@ type Order struct {
 	CreatedAt       time.Time `spanner:"created_at"`
 	State           string    `spanner:"state"`
 	UserId          string    `spanner:"user_id"`
+	BrokerId        string    `spanner:"broker_id"`
 }
 
 type Action struct {
@@ -118,6 +119,7 @@ func CreateOrderAction(ctx context.Context, o *engine.Order, userId string, crea
 		CreatedAt:       createdAt,
 		State:           OrderStatePending,
 		UserId:          userId,
+		BrokerId:        o.BrokerId,
 	}
 	action := Action{
 		OrderId:   order.OrderId,

@@ -21,9 +21,10 @@ type Order struct {
 	RemainingFunds  number.Integer
 	FilledFunds     number.Integer
 
-	Quote  string
-	Base   string
-	UserId string
+	Quote    string
+	Base     string
+	UserId   string
+	BrokerId string
 }
 
 func (order *Order) filled() bool {

@@ -1,0 +1,33 @@
+package config
+
+// mixin account
+const (
+	brokerJson = `[
+		{
+			"pin": "", 
+			"pin_token": "", 
+			"key": "", 
+			"sid": "", 
+			"is_master": "", 
+			"id": ""
+		}
+	]`
+)
+
+// bugsnag
+const (
+	BugsnagAPIKey = ""
+	BuildVersion  = ""
+	Environment   = ""
+)
+
+// spanner
+const (
+	GoogleCloudSpanner = ""
+)
+
+// redis
+const (
+	RedisEngineCacheAddress  = "localhost"
+	RedisEngineCacheDatabase = 6379
+)
