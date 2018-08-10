@@ -444,10 +444,10 @@ Market.prototype = {
         $('.order.book .book.data').show();
         $('.order.book .order.item').remove();
         for (var i = 0; i < book.asks.length; i++) {
-          self.orderOpenOnPage(book.asks[i]);
+          self.orderOpenOnPage(book.asks[i], true);
         }
         for (var i = 0; i < book.bids.length; i++) {
-          self.orderOpenOnPage(book.bids[i]);
+          self.orderOpenOnPage(book.bids[i], true);
         }
         self.fixListItemHeight();
         break;
@@ -516,7 +516,7 @@ Market.prototype = {
     $('.history.data li:nth-of-type(1n+100)').remove();
   },
 
-  orderOpenOnPage: function (o) {
+  orderOpenOnPage: function (o, instant) {
     const self = this;
     const price = parseFloat(o.price);
     const amount = parseFloat(o.amount);
@@ -539,12 +539,19 @@ Market.prototype = {
     if ($('#order-point-' + o.pricePoint).length > 0) {
       var bo = $('#order-point-' + o.pricePoint);
       o.amount = (parseFloat(bo.attr('data-amount')) + amount).toFixed(4);
-      bo.replaceWith($(self.itemOrder(o)).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
+      if (instant) {
+        bo.replaceWith(self.itemOrder(o));
+      } else {
+        bo.replaceWith($(self.itemOrder(o)).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
+      }
       return;
     }
 
-    var item = self.itemOrder(o);
     var list = $('.order.item');
+    var item = self.itemOrder(o);
+    if (!instant) {
+      item = $(item).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500);
+    }
     for (var i = 0; i < list.length; i++) {
       var bo = $(list[i]);
       if (price < parseFloat(bo.attr('data-price'))) {
@@ -552,16 +559,16 @@ Market.prototype = {
       }
 
       if (o.side !== bo.attr('data-side')) {
-        $('.book.data .spread').before($(item).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
+        $('.book.data .spread').before(item);
       } else {
-        bo.before($(item).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
+        bo.before(item);
       }
       return;
     }
     if (o.side === 'BID') {
-      $('.book.data').append($(item).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
+      $('.book.data').append(item);
     } else {
-      $('.book.data .spread').before($(item).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
+      $('.book.data .spread').before(item);
     }
   },
 
