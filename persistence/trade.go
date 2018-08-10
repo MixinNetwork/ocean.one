@@ -32,6 +32,7 @@ type Trade struct {
 	Amount       string    `spanner:"amount"`
 	CreatedAt    time.Time `spanner:"created_at"`
 	UserId       string    `spanner:"user_id"`
+	BrokerId     string    `spanner:"broker_id"`
 	FeeAssetId   string    `spanner:"fee_asset_id"`
 	FeeAmount    string    `spanner:"fee_amount"`
 }
@@ -145,6 +146,7 @@ func makeTrades(taker, maker *engine.Order, amount number.Decimal) (*Trade, *Tra
 		Amount:       amount.Persist(),
 		CreatedAt:    time.Now(),
 		UserId:       taker.UserId,
+		BrokerId:     taker.BrokerId,
 	}
 	makerTrade := &Trade{
 		TradeId:      tradeId.String(),
@@ -158,6 +160,7 @@ func makeTrades(taker, maker *engine.Order, amount number.Decimal) (*Trade, *Tra
 		Amount:       amount.Persist(),
 		CreatedAt:    time.Now(),
 		UserId:       maker.UserId,
+		BrokerId:     maker.BrokerId,
 	}
 
 	askTrade, bidTrade := takerTrade, makerTrade
@@ -189,6 +192,7 @@ func handleFees(ask, bid *Trade) (*Transfer, *Transfer) {
 		Amount:     total.Sub(askFee).Persist(),
 		CreatedAt:  time.Now(),
 		UserId:     ask.UserId,
+		BrokerId:   ask.BrokerId,
 	}
 	bidTransfer := &Transfer{
 		TransferId: getSettlementId(bid.TradeId, bid.Liquidity),
@@ -198,6 +202,7 @@ func handleFees(ask, bid *Trade) (*Transfer, *Transfer) {
 		Amount:     number.FromString(bid.Amount).Sub(bidFee).Persist(),
 		CreatedAt:  time.Now(),
 		UserId:     bid.UserId,
+		BrokerId:   bid.BrokerId,
 	}
 	return askTransfer, bidTransfer
 }

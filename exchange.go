@@ -216,6 +216,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 		Quote:           order.QuoteAssetId,
 		Base:            order.BaseAssetId,
 		UserId:          order.UserId,
+		BrokerId:        order.BrokerId,
 	}, action.Action)
 }
 

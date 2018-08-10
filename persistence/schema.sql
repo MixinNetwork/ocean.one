@@ -48,6 +48,7 @@ CREATE TABLE trades (
   amount            STRING(128) NOT NULL,
   created_at        TIMESTAMP NOT NULL,
   user_id           STRING(36) NOT NULL,
+  broker_id         STRING(36) NOT NULL,
   fee_asset_id      STRING(36) NOT NULL,
   fee_amount        STRING(128) NOT NULL,
 ) PRIMARY KEY(trade_id, liquidity);
