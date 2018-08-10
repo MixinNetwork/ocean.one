@@ -30,7 +30,7 @@ Account.prototype = {
     params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
     this.api.request('POST', '/users', params, function(resp) {
       if (resp.data) {
-        Cookies.set('sid', pwd, {secure: true});
+        Cookies.set('sid', pwd);
         window.localStorage.setItem('token.example', priv);
         window.localStorage.setItem('uid', resp.data.user_id);
         window.localStorage.setItem('sid', resp.data.session_id);
@@ -67,7 +67,7 @@ Account.prototype = {
     params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
     this.api.request('POST', '/sessions', params, function(resp) {
       if (resp.data) {
-        Cookies.set('sid', pwd, {secure: true});
+        Cookies.set('sid', pwd);
         window.localStorage.setItem('token.example', priv);
         window.localStorage.setItem('uid', resp.data.user_id);
         window.localStorage.setItem('sid', resp.data.session_id);
@@ -88,6 +88,16 @@ Account.prototype = {
     this.api.request('POST', '/me/mixin', {code: code}, function(resp) {
       return callback(resp);
     });
+  },
+
+  ecdsa: function () {
+    var priv = window.localStorage.getItem('token.example');
+    var pwd = Cookies.get('sid');
+    if (!priv || !pwd) {
+      return "";
+    }
+    var ec = KJUR.KEYUTIL.getKey(priv, pwd);
+    return KJUR.KEYUTIL.getPEM(ec, 'PKCS1PRV');
   },
 
   token: function (method, uri, body) {

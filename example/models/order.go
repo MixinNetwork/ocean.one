@@ -52,7 +52,10 @@ func (current *User) CreateOrder(ctx context.Context, o *OrderAction) error {
 		return session.ForbiddenError(ctx)
 	}
 
-	price := number.FromString(o.Price)
+	price := number.FromString(o.Price).RoundFloor(8)
+	if o.Quote == USDTAssetId {
+		price = price.RoundFloor(4)
+	}
 	switch o.Type {
 	case engine.OrderTypeLimit:
 		o.Type = "L"
@@ -80,6 +83,7 @@ func (current *User) CreateOrder(ctx context.Context, o *OrderAction) error {
 	default:
 		return session.BadDataError(ctx)
 	}
+	amount = amount.RoundFloor(4)
 	if amount.Exhausted() {
 		return session.BadDataError(ctx)
 	}

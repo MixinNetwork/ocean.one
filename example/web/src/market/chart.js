@@ -153,17 +153,29 @@ Chart.prototype = {
       });
     }
     bidsData = bidsData.reverse();
+    if (bidsData.length > 20) {
+      bidsData = bidsData.splice(bidsData.length / 2);
+    }
 
-    var asksData = [];
+    var asksInput = [];
     for(var i = 0; i < asks.length; i++) {
       asks[i].volume = parseFloat(parseFloat(asks[i].amount).toFixed(4));
       if (i > 0) {
         asks[i].volume = parseFloat((asks[i-1].volume + asks[i].volume).toFixed(4));
       }
-      asksData.push({
+      asksInput.push({
         x: parseFloat(asks[i].price),
         y: asks[i].volume
       });
+    }
+    var asksData = [];
+    var priceThreshold = bidsData[bidsData.length - 1].x + asksInput[0].x - bidsData[0].x;
+    for (var i = 0; i < asksInput.length; i++) {
+      var point = asksInput[i];
+      if (point.x > priceThreshold) {
+        break;
+      }
+      asksData.push(point);
     }
 
     var minPrice = bidsData[0].x;
@@ -223,6 +235,7 @@ Chart.prototype = {
         },
         gridLineWidth: 0.5,
         max: maxVolume,
+        min: 0,
         title: {
           text: '',
         },

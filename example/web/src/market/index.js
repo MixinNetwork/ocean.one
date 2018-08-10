@@ -344,6 +344,12 @@ Market.prototype = {
   },
 
   fixListItemHeight: function () {
+    var mass = $('.book.data .ask').length - 30;
+    if (mass > 0) {
+      $('.book.data li.ask:nth-of-type(-n+' + mass + ')').remove();
+    }
+    $('.book.data li.bid:nth-of-type(1n+50)').remove();
+
     const itemHeight = 21;
     var total = $('.order.book').height() - $('.order.book .spread').outerHeight() - $('.book.tab').outerHeight();
     var count = parseInt(total / itemHeight / 2) * 2;
@@ -417,7 +423,6 @@ Market.prototype = {
   },
 
   render: function (msg) {
-    console.log(msg);
     const self = this;
     if (msg.action !== 'EMIT_EVENT') {
       return;
@@ -502,6 +507,9 @@ Market.prototype = {
       o.price = parseFloat(o.price).toFixed(8);
     }
     o.amount = parseFloat(o.amount).toFixed(4);
+    if (o.amount === '0.0000') {
+      o.amount = '0.0001';
+    }
     o.sideClass = o.side.toLowerCase();
     o.time = TimeUtils.short(o.created_at);
     $('.history.data').prepend(self.itemTrade(o));
@@ -525,6 +533,9 @@ Market.prototype = {
     }
     o.pricePoint = o.price.replace('.', '');
     o.amount = amount.toFixed(4);
+    if (o.amount === '0.0000') {
+      o.amount = '0.0001';
+    }
     if ($('#order-point-' + o.pricePoint).length > 0) {
       var bo = $('#order-point-' + o.pricePoint);
       o.amount = (parseFloat(bo.attr('data-amount')) + amount).toFixed(4);
@@ -566,7 +577,6 @@ Market.prototype = {
       o.price = parseFloat(o.price).toFixed(8);
     }
     o.pricePoint = o.price.replace('.', '');
-    o.amount = amount.toFixed(4);
     if ($('#order-point-' + o.pricePoint).length === 0) {
       return;
     }
@@ -577,11 +587,15 @@ Market.prototype = {
       bgColor = 'rgba(229, 85, 65, 0.3)';
     }
     o.amount = parseFloat(bo.attr('data-amount')) - amount;
-    if (o.amount > 0) {
-      o.amount = o.amount.toFixed(4);
-      bo.replaceWith($(self.itemOrder(o)).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
-    } else {
+    o.funds = parseFloat(bo.attr('data-funds')) - parseFloat(o.funds);
+    if (o.amount <= 0 || o.funds <= 0) {
       bo.remove();
+    } else {
+      o.amount = o.amount.toFixed(4);
+      if (o.amount === '0.0000') {
+        o.amount = '0.0001';
+      }
+      bo.replaceWith($(self.itemOrder(o)).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500));
     }
   },
 
@@ -647,6 +661,7 @@ Market.prototype = {
 
   pollAccountBalance: function (asset) {
     if (this.api.account.token() === '') {
+      $('.account.balances .balance').hide();
       $('.account.in.actions').hide();
       $('.account.out.actions').show();
       return;
@@ -657,6 +672,9 @@ Market.prototype = {
     const self = this;
     self.api.mixin.asset(function (resp) {
       if (resp.error) {
+        if (resp.error.code === 401) {
+          self.api.account.clear();
+        }
         return true;
       }
 

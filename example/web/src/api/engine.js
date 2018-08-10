@@ -11,7 +11,7 @@ function Engine(endpoint) {
     reconnectionDelayGrowFactor: 1.2,
     connectionTimeout: 4000,
     maxRetries: Infinity,
-    debug: true
+    debug: false
   });
 
   self.ws.addEventListener("message", (event) => {
