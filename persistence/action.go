@@ -101,7 +101,7 @@ func ListPendingActions(ctx context.Context, checkpoint time.Time, limit int) ([
 	return actions, nil
 }
 
-func CreateOrderAction(ctx context.Context, o *engine.Order, userId string, createdAt time.Time) error {
+func CreateOrderAction(ctx context.Context, o *engine.Order, userId, brokerId string, createdAt time.Time) error {
 	if !o.FilledFunds.IsZero() || !o.FilledAmount.IsZero() {
 		log.Panicln(userId, o)
 	}
@@ -119,6 +119,7 @@ func CreateOrderAction(ctx context.Context, o *engine.Order, userId string, crea
 		CreatedAt:       createdAt,
 		State:           OrderStatePending,
 		UserId:          userId,
+		BrokerId:        brokerId,
 	}
 	action := Action{
 		OrderId:   order.OrderId,

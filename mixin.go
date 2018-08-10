@@ -154,7 +154,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		FilledAmount:    amount.Zero(),
 		RemainingFunds:  funds,
 		FilledFunds:     funds.Zero(),
-	}, s.OpponentId, s.CreatedAt)
+	}, s.OpponentId, s.UserId, s.CreatedAt)
 }
 
 func (ex *Exchange) getQuoteBasePair(s *Snapshot, a *OrderAction) (string, string) {
