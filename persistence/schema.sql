@@ -19,6 +19,7 @@ CREATE TABLE orders (
   created_at        TIMESTAMP NOT NULL,
   state             STRING(36) NOT NULL,
   user_id           STRING(36) NOT NULL,
+  broker_id         STRING(36) NOT NULL,
 ) PRIMARY KEY(order_id);
 
 CREATE INDEX orders_by_user_created_desc ON orders(user_id, created_at DESC) STORING(quote_asset_id,base_asset_id,state);

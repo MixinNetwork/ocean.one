@@ -71,7 +71,7 @@ func (ex *Exchange) ensureProcessSnapshot(ctx context.Context, s *Snapshot) {
 }
 
 func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
-	if s.UserId != config.ClientId {
+	if config.Broker(s.UserId) == nil {
 		return nil
 	}
 	if s.OpponentId == "" || s.TraceId == "" {
@@ -154,7 +154,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		FilledAmount:    amount.Zero(),
 		RemainingFunds:  funds,
 		FilledFunds:     funds.Zero(),
-	}, s.OpponentId, s.CreatedAt)
+	}, s.UserId, s.OpponentId, s.CreatedAt)
 }
 
 func (ex *Exchange) getQuoteBasePair(s *Snapshot, a *OrderAction) (string, string) {
@@ -189,7 +189,7 @@ func (ex *Exchange) refundSnapshot(ctx context.Context, s *Snapshot) error {
 	if amount.Exhausted() {
 		return nil
 	}
-	return persistence.CreateRefundTransfer(ctx, s.OpponentId, s.Asset.AssetId, amount, s.TraceId)
+	return persistence.CreateRefundTransfer(ctx, s.UserId, s.OpponentId, s.Asset.AssetId, amount, s.TraceId)
 }
 
 func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) *OrderAction {
@@ -220,7 +220,8 @@ func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) *OrderA
 
 func (ex *Exchange) requestMixinNetwork(ctx context.Context, checkpoint time.Time, limit int) ([]*Snapshot, error) {
 	uri := fmt.Sprintf("/network/snapshots?offset=%s&order=ASC&limit=%d", checkpoint.Format(time.RFC3339Nano), limit)
-	token, err := bot.SignAuthenticationToken(config.ClientId, config.SessionId, config.SessionKey, "GET", uri, "")
+	broker := config.MasterBroker()
+	token, err := bot.SignAuthenticationToken(broker.ClientId, broker.SessionId, broker.SessionKey, "GET", uri, "")
 	if err != nil {
 		return nil, err
 	}
@@ -242,12 +243,13 @@ func (ex *Exchange) requestMixinNetwork(ctx context.Context, checkpoint time.Tim
 	return resp.Data, nil
 }
 
-func (ex *Exchange) sendTransfer(ctx context.Context, recipientId, assetId string, amount number.Decimal, traceId, memo string) error {
+func (ex *Exchange) sendTransfer(ctx context.Context, brokerId, recipientId, assetId string, amount number.Decimal, traceId, memo string) error {
+	broker := config.Broker(brokerId)
 	return bot.CreateTransfer(ctx, &bot.TransferInput{
 		AssetId:     assetId,
 		RecipientId: recipientId,
 		Amount:      amount,
 		TraceId:     traceId,
 		Memo:        memo,
-	}, config.ClientId, config.SessionId, config.SessionKey, config.SessionAssetPIN, config.PinToken)
+	}, broker.ClientId, broker.SessionId, broker.SessionKey, broker.SessionAssetPIN, broker.PinToken)
 }

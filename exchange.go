@@ -163,7 +163,7 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 	if len(memo) > 140 {
 		log.Panicln(transfer, memo)
 	}
-	return ex.sendTransfer(ctx, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
+	return ex.sendTransfer(ctx, transfer.BrokerId, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
 }
 
 func (ex *Exchange) buildBook(ctx context.Context, market string) *engine.Book {
@@ -257,7 +257,8 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 
 func (ex *Exchange) PollMixinMessages(ctx context.Context) {
 	for {
-		err := bot.Loop(ctx, ex, config.ClientId, config.SessionId, config.SessionKey)
+		broker := config.MasterBroker()
+		err := bot.Loop(ctx, ex, broker.ClientId, broker.SessionId, broker.SessionKey)
 		if err != nil {
 			log.Println("PollMixinMessages", err)
 			time.Sleep(1 * time.Second)

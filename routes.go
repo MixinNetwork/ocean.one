@@ -47,16 +47,18 @@ func (impl *R) tokens(w http.ResponseWriter, r *http.Request, _ map[string]strin
 		return
 	}
 
+	broker := config.MasterBroker()
+
 	sum := sha256.Sum256([]byte("GET" + body.URI))
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
-		"uid": config.ClientId,
-		"sid": config.SessionId,
+		"uid": broker.ClientId,
+		"sid": broker.SessionId,
 		"scp": "ASSETS:READ",
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 		"sig": hex.EncodeToString(sum[:]),
 	})
 
-	block, _ := pem.Decode([]byte(config.SessionKey))
+	block, _ := pem.Decode([]byte(broker.SessionKey))
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
