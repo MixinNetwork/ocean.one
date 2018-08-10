@@ -81,8 +81,8 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return nil
 	}
 
-	action := ex.decryptOrderAction(ctx, s.Data)
-	if action == nil {
+	action, err := ex.decryptOrderAction(ctx, s.Data)
+	if err != nil {
 		return ex.refundSnapshot(ctx, s)
 	}
 	if len(action.U) > 16 {
@@ -192,16 +192,16 @@ func (ex *Exchange) refundSnapshot(ctx context.Context, s *Snapshot) error {
 	return persistence.CreateRefundTransfer(ctx, s.UserId, s.OpponentId, s.Asset.AssetId, amount, s.TraceId)
 }
 
-func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) *OrderAction {
+func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) (*OrderAction, error) {
 	payload, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	var action OrderAction
 	decoder := codec.NewDecoderBytes(payload, ex.codec)
 	err = decoder.Decode(&action)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	switch action.T {
 	case "L":
@@ -215,7 +215,7 @@ func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) *OrderA
 	case "B":
 		action.S = engine.PageSideBid
 	}
-	return &action
+	return &action, nil
 }
 
 func (ex *Exchange) requestMixinNetwork(ctx context.Context, checkpoint time.Time, limit int) ([]*Snapshot, error) {
