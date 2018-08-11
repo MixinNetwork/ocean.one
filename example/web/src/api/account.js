@@ -104,7 +104,6 @@ Account.prototype = {
     var oPayload = {
       uid: uid,
       sid: sid,
-      iat: moment.utc().unix() ,
       exp: expire,
       jti: uuid(),
       sig: md.digest().toHex()

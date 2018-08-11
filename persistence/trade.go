@@ -127,7 +127,7 @@ func makeOrderMutations(taker, maker *engine.Order) []*spanner.Mutation {
 }
 
 func makeTrades(taker, maker *engine.Order, amount number.Decimal) (*Trade, *Trade) {
-	tradeId, _ := uuid.NewV4()
+	tradeId := getSettlementId(taker.Id, maker.Id)
 	askOrderId, bidOrderId := taker.Id, maker.Id
 	if taker.Side == engine.PageSideBid {
 		askOrderId, bidOrderId = maker.Id, taker.Id
@@ -135,7 +135,7 @@ func makeTrades(taker, maker *engine.Order, amount number.Decimal) (*Trade, *Tra
 	price := maker.Price.Decimal()
 
 	takerTrade := &Trade{
-		TradeId:      tradeId.String(),
+		TradeId:      tradeId,
 		Liquidity:    TradeLiquidityTaker,
 		AskOrderId:   askOrderId,
 		BidOrderId:   bidOrderId,
@@ -148,7 +148,7 @@ func makeTrades(taker, maker *engine.Order, amount number.Decimal) (*Trade, *Tra
 		UserId:       taker.UserId,
 	}
 	makerTrade := &Trade{
-		TradeId:      tradeId.String(),
+		TradeId:      tradeId,
 		Liquidity:    TradeLiquidityMaker,
 		AskOrderId:   askOrderId,
 		BidOrderId:   bidOrderId,
