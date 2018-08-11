@@ -171,6 +171,10 @@ func ResetPassword(ctx context.Context, verificationId, password, secret string)
 		if err != nil {
 			return err
 		}
+		err = cleanupSessions(ctx, txn, user.UserId)
+		if err != nil {
+			return err
+		}
 		s, err := addSession(ctx, txn, user.UserId, secret)
 		if err != nil {
 			return err

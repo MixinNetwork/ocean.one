@@ -102,6 +102,36 @@ func readSession(ctx context.Context, txn durable.Transaction, uid, sid string) 
 	return sessionFromRow(row)
 }
 
+func cleanupSessions(ctx context.Context, txn *spanner.ReadWriteTransaction, uid string) error {
+	stmt := spanner.Statement{
+		SQL:    "SELECT session_id FROM sessions WHERE user_id=@user_id LIMIT 1000",
+		Params: map[string]interface{}{"user_id": uid},
+	}
+	it := txn.Query(ctx, stmt)
+	defer it.Stop()
+
+	var keySets []spanner.KeySet
+	for {
+		row, err := it.Next()
+		if err == iterator.Done {
+			break
+		} else if err != nil {
+			return nil
+		}
+
+		var sid string
+		if err := row.Columns(&sid); err != nil {
+			return err
+		}
+		keySets = append(keySets, spanner.Key{uid, sid})
+	}
+
+	if len(keySets) > 0 {
+		return txn.BufferWrite([]*spanner.Mutation{spanner.Delete("sessions", spanner.KeySets(keySets...))})
+	}
+	return nil
+}
+
 func sessionFromRow(row *spanner.Row) (*Session, error) {
 	var s Session
 	err := row.Columns(&s.UserId, &s.SessionId, &s.Secret, &s.RemoteAddress, &s.ActiveAt, &s.CreatedAt)
