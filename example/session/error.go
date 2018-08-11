@@ -123,6 +123,11 @@ func PhoneOccupiedError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 20122, description, nil)
 }
 
+func PhoneNonExistError(ctx context.Context) Error {
+	description := "The phone number is not present."
+	return createError(ctx, http.StatusAccepted, 20123, description, nil)
+}
+
 func createError(ctx context.Context, status, code int, description string, err error) Error {
 	pc, file, line, _ := runtime.Caller(2)
 	funcName := runtime.FuncForPC(pc).Name()
