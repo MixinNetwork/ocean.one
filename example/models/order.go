@@ -71,19 +71,22 @@ func (current *User) CreateOrder(ctx context.Context, o *OrderAction) error {
 		return session.BadDataError(ctx)
 	}
 
-	amount := number.FromString(o.Amount)
+	amount := number.FromString(o.Amount).RoundFloor(4)
 	sent, get := o.Quote, o.Base
 	switch o.Side {
 	case engine.PageSideBid:
 		o.Side = "B"
-		amount = number.FromString(o.Funds)
+		funds := number.FromString(o.Funds).RoundFloor(8)
+		if price.IsPositive() && funds.Div(price).RoundFloor(4).Exhausted() {
+			return session.BadDataError(ctx)
+		}
+		amount = funds
 	case engine.PageSideAsk:
 		o.Side = "A"
 		sent, get = o.Base, o.Quote
 	default:
 		return session.BadDataError(ctx)
 	}
-	amount = amount.RoundFloor(4)
 	if amount.Exhausted() {
 		return session.BadDataError(ctx)
 	}
