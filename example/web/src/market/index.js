@@ -50,6 +50,13 @@ Market.prototype = {
   do: function (markets) {
     const self = this;
 
+
+    if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
+      self.quote.step = '0.0001';
+    } else {
+      self.quote.step = '0.00000001';
+    }
+
     $('body').attr('class', 'market layout');
     $('#layout-container').html(self.templateIndex({
       logoURL: require('./logo.png'),

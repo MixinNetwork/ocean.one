@@ -341,7 +341,8 @@
       }
     }
 
-    input[type="text"] {
+    input[type="text"],
+    input[type="number"] {
       margin: auto;
       flex: 1;
       border: 0 none;

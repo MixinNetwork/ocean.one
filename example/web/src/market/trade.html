@@ -102,12 +102,12 @@
       <form action="javascript:void(0);" class="limit buy bid form active">
         <div class="text field">
           <span class="price left label">{{t 'market.form.price'}}</span>
-          <input type="text" name="price" />
+          <input type="number" name="price" step="{{quote.step}}" autocomplete="off" />
           <span class="price right label">{{quote.symbol}}</span>
         </div>
         <div class="text field">
           <span class="amount left label">{{t 'market.form.amount'}}</span>
-          <input type="text" name="amount" />
+          <input type="number" name="amount" step="0.00000001" autocomplete="off" />
           <span class="amount right label">{{base.symbol}}</span>
         </div>
         <div class="field">
@@ -129,12 +129,12 @@
       <form action="javascript:void(0);" class="limit sell ask form">
         <div class="text field">
           <span class="price left label">{{t 'market.form.price'}}</span>
-          <input type="text" name="price" />
+          <input type="number" name="price" step="{{quote.step}}" autocomplete="off" />
           <span class="price right label">{{quote.symbol}}</span>
         </div>
         <div class="text field">
           <span class="amount left label">{{t 'market.form.amount'}}</span>
-          <input type="text" name="amount" />
+          <input type="number" name="amount" step="0.00000001" autocomplete="off" />
           <span class="amount right label">{{base.symbol}}</span>
         </div>
         <div class="field">
@@ -156,7 +156,7 @@
       <form action="javascript:void(0);" class="market buy bid form">
         <div class="text field">
           <span class="funds left label">{{t 'market.form.amount'}}</span>
-          <input type="text" name="funds" />
+          <input type="number" name="funds" step="0.00000001" autocomplete="off" />
           <span class="funds right label">{{quote.symbol}}</span>
         </div>
         <div class="field">
@@ -178,7 +178,7 @@
       <form action="javascript:void(0);" class="market sell ask form">
         <div class="text field">
           <span class="amount left label">{{t 'market.form.amount'}}</span>
-          <input type="text" name="amount" />
+          <input type="number" name="amount" step="0.00000001" autocomplete="off" />
           <span class="amount right label">{{base.symbol}}</span>
         </div>
         <div class="field">
