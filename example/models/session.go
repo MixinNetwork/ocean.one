@@ -104,7 +104,7 @@ func readSession(ctx context.Context, txn durable.Transaction, uid, sid string) 
 
 func cleanupSessions(ctx context.Context, txn *spanner.ReadWriteTransaction, uid string) error {
 	stmt := spanner.Statement{
-		SQL:    "SELECT session_id FROM sessions WHERE user_id=@user_id",
+		SQL:    "SELECT session_id FROM sessions WHERE user_id=@user_id LIMIT 1000",
 		Params: map[string]interface{}{"user_id": uid},
 	}
 	it := txn.Query(ctx, stmt)
