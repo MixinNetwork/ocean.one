@@ -25,6 +25,7 @@ type Exchange struct {
 	codec     codec.Handle
 	snapshots map[string]bool
 	brokers   map[string]*persistence.Broker
+	mutexes   *tmap
 }
 
 func QuotePrecision(assetId string) uint8 {
@@ -61,6 +62,7 @@ func NewExchange() *Exchange {
 		books:     make(map[string]*engine.Book),
 		snapshots: make(map[string]bool),
 		brokers:   make(map[string]*persistence.Broker),
+		mutexes:   newTmap(),
 	}
 }
 

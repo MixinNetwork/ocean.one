@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/MixinNetwork/bot-api-go-client"
@@ -243,6 +245,10 @@ func (ex *Exchange) requestMixinNetwork(ctx context.Context, checkpoint time.Tim
 }
 
 func (ex *Exchange) sendTransfer(ctx context.Context, brokerId, recipientId, assetId string, amount number.Decimal, traceId, memo string) error {
+	mutex := ex.mutexes.fetch(recipientId, assetId)
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	broker := ex.brokers[brokerId]
 	return bot.CreateTransfer(ctx, &bot.TransferInput{
 		AssetId:     assetId,
@@ -251,4 +257,26 @@ func (ex *Exchange) sendTransfer(ctx context.Context, brokerId, recipientId, ass
 		TraceId:     traceId,
 		Memo:        memo,
 	}, broker.BrokerId, broker.SessionId, broker.SessionKey, broker.DecryptedPIN, broker.PINToken)
+}
+
+type tmap struct {
+	mutex sync.Mutex
+	m     map[string]*sync.Mutex
+}
+
+func newTmap() *tmap {
+	return &tmap{
+		m: make(map[string]*sync.Mutex),
+	}
+}
+
+func (m *tmap) fetch(user, asset string) *sync.Mutex {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	key := fmt.Sprintf("%x", md5.Sum([]byte(user+asset)))
+	if m.m[key] == nil {
+		m.m[key] = &sync.Mutex{}
+	}
+	return m.m[key]
 }
