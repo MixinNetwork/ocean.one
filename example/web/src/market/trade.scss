@@ -607,7 +607,8 @@
     }
 
     .label,
-    input[type="text"] {
+    input[type="text"],
+    input[type="number"] {
       line-height: 36px;
     }
 
