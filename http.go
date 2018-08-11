@@ -38,6 +38,11 @@ func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 
 	if strings.ToLower(r.Header.Get("Upgrade")) != "websocket" {
+		cp, err := persistence.ReadPropertyAsTime(r.Context(), CheckpointMixinNetworkSnapshots)
+		if err != nil {
+			render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
 		ac, err := persistence.CountPendingActions(r.Context())
 		if err != nil {
 			render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -51,6 +56,7 @@ func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		data := map[string]interface{}{
 			"build":      config.BuildVersion + "-" + runtime.Version(),
 			"developers": "https://github.com/MixinNetwork/ocean.one",
+			"checkpoint": cp,
 			"actions":    ac,
 			"transfers":  tc,
 		}
