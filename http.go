@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"net/http"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/MixinNetwork/ocean.one/cache"
+	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/MixinNetwork/ocean.one/persistence"
 	"github.com/bugsnag/bugsnag-go"
 	"github.com/dimfeld/httptreemux"
@@ -31,6 +34,27 @@ func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 	if r.URL.Path != "/" {
 		handler.router.ServeHTTP(w, r)
+		return
+	}
+
+	if strings.ToLower(r.Header.Get("Upgrade")) != "websocket" {
+		ac, err := persistence.CountPendingActions(r.Context())
+		if err != nil {
+			render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+		tc, err := persistence.CountPendingTransfers(r.Context())
+		if err != nil {
+			render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+		data := map[string]interface{}{
+			"build":      config.BuildVersion + "-" + runtime.Version(),
+			"developers": "https://github.com/MixinNetwork/ocean.one",
+			"actions":    ac,
+			"transfers":  tc,
+		}
+		render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": data})
 		return
 	}
 

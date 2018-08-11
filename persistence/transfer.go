@@ -28,6 +28,23 @@ type Transfer struct {
 	BrokerId   string    `spanner:"broker_id"`
 }
 
+func CountPendingTransfers(ctx context.Context) (int64, error) {
+	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{
+		SQL: "SELECT COUNT(*) FROM transfers",
+	})
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return 0, nil
+	} else if err != nil {
+		return 0, err
+	}
+	var count int64
+	err = row.Columns(&count)
+	return count, err
+}
+
 func ListPendingTransfers(ctx context.Context, broker string, limit int) ([]*Transfer, error) {
 	txn := Spanner(ctx).ReadOnlyTransaction()
 	defer txn.Close()
