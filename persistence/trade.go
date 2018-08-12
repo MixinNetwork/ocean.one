@@ -36,7 +36,7 @@ type Trade struct {
 	FeeAmount    string    `spanner:"fee_amount"`
 }
 
-func Transact(ctx context.Context, taker, maker *engine.Order, amount, funds number.Integer) (string, error) {
+func Transact(ctx context.Context, taker, maker *engine.Order, amount number.Integer) (string, error) {
 	askTrade, bidTrade := makeTrades(taker, maker, amount.Decimal())
 	askTransfer, bidTransfer := handleFees(askTrade, bidTrade, taker, maker)
 

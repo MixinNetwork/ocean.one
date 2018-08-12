@@ -17,7 +17,7 @@ const (
 	EventQueueSize = 8192
 )
 
-type TransactCallback func(taker, maker *Order, amount, funds number.Integer) string
+type TransactCallback func(taker, maker *Order, amount number.Integer) string
 type CancelCallback func(order *Order)
 
 type OrderEvent struct {
@@ -107,7 +107,7 @@ func (book *Book) process(ctx context.Context, taker, maker *Order) (string, num
 		maker.RemainingFunds = maker.RemainingFunds.Sub(matchedFunds)
 	}
 
-	tradeId := book.transact(taker, maker, matchedAmount, matchedFunds)
+	tradeId := book.transact(taker, maker, matchedAmount)
 	return tradeId, matchedAmount, matchedFunds
 }
 
