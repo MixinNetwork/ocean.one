@@ -82,7 +82,7 @@ Engine.prototype = {
   unsubscribe: function (market) {
     var handler = this.handlers[market];
     if (handler) {
-      delete self.handlers[market];
+      delete this.handlers[market];
       this.send({
         id: uuidv4().toLowerCase(),
         action: 'UNSUBSCRIBE_BOOK',
