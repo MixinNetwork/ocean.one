@@ -47,9 +47,8 @@ Market.prototype = {
     });
   },
 
-  do: function (markets) {
+  do: function (inputs) {
     const self = this;
-
 
     if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
       self.quote.step = '0.0001';
@@ -92,7 +91,7 @@ Market.prototype = {
         window.location.href = '/trade/' + $(this).data('symbol');
       }
     });
-    self.renderMarkets(markets);
+    var markets = self.renderMarkets(inputs);
     setInterval(function() {
       self.pollMarkets();
     }, 5000);
@@ -239,6 +238,8 @@ Market.prototype = {
       cell.removeClass('down');
       cell.addClass(m.direction);
     }
+
+    return markets;
   },
 
   pollMarkets: function () {
