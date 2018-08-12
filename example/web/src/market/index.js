@@ -212,7 +212,7 @@ Market.prototype = {
       m.volume = parseFloat(m.volume.toFixed(2));
       m.total = parseFloat(m.total.toFixed(2));
       m.price_usd = m.price * m.quote_usd;
-      if (parseFloat(m.price_usd.toFixed(2)) === 0) {
+      if (m.price_usd.toFixed(4).indexOf('0.00') === 0) {
         m.price_usd = parseFloat(m.price_usd.toFixed(4));
       } else {
         m.price_usd = parseFloat(m.price_usd.toFixed(2));
@@ -227,6 +227,7 @@ Market.prototype = {
         $('.ticker.total .value').html(m.total);
       }
 
+      m.price = m.price.toFixed(8).replace(/\.?0+$/,"");
       var item = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol);
       if (item.length > 0) {
         item.replaceWith(self.itemMarket(m));
@@ -490,9 +491,9 @@ Market.prototype = {
   updateTickerPrice: function (price) {
     const self = this;
     $('.book.data .spread').attr('data-price', price);
-    $('.quote.price').html(parseFloat(price));
+    $('.quote.price').html(parseFloat(price).toFixed(8).replace(/\.?0+$/,""));
     var price_usd = parseFloat(price) * self.quote_usd;
-    if (parseFloat(price_usd.toFixed(2)) === 0) {
+    if (price_usd.toFixed(4).indexOf('0.00') === 0) {
       price_usd = parseFloat(price_usd.toFixed(4));
     } else {
       price_usd = parseFloat(price_usd.toFixed(2));
