@@ -36,6 +36,8 @@
       "create.user": "创建账户",
       "reset.password": "重置密码"
     },
+    "password.hint": "请输入一个复杂的密码",
+    "password.confirmation": "请重复确认密码",
     "placeholder.password": "密码"
   },
   "orders": {
@@ -52,7 +54,16 @@
     "confirmations": "充值需要至少 %{confirmations} 个确认才能到账。"
   },
   "withdrawal": {
-    "title": "提现"
+    "title": "提现",
+    "connected": {
+      "notice": "只能对您的 Mixin Messenger 帐户进行提款，您已连接的 Mixin Messenger ID 为<strong>%{mixin_id}</strong>。",
+      "amount": "输入提款的 %{symbol} 金额："
+    },
+    "disconnected": {
+      "button": "关联 Mixin Messenger",
+      "notice": "Mixin Messenger 连接是永久性的，关联以后无法断开连接。",
+      "steps": "<li>为了保护帐户安全，只能向 Mixin Messenger 帐户提款。</li><li>从唯一的官方下载页面获取 Mixin Messenger <a href =\"https://mixin.one\">https://mixin.one</a>。</li><li>找到 Mixin Messenger 应用程序底部的圆形按钮，它是 QR 二维码扫描仪。</li><li>点击下面按钮将重定向到 Mixin Messenger 网站。</li><li>使用 Mixin Messenger 二维码扫描器扫描二维码。</li><li>允许 Ocean ONE 访问您的 Mixin 个人资料。</li>"
+    }
   },
   "home": {
     "headline": "一个开源的分布式交易所，用于交易所有数字资产。",

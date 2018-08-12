@@ -36,6 +36,8 @@
       "create.user": "Create Account",
       "reset.password": "Reset Password"
     },
+    "password.hint": "Enter a strong password",
+    "password.confirmation": "Repeat your password",
     "placeholder.password": "Password"
   },
   "orders": {
@@ -52,7 +54,16 @@
     "confirmations": "The deposit will arrive after at least %{confirmations} confirmations."
   },
   "withdrawal": {
-    "title": "Withdrawal"
+    "title": "Withdrawal",
+    "connected": {
+      "notice": "The withdrawal can only be made to your Mixin Messenger account, and your connected Mixin Messenger ID is <strong>%{mixin_id}</strong>.",
+      "amount": "Enter the amount of %{symbol} to withdrawal:"
+    },
+    "disconnected": {
+      "button": "Connect Mixin Messenger",
+      "notice": "The Mixin Messenger connection is permanent, you can't disconnect it later.",
+      "steps": "<li>To protect account security, withdrawal can only be made to a Mixin Messenger account.</li><li>Get Mixin Messenger from the only official donwload page <a href=\"https://mixin.one\">https://mixin.one</a>.</li><li>Find the the circle button at the bottom of the Mixin Messenger app, it's the QR code scanner.</li><li>Click the button below will redirect you to the Mixin Messenger website.</li><li>Scan the QR code with the Mixin Messenger QR code scanner.</li><li>Allow the access of Ocean ONE to your Mixin profile.</li>"
+    }
   },
   "home": {
     "headline": "An open source decentralized exchange to trade all digital assets.",

@@ -36,20 +36,13 @@
 
       <div class="withdrawal action container">
         <div class="mixin disconnected">
-          <ul class="withdrawal steps">
-            <li>To protect account security, withdrawal can only be made to a Mixin Messenger account.</li>
-            <li>Get Mixin Messenger from the only official donwload page <a href="https://mixin.one">https://mixin.one</a>.</li>
-            <li>Find the the circle button at the bottom of the Mixin Messenger app, it's the QR code scanner.</li>
-            <li>Click the button below will redirect you to the Mixin Messenger website.</li>
-            <li>Scan the QR code with the Mixin Messenger QR code scanner.</li>
-            <li>Allow the access of Ocean ONE to your Mixin profile.</li>
-          </ul>
-          <div class="withdrawal mixin connect button"><a href="https://mixin.one/oauth/authorize?client_id=82aae164-4311-45bf-b418-e237a4d891b4&scope=PROFILE:READ&response_type=code&redirect_uri=https://ocean.one/auth/callback">Connect Mixin Messenger</a></div>
-          <div class="withdrawal mixin connect notice">The Mixin Messenger connection is permanent, you can't disconnect it later.</div>
+          <ul class="withdrawal steps">{{{t 'withdrawal.disconnected.steps'}}}</ul>
+          <div class="withdrawal mixin connect button"><a href="https://mixin.one/oauth/authorize?client_id=82aae164-4311-45bf-b418-e237a4d891b4&scope=PROFILE:READ&response_type=code&redirect_uri=https://ocean.one/auth/callback">{{t 'withdrawal.disconnected.button'}}</a></div>
+          <div class="withdrawal mixin connect notice">{{t 'withdrawal.disconnected.notice'}}</div>
         </div>
         <div class="mixin connected">
-          <div class="mixin id">The withdrawal can only be made to your Mixin Messenger account, and your connected Mixin Messenger ID is <strong>{{me.mixin_id}}</strong>.</div>
-          <div>Enter the amount of {{symbol}} to withdrawal:</div>
+          <div class="mixin id">{{{t 'withdrawal.connected.notice' mixin_id=me.mixin_id}}}</div>
+          <div>{{t 'withdrawal.connected.amount' symbol=symbol}}</div>
           <form action="javascript:void(0);" class="withdrawal form">
             <input class="mixin withdrawal amount" type="text" name="amount" />
             <input type="hidden" name="asset_id" value="{{asset_id}}" />
