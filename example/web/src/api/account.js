@@ -5,6 +5,8 @@ import uuid from 'uuid/v4';
 import Cookies from 'js-cookie';
 
 function Account(api) {
+  const inSixHours = new Date(new Date().getTime() + 6 * 60 * 60 * 1000);
+  Cookies.defaults.expires = inSixHours;
   this.api = api;
 }
 
@@ -105,6 +107,7 @@ Account.prototype = {
     if (!priv || !pwd) {
       return "";
     }
+    Cookies.set('sid', pwd);
 
     var uid = window.localStorage.getItem('uid');
     var sid = window.localStorage.getItem('sid');
