@@ -22,7 +22,7 @@ func registerMarkets(router *httptreemux.TreeMux) {
 }
 
 func (impl *marketsImpl) index(w http.ResponseWriter, r *http.Request, params map[string]string) {
-	markets, err := models.ListMarkets(r.Context())
+	markets, err := models.ListActiveMarkets(r.Context())
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
 		return
@@ -31,13 +31,15 @@ func (impl *marketsImpl) index(w http.ResponseWriter, r *http.Request, params ma
 	data := make([]map[string]interface{}, 0)
 	for _, m := range markets {
 		data = append(data, map[string]interface{}{
-			"base":      m.Base,
-			"quote":     m.Quote,
-			"price":     m.Price,
-			"volume":    m.Volume,
-			"total":     m.Total,
-			"change":    m.Change,
-			"quote_usd": m.QuoteUSD,
+			"base":         m.Base,
+			"quote":        m.Quote,
+			"price":        m.Price,
+			"volume":       m.Volume,
+			"total":        m.Total,
+			"change":       m.Change,
+			"quote_usd":    m.QuoteUSD,
+			"base_symbol":  m.BaseSymbol(),
+			"quote_symbol": m.QuoteSymbol(),
 		})
 	}
 	views.RenderDataResponse(w, r, data)

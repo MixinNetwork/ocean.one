@@ -69,6 +69,21 @@ func GetMarket(ctx context.Context, base, quote string) (*Market, error) {
 	return m, nil
 }
 
+func ListActiveMarkets(ctx context.Context) ([]*Market, error) {
+	inputs, err := ListMarkets(ctx)
+	if err != nil {
+		return inputs, err
+	}
+
+	var markets []*Market
+	for _, m := range inputs {
+		if m.Volume > 0 {
+			markets = append(markets, m)
+		}
+	}
+	return markets, nil
+}
+
 func ListMarkets(ctx context.Context) ([]*Market, error) {
 	it := session.Database(ctx).Query(ctx, spanner.Statement{
 		SQL: fmt.Sprintf("SELECT %s FROM markets", strings.Join(marketsColumnsFull, ",")),
