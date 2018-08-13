@@ -348,11 +348,11 @@
       cursor: pointer;
     }
 
-    .up.change.cell .main {
+    .up.cell .main {
       color: $color-side-bid;
     }
 
-    .down.change.cell .main {
+    .down.cell .main {
       color: $color-side-ask;
     }
   }
@@ -434,7 +434,7 @@
       }
     }
 
-    table {
+    table thead {
       font-size: 12px;
     }
   }

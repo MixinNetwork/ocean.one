@@ -238,6 +238,10 @@ Market.prototype = {
       cell.removeClass('up');
       cell.removeClass('down');
       cell.addClass(m.direction);
+      cell = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol + ' .price.cell');
+      cell.removeClass('up');
+      cell.removeClass('down');
+      cell.addClass(m.direction);
     }
 
     var totalUSD = 0;
