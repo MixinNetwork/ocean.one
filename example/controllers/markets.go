@@ -63,13 +63,15 @@ func (impl *marketsImpl) market(w http.ResponseWriter, r *http.Request, params m
 	}
 
 	data := map[string]interface{}{
-		"base":      m.Base,
-		"quote":     m.Quote,
-		"price":     m.Price,
-		"volume":    m.Volume,
-		"total":     m.Total,
-		"change":    m.Change,
-		"quote_usd": m.QuoteUSD,
+		"base":         m.Base,
+		"quote":        m.Quote,
+		"price":        m.Price,
+		"volume":       m.Volume,
+		"total":        m.Total,
+		"change":       m.Change,
+		"quote_usd":    m.QuoteUSD,
+		"base_symbol":  m.BaseSymbol(),
+		"quote_symbol": m.QuoteSymbol(),
 	}
 	views.RenderDataResponse(w, r, data)
 }
