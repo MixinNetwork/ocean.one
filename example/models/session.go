@@ -88,7 +88,7 @@ func CreateSession(ctx context.Context, receiver, password string, secret string
 	if user.MixinUserId() != "" {
 		go func(user *User, s *Session) {
 			content := fmt.Sprintf("Your account %s has been signed on %s from IP %s, please make sure it is you that signed in", user.FullName, s.CreatedAt.Format("2006-01-02 15:04:05"), s.RemoteAddress)
-			NotifyMessager(ctx, user.MixinUserId(), content)
+			NotifyMesseger(ctx, user.MixinUserId(), content)
 		}(user, s)
 	}
 
