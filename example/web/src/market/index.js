@@ -3,6 +3,7 @@ import './trade.scss';
 import $ from 'jquery';
 import jQueryColor from '../jquery-color-plus-names.js';
 import uuid from 'uuid/v4';
+import {BigNumber} from 'bignumber.js';
 import Chart from './chart.js';
 import FormUtils from '../utils/form.js';
 import TimeUtils from '../utils/time.js';
@@ -123,7 +124,7 @@ Market.prototype = {
 
     $('.order.book').on('click', 'li', function (event) {
       event.preventDefault();
-      $('.trade.form input[name="price"]').val(parseFloat($(this).data('price')));
+      $('.trade.form input[name="price"]').val($(this).data('price'));
     });
 
     self.handleOrderCreate();
@@ -184,12 +185,12 @@ Market.prototype = {
       if (a.quote.symbol > b.quote.symbol) {
         return 1;
       }
-      var at = parseFloat(a.total);
-      var bt = parseFloat(b.total);
-      if (at > bt) {
+      var at = new BigNumber(a.total);
+      var bt = new BigNumber(b.total);
+      if (at.isGreaterThan(bt)) {
         return -1;
       }
-      if (at < bt) {
+      if (at.isLessThan(bt)) {
         return 1;
       }
       if (a.base.symbol < b.base.symbol) {
@@ -203,19 +204,19 @@ Market.prototype = {
 
     for (var i = 0; i < markets.length; i++) {
       var m = markets[i];
-      m.change_amount = parseFloat((m.price - (m.price / (m.change + 1))).toFixed(8));
+      m.change_amount = new BigNumber(m.price).minus(new BigNumber(m.price).div(new BigNumber(m.change).plus(1))).toFixed(8);
       if (m.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
-        m.change_amount = parseFloat(m.change_amount.toFixed(4));
+        m.change_amount = new BigNumber(m.change_amount).toFixed(4);
       }
       m.direction = m.change < 0 ? 'down' : 'up';
       m.change = (m.change < 0 ? '' : '+') + Number(m.change * 100).toFixed(2) + '%';
-      m.volume = parseFloat(m.volume.toFixed(2));
-      m.total = parseFloat(m.total.toFixed(2));
-      m.price_usd = m.price * m.quote_usd;
+      m.volume = new BigNumber(m.volume).toFixed(2);
+      m.total = new BigNumber(m.total).toFixed(2);
+      m.price_usd = new BigNumber(m.price).times(m.quote_usd);
       if (m.price_usd.toFixed(4).indexOf('0.00') === 0) {
-        m.price_usd = parseFloat(m.price_usd.toFixed(4));
+        m.price_usd = new BigNumber(m.price_usd).toFixed(4);
       } else {
-        m.price_usd = parseFloat(m.price_usd.toFixed(2));
+        m.price_usd = new BigNumber(m.price_usd).toFixed(2);
       }
       if (self.base.asset_id === m.base.asset_id && self.quote.asset_id === m.quote.asset_id) {
         self.quote_usd = m.quote_usd;
@@ -306,7 +307,7 @@ Market.prototype = {
       var form = $(this);
       var data = FormUtils.serialize(this);
       if (data.type === 'LIMIT' && data.side === 'BID') {
-        data.funds = (parseFloat(data.amount) * parseFloat(data.price)).toFixed(8);
+        data.funds = new BigNumber(data.amount).times(data.price).toFixed(8);
       }
       self.api.order.create(function (resp) {
         $('.submit-loader', form).hide();
@@ -491,12 +492,12 @@ Market.prototype = {
   updateTickerPrice: function (price) {
     const self = this;
     $('.book.data .spread').attr('data-price', price);
-    $('.quote.price').html(parseFloat(price).toFixed(8).replace(/\.?0+$/,""));
-    var price_usd = parseFloat(price) * self.quote_usd;
+    $('.quote.price').html(new BigNumber(price).toFixed(8).replace(/\.?0+$/,""));
+    var price_usd = new BigNumber(price).times(self.quote_usd);
     if (price_usd.toFixed(4).indexOf('0.00') === 0) {
-      price_usd = parseFloat(price_usd.toFixed(4));
+      price_usd = new BigNumber(price_usd).toFixed(4);
     } else {
-      price_usd = parseFloat(price_usd.toFixed(2));
+      price_usd = new BigNumber(price_usd).toFixed(2);
     }
     $('.fiat.price').html('$' + price_usd);
   },
@@ -512,11 +513,11 @@ Market.prototype = {
     }
     $('.trade.history .spinner-container').remove();
     if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
-      o.price = parseFloat(o.price).toFixed(4);
+      o.price = new BigNumber(o.price).toFixed(4);
     } else {
-      o.price = parseFloat(o.price).toFixed(8);
+      o.price = new BigNumber(o.price).toFixed(8);
     }
-    o.amount = parseFloat(o.amount).toFixed(4);
+    o.amount = new BigNumber(o.amount).toFixed(4);
     if (o.amount === '0.0000') {
       o.amount = '0.0001';
     }
@@ -528,8 +529,8 @@ Market.prototype = {
 
   orderOpenOnPage: function (o, instant) {
     const self = this;
-    const price = parseFloat(o.price);
-    const amount = parseFloat(o.amount);
+    const price = new BigNumber(o.price);
+    const amount = new BigNumber(o.amount);
     var bgColor = 'rgba(0, 181, 110, 0.3)';
     if (o.side === 'ASK') {
       bgColor = 'rgba(229, 85, 65, 0.3)';
@@ -537,18 +538,18 @@ Market.prototype = {
 
     o.sideClass = o.side.toLowerCase()
     if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
-      o.price = parseFloat(o.price).toFixed(4);
+      o.price = new BigNumber(o.price).toFixed(4);
     } else {
-      o.price = parseFloat(o.price).toFixed(8);
+      o.price = new BigNumber(o.price).toFixed(8);
     }
     o.pricePoint = o.price.replace('.', '');
-    o.amount = amount.toFixed(4);
+    o.amount = amount.toFixed(4);;
     if (o.amount === '0.0000') {
       o.amount = '0.0001';
     }
     if ($('#order-point-' + o.pricePoint).length > 0) {
       var bo = $('#order-point-' + o.pricePoint);
-      o.amount = (parseFloat(bo.attr('data-amount')) + amount).toFixed(4);
+      o.amount = new BigNumber(bo.attr('data-amount')).plus(amount).toFixed(4);
       if (instant) {
         bo.replaceWith(self.itemOrder(o));
       } else {
@@ -564,7 +565,7 @@ Market.prototype = {
     }
     for (var i = 0; i < list.length; i++) {
       var bo = $(list[i]);
-      if (price < parseFloat(bo.attr('data-price'))) {
+      if (price.isLessThan(bo.attr('data-price'))) {
         continue;
       }
 
@@ -584,14 +585,14 @@ Market.prototype = {
 
   orderRemoveFromPage: function (o) {
     const self = this;
-    const price = parseFloat(o.price);
-    const amount = parseFloat(o.amount);
+    const price = new BigNumber(o.price);
+    const amount = new BigNumber(o.amount);
 
     o.sideClass = o.side.toLowerCase()
     if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
-      o.price = parseFloat(o.price).toFixed(4);
+      o.price = new BigNumber(o.price).toFixed(4);
     } else {
-      o.price = parseFloat(o.price).toFixed(8);
+      o.price = new BigNumber(o.price).toFixed(8);
     }
     o.pricePoint = o.price.replace('.', '');
     if ($('#order-point-' + o.pricePoint).length === 0) {
@@ -603,9 +604,9 @@ Market.prototype = {
     if (o.side === 'ASK') {
       bgColor = 'rgba(229, 85, 65, 0.3)';
     }
-    o.amount = parseFloat(bo.attr('data-amount')) - amount;
-    o.funds = parseFloat(bo.attr('data-funds')) - parseFloat(o.funds);
-    if (o.amount <= 0 || o.funds <= 0) {
+    o.amount = new BigNumber(bo.attr('data-amount')).minus(amount);
+    o.funds = new BigNumber(bo.attr('data-funds')).minus(o.funds);
+    if (o.amount.isLessThan(0) || o.funds.isLessThan(0)) {
       bo.remove();
     } else {
       o.amount = o.amount.toFixed(4);
@@ -618,18 +619,18 @@ Market.prototype = {
 
   orderOpenOnBook: function (o) {
     const self = this;
-    const price = parseFloat(o.price);
-    const amount = parseFloat(o.amount);
+    const price = new BigNumber(o.price);
+    const amount = new BigNumber(o.amount);
 
     if (o.side === 'ASK') {
       for (var i = 0; i < self.book.asks.length; i++) {
         var bo = self.book.asks[i];
-        var bp = parseFloat(bo.price);
-        if (bp === price) {
-          bo.amount = parseFloat((parseFloat(bo.amount) + amount).toFixed(4));
+        var bp = new BigNumber(bo.price);
+        if (bp.isEqualTo(price)) {
+          bo.amount = new BigNumber(bo.amount).plus(amount).toFixed(4);
           return;
         }
-        if (bp > price) {
+        if (bp.isGreaterThan(price)) {
           self.book.asks.splice(i, 0, o);
           return;
         }
@@ -638,12 +639,12 @@ Market.prototype = {
     } else if (o.side === 'BID') {
       for (var i = 0; i < self.book.bids.length; i++) {
         var bo = self.book.bids[i];
-        var bp = parseFloat(bo.price);
-        if (bp === price) {
-          bo.amount = parseFloat((parseFloat(bo.amount) + amount).toFixed(4));
+        var bp = new BigNumber(bo.price);
+        if (bp.isEqualTo(price)) {
+          bo.amount = new BigNumber(bo.amount).plus(amount).toFixed(4);
           return;
         }
-        if (bp < price) {
+        if (bp.isLessThan(price)) {
           self.book.bids.splice(i, 0, o);
           return;
         }
@@ -654,8 +655,8 @@ Market.prototype = {
 
   orderRemoveFromBook: function (o) {
     const self = this;
-    const price = parseFloat(o.price);
-    const amount = parseFloat(o.amount);
+    const price = new BigNumber(o.price);
+    const amount = new BigNumber(o.amount);
 
     var list = self.book.asks;
     if (o.side === 'BID') {
@@ -664,12 +665,12 @@ Market.prototype = {
 
     for (var i = 0; i < list.length; i++) {
       var bo = list[i];
-      if (parseFloat(bo.price) !== price) {
+      if (!new BigNumber(bo.price).isEqualTo(price)) {
         continue;
       }
 
-      bo.amount = parseFloat((parseFloat(bo.amount) - amount).toFixed(4));
-      if (bo.amount === 0) {
+      bo.amount = new BigNumber(bo.amount).minus(amount).toFixed(4);
+      if (bo.amount === '0.0000') {
         list.splice(i, 1);
       }
       return;

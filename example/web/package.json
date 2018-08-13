@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bignumber.js": "^7.2.1",
     "handlebars": "^4.0.11",
     "intl-tel-input": "^13.0.2",
     "jquery": "^3.3.1",
