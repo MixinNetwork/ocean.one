@@ -554,7 +554,7 @@ Market.prototype = {
       o.price = new BigNumber(o.price).toFixed(8);
     }
     o.pricePoint = o.price.replace('.', '');
-    o.amount = amount.toFixed(4);;
+    o.amount = amount.toFixed(4);
     if (o.amount === '0.0000') {
       o.amount = '0.0001';
     }
