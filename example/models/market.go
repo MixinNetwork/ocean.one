@@ -69,6 +69,21 @@ func GetMarket(ctx context.Context, base, quote string) (*Market, error) {
 	return m, nil
 }
 
+func ListActiveMarkets(ctx context.Context) ([]*Market, error) {
+	inputs, err := ListMarkets(ctx)
+	if err != nil {
+		return inputs, err
+	}
+
+	var markets []*Market
+	for _, m := range inputs {
+		if m.Volume > 0 {
+			markets = append(markets, m)
+		}
+	}
+	return markets, nil
+}
+
 func ListMarkets(ctx context.Context) ([]*Market, error) {
 	it := session.Database(ctx).Query(ctx, spanner.Statement{
 		SQL: fmt.Sprintf("SELECT %s FROM markets", strings.Join(marketsColumnsFull, ",")),
@@ -199,33 +214,21 @@ var symbolsMap = map[string]string{
 
 var usdtMarkets = []string{
 	"c6d0c728-2624-429b-8e0d-d9d19b6592fa", // BTC
-	"fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0", // BCH
 	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d", // EOS
 	"43d61dcd-e413-450d-80b8-101d5e903357", // ETH
-	"2204c1ee-0ea2-4add-bb9a-b3719cfff93a", // ETC
-	"76c802a2-7c88-447f-a93e-c29c9e5dd9c8", // LTC
-	"23dfb5a5-5d7b-48b6-905f-3970e3176e27", // XRP
 	"990c4c29-57e9-48f6-9819-7d986ea44985", // SC
 	"c94ac88f-4671-3976-b60a-09064f1811e8", // XIN
 }
 
 var btcMarkets = []string{
-	"fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0",
-	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d",
-	"43d61dcd-e413-450d-80b8-101d5e903357",
-	"2204c1ee-0ea2-4add-bb9a-b3719cfff93a",
-	"76c802a2-7c88-447f-a93e-c29c9e5dd9c8",
-	"23dfb5a5-5d7b-48b6-905f-3970e3176e27",
-	"990c4c29-57e9-48f6-9819-7d986ea44985",
-	"c94ac88f-4671-3976-b60a-09064f1811e8",
+	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d", // EOS
+	"43d61dcd-e413-450d-80b8-101d5e903357", // ETH
+	"990c4c29-57e9-48f6-9819-7d986ea44985", // SC
+	"c94ac88f-4671-3976-b60a-09064f1811e8", // XIN
 }
 
 var xinMarkets = []string{
-	"fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0",
-	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d",
-	"43d61dcd-e413-450d-80b8-101d5e903357",
-	"2204c1ee-0ea2-4add-bb9a-b3719cfff93a",
-	"76c802a2-7c88-447f-a93e-c29c9e5dd9c8",
-	"23dfb5a5-5d7b-48b6-905f-3970e3176e27",
-	"990c4c29-57e9-48f6-9819-7d986ea44985",
+	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d", // EOS
+	"43d61dcd-e413-450d-80b8-101d5e903357", // ETH
+	"990c4c29-57e9-48f6-9819-7d986ea44985", // SC
 }

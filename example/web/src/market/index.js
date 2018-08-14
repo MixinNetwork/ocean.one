@@ -204,9 +204,9 @@ Market.prototype = {
 
     for (var i = 0; i < markets.length; i++) {
       var m = markets[i];
-      m.change_amount = new BigNumber(m.price).minus(new BigNumber(m.price).div(new BigNumber(m.change).plus(1))).toFixed(8);
+      m.change_amount = new BigNumber(m.price).minus(new BigNumber(m.price).div(new BigNumber(m.change).plus(1))).toFixed(8).replace(/\.?0+$/,"");
       if (m.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
-        m.change_amount = new BigNumber(m.change_amount).toFixed(4);
+        m.change_amount = new BigNumber(m.change_amount).toFixed(4).replace(/\.?0+$/,"");
       }
       m.direction = m.change < 0 ? 'down' : 'up';
       m.change = (m.change < 0 ? '' : '+') + Number(m.change * 100).toFixed(2) + '%';
@@ -239,7 +239,18 @@ Market.prototype = {
       cell.removeClass('up');
       cell.removeClass('down');
       cell.addClass(m.direction);
+      cell = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol + ' .price.cell');
+      cell.removeClass('up');
+      cell.removeClass('down');
+      cell.addClass(m.direction);
     }
+
+    var totalUSD = 0;
+    for (var i = 0; i < markets.length; i++) {
+      var m = markets[i];
+      totalUSD += m.total * m.quote_usd;
+    }
+    console.log("24 hour volume in USD " + totalUSD.toLocaleString(undefined, { maximumFractionDigits: 0 }));
 
     return markets;
   },

@@ -44,7 +44,8 @@ Chart.prototype = {
 
     var chart = Highcharts.stockChart(ele, {
       chart: {
-        zoomType: null,
+        zoomType: 'none',
+        pinchType: 'none',
         panning: false,
         spacing: [0, 0, 0, 0]
       },
@@ -98,7 +99,7 @@ Chart.prototype = {
 
       tooltip: {
         followPointer: true,
-        followTouchMove: true,
+        followTouchMove: false,
         split: true
       },
 
@@ -192,7 +193,8 @@ Chart.prototype = {
 
     var chart = Highcharts.chart(ele, {
       chart: {
-        zoomType: null,
+        zoomType: 'none',
+        pinchType: 'none',
         panning: false,
         spacing: [0, 0, 0, 0]
       },
