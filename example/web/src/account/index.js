@@ -58,6 +58,7 @@ Account.prototype = {
     });
     phoneInput.focus();
 
+    var recaptcha_response = "";
     $('#enroll-phone-form').submit(function (event) {
       event.preventDefault();
       var form = $(this);
@@ -67,7 +68,8 @@ Account.prototype = {
       }
       var params = {
         category: 'PHONE',
-        receiver: phone
+        receiver: phone,
+        recaptcha_response: recaptcha_response
       };
       self.api.account.newVerification(function (resp) {
         $('.submit-loader', form).hide();
@@ -80,12 +82,21 @@ Account.prototype = {
         self.renderCodeStep(phone, resp.data.verification_id, purpose);
       }, params);
     });
+    var enroll = function (token) {
+      recaptcha_response = token;
+      $('#enroll-phone-form').submit();
+    };
+    var widgetId = grecaptcha.render("g-recaptcha", {
+      "sitekey": "6Lel2WkUAAAAACALCDKLeDxNCwTc2drMzhyMc8LJ",
+      "size": "invisible",
+      "callback": enroll
+    });
     $('#enroll-phone-form :submit').click(function (event) {
       event.preventDefault();
       var form = $(this).parents('form');
       $('.submit-loader', form).show();
       $(this).hide();
-      form.submit();
+      grecaptcha.execute(widgetId);
     });
   },
 
