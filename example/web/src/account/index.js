@@ -86,16 +86,17 @@ Account.prototype = {
       recaptcha_response = token;
       $('#enroll-phone-form').submit();
     };
-    var widgetId = grecaptcha.render("g-recaptcha", {
-      "sitekey": "6Lel2WkUAAAAACALCDKLeDxNCwTc2drMzhyMc8LJ",
-      "size": "invisible",
-      "callback": enroll
-    });
     $('#enroll-phone-form :submit').click(function (event) {
       event.preventDefault();
       var form = $(this).parents('form');
       $('.submit-loader', form).show();
       $(this).hide();
+
+      var widgetId = grecaptcha.render("g-recaptcha", {
+        "sitekey": "6Lel2WkUAAAAACALCDKLeDxNCwTc2drMzhyMc8LJ",
+        "size": "invisible",
+        "callback": enroll
+      });
       grecaptcha.execute(widgetId);
     });
   },
