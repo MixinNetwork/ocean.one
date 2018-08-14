@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import {BigNumber} from 'bignumber.js';
 
 function Chart() {
   Highcharts.setOptions({
@@ -151,7 +152,7 @@ Chart.prototype = {
     for(var i = 0; i < bids.length; i++) {
       bids[i].volume = parseFloat(bids[i].amount);
       if (i > 0) {
-        bids[i].volume = bids[i-1].volume + bids[i].volume;
+        bids[i].volume = parseFloat(new BigNumber(bids[i-1].volume).plus(bids[i].volume).toFixed(8));
       }
       bidsData.push({
         x: parseFloat(bids[i].price),
@@ -167,7 +168,7 @@ Chart.prototype = {
     for(var i = 0; i < asks.length; i++) {
       asks[i].volume = parseFloat(parseFloat(asks[i].amount).toFixed(4));
       if (i > 0) {
-        asks[i].volume = parseFloat((asks[i-1].volume + asks[i].volume).toFixed(4));
+        asks[i].volume = parseFloat(new BigNumber(asks[i-1].volume).plus(asks[i].volume).toFixed(4));
       }
       asksInput.push({
         x: parseFloat(asks[i].price),
