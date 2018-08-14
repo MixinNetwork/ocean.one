@@ -58,7 +58,6 @@ Account.prototype = {
     });
     phoneInput.focus();
 
-    var recaptcha_response = "";
     $('#enroll-phone-form').submit(function (event) {
       event.preventDefault();
       var form = $(this);
@@ -69,7 +68,7 @@ Account.prototype = {
       var params = {
         category: 'PHONE',
         receiver: phone,
-        recaptcha_response: recaptcha_response
+        recaptcha_response: $('#recaptcha-response').val()
       };
       self.api.account.newVerification(function (resp) {
         $('.submit-loader', form).hide();
@@ -83,7 +82,7 @@ Account.prototype = {
       }, params);
     });
     var enroll = function (token) {
-      recaptcha_response = token;
+      $('#recaptcha-response').val(token);
       $('#enroll-phone-form').submit();
     };
     $('#enroll-phone-form :submit').click(function (event) {
