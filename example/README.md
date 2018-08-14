@@ -11,13 +11,13 @@ GET https://example.ocean.one/markets
     {
       "base": "43d61dcd-e413-450d-80b8-101d5e903357",
       "base_symbol": "ETH",
-      "change": -0.002649317907466239,
-      "price": 317.4274,
+      "change": "-0.00264931",
+      "price": "317.4274",
       "quote": "815b0b1a-2764-3736-8faa-42d694fa620a",
       "quote_symbol": "USDT",
-      "quote_usd": 1.0174087,
-      "total": 4163484.3716705,
-      "volume": 12991.477100000004
+      "quote_usd": "1.0174087",
+      "total": "4163484.37",
+      "volume": "12991.47"
     }
   ]
 }

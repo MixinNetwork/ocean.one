@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/ocean.one/example/models"
 	"github.com/MixinNetwork/ocean.one/example/session"
 	"github.com/MixinNetwork/ocean.one/example/views"
@@ -30,14 +32,18 @@ func (impl *marketsImpl) index(w http.ResponseWriter, r *http.Request, params ma
 
 	data := make([]map[string]interface{}, 0)
 	for _, m := range markets {
+		price := number.FromFloat(m.Price)
+		if m.Quote == "815b0b1a-2764-3736-8faa-42d694fa620a" {
+			price.Round(4)
+		}
 		data = append(data, map[string]interface{}{
 			"base":         m.Base,
 			"quote":        m.Quote,
-			"price":        m.Price,
-			"volume":       m.Volume,
-			"total":        m.Total,
-			"change":       m.Change,
-			"quote_usd":    m.QuoteUSD,
+			"price":        price.Persist(),
+			"volume":       number.FromFloat(m.Volume).Round(2).Persist(),
+			"total":        number.FromFloat(m.Total).Round(2).Persist(),
+			"change":       number.FromFloat(m.Change).Persist(),
+			"quote_usd":    fmt.Sprint(m.QuoteUSD),
 			"base_symbol":  m.BaseSymbol(),
 			"quote_symbol": m.QuoteSymbol(),
 		})
