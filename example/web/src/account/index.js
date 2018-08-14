@@ -92,7 +92,7 @@ Account.prototype = {
       $(this).hide();
 
       var widgetId = grecaptcha.render("g-recaptcha", {
-        "sitekey": "6Lel2WkUAAAAACALCDKLeDxNCwTc2drMzhyMc8LJ",
+        "sitekey": RECAPTCHA_SITE_KEY,
         "size": "invisible",
         "callback": enroll
       });
