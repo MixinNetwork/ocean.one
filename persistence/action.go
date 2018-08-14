@@ -173,8 +173,11 @@ func CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time,
 			return err
 		}
 		state, err := checkOrderState(ctx, txn, action.OrderId)
-		if err != nil || state.State != OrderStatePending || state.UserId != userId || state.OrderType != engine.OrderTypeLimit {
+		if err != nil || state == nil {
 			return err
+		}
+		if state.State != OrderStatePending || state.UserId != userId || state.OrderType != engine.OrderTypeLimit {
+			return nil
 		}
 		actionMutation, err := spanner.InsertStruct("actions", action)
 		if err != nil {
