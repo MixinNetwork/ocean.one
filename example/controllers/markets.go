@@ -32,17 +32,13 @@ func (impl *marketsImpl) index(w http.ResponseWriter, r *http.Request, params ma
 
 	data := make([]map[string]interface{}, 0)
 	for _, m := range markets {
-		price := number.FromFloat(m.Price)
-		if m.Quote == "815b0b1a-2764-3736-8faa-42d694fa620a" {
-			price.Round(4)
-		}
 		data = append(data, map[string]interface{}{
 			"base":         m.Base,
 			"quote":        m.Quote,
-			"price":        price.Persist(),
-			"volume":       number.FromFloat(m.Volume).Round(2).Persist(),
-			"total":        number.FromFloat(m.Total).Round(2).Persist(),
-			"change":       number.FromFloat(m.Change).Persist(),
+			"price":        number.FromString(fmt.Sprint(m.Price)).Persist(),
+			"volume":       number.FromString(fmt.Sprint(m.Volume)).Round(2).Persist(),
+			"total":        number.FromString(fmt.Sprint(m.Total)).Round(2).Persist(),
+			"change":       number.FromString(fmt.Sprint(m.Change)).Persist(),
 			"quote_usd":    fmt.Sprint(m.QuoteUSD),
 			"base_symbol":  m.BaseSymbol(),
 			"quote_symbol": m.QuoteSymbol(),
@@ -71,11 +67,11 @@ func (impl *marketsImpl) market(w http.ResponseWriter, r *http.Request, params m
 	data := map[string]interface{}{
 		"base":         m.Base,
 		"quote":        m.Quote,
-		"price":        m.Price,
-		"volume":       m.Volume,
-		"total":        m.Total,
-		"change":       m.Change,
-		"quote_usd":    m.QuoteUSD,
+		"price":        number.FromString(fmt.Sprint(m.Price)).Persist(),
+		"volume":       number.FromString(fmt.Sprint(m.Volume)).Round(2).Persist(),
+		"total":        number.FromString(fmt.Sprint(m.Total)).Round(2).Persist(),
+		"change":       number.FromString(fmt.Sprint(m.Change)).Persist(),
+		"quote_usd":    fmt.Sprint(m.QuoteUSD),
 		"base_symbol":  m.BaseSymbol(),
 		"quote_symbol": m.QuoteSymbol(),
 	}
