@@ -63,7 +63,8 @@ module.exports = {
       WEB_ROOT: JSON.stringify(webRoot(process.env.NODE_ENV)),
       API_ROOT: JSON.stringify("https://example.ocean.one"),
       ENGINE_ROOT: JSON.stringify("wss://events.ocean.one"),
-      APP_NAME: JSON.stringify("Ocean ONE")
+      APP_NAME: JSON.stringify("Ocean ONE"),
+      RECAPTCHA_SITE_KEY: JSON.stringify("6Leo5WkUAAAAACT-jCLijZ1yyFvMMxy_yhoiJa3H")
     }),
     new CompressionPlugin({
       asset: "[path]",
