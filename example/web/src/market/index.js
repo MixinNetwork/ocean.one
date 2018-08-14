@@ -228,7 +228,7 @@ Market.prototype = {
         $('.ticker.total .value').html(m.total);
       }
 
-      m.price = m.price.toFixed(8).replace(/\.?0+$/,"");
+      m.price = new BigNumber(m.price).toFixed(8).replace(/\.?0+$/,"");
       var item = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol);
       if (item.length > 0) {
         item.replaceWith(self.itemMarket(m));
@@ -617,7 +617,7 @@ Market.prototype = {
     }
     o.amount = new BigNumber(bo.attr('data-amount')).minus(amount);
     o.funds = new BigNumber(bo.attr('data-funds')).minus(o.funds);
-    if (o.amount.isLessThan(0) || o.funds.isLessThan(0)) {
+    if (!o.amount.isGreaterThan(0) || !o.funds.isGreaterThan(0)) {
       bo.remove();
     } else {
       o.amount = o.amount.toFixed(4);
