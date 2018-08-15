@@ -160,7 +160,7 @@ Chart.prototype = {
       });
     }
     bidsData = bidsData.reverse();
-    if (bidsData.length > 20) {
+    if (bidsData.length > 40) {
       bidsData = bidsData.splice(bidsData.length / 2);
     }
 
@@ -179,7 +179,7 @@ Chart.prototype = {
     var priceThreshold = bidsData[bidsData.length - 1].x + asksInput[0].x - bidsData[0].x;
     for (var i = 0; i < asksInput.length; i++) {
       var point = asksInput[i];
-      if (point.x > priceThreshold && asksData.length > 20) {
+      if (point.x > priceThreshold && asksData.length > 10) {
         break;
       }
       asksData.push(point);
