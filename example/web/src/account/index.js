@@ -6,6 +6,7 @@ import uuid from 'uuid/v4';
 import QRious from 'qrious';
 import FormUtils from '../utils/form.js';
 import TimeUtils from '../utils/time.js';
+import URLUtils from '../utils/url.js';
 
 function Account(router, api) {
   this.router = router;
@@ -403,6 +404,10 @@ Account.prototype = {
       this.router.replace('/orders/BTC-USDT');
       return;
     }
+    var state = "PENDING";
+    if (URLUtils.getUrlParameter('state') === "DONE") {
+      state = "DONE"
+    }
     const base = pair[0];
     const quote = pair[1];
 
@@ -427,13 +432,15 @@ Account.prototype = {
       }
       $('body').attr('class', 'account layout');
       $('#layout-container').html(self.templateOrders({
+        pending: state === "PENDING",
         base: base,
         quote: quote,
+        pair: base.symbol+'-'+quote.symbol,
         orders: resp.data
       }));
       self.handleOrderCancel();
       self.router.updatePageLinks();
-    }, base.asset_id + '-' + quote.asset_id, offset);
+    }, state, 'DESC', base.asset_id + '-' + quote.asset_id, offset);
   },
 
   handleOrderCancel: function () {

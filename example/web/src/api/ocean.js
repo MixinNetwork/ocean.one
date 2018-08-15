@@ -3,8 +3,8 @@ function Ocean(api) {
 }
 
 Ocean.prototype = {
-  orders: function (callback, market, offset) {
-    this.api.request('GET', 'https://events.ocean.one/orders?state=PENDING&order=DESC&limit=100&market=' + market + '&offset=' + offset, undefined, function (resp) {
+  orders: function (callback, state, order, market, offset) {
+    this.api.request('GET', 'https://events.ocean.one/orders?state=' + state + '&order=' + order + '&limit=100&market=' + market + '&offset=' + offset, undefined, function (resp) {
       return callback(resp);
     });
   },
