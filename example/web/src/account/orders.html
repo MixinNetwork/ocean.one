@@ -6,7 +6,10 @@
   </header>
   <section class="content">
     <div class="orders container">
-
+      <div class="navi">
+        <a href="/orders/{{ pair }}" class="item {{#if pending}}active{{/if}}">Pending</a>
+        <a href="/orders/{{ pair }}?state=DONE" class="item {{#unless pending}}active{{/unless}}">Done</a>
+      </div>
       <table class="orders list">
         <thead>
           <tr>
@@ -14,7 +17,9 @@
             <td>{{t 'orders.table.price'}} ({{quote.symbol}})</td>
             <td>{{t 'orders.table.amount'}} ({{base.symbol}})</td>
             <td>{{t 'orders.table.time'}}</td>
+            {{#if pending}}
             <td></td>
+            {{/if}}
           </tr>
         </thead>
         <tbody>
@@ -24,12 +29,14 @@
             <td><span>{{this.price}}</span><span class="filled">⌭{{this.filled_price}}</span></td>
             <td><span>{{this.amount}}</span><span class="filled">⌭{{this.filled_amount}}</span></td>
             <td>{{this.created_at}}</td>
+            {{../pending}}
+            {{#if ../pending}}
             <td class="cancel action"><a href="javascript:void(0);"><i class="icon-close"></i></a></td>
+            {{/if}}
           </tr>
           {{/each}}
         </tbody>
       </table>
-
     </div>
   </section>
 </div>
