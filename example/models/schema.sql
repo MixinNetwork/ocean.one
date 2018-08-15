@@ -94,3 +94,11 @@ CREATE TABLE markets (
   change      FLOAT64 NOT NULL,
   quote_usd   FLOAT64 NOT NULL,
 ) PRIMARY KEY(base, quote);
+
+
+CREATE TABLE favorite_markets (
+  user_id     STRING(36) NOT NULL,
+  base        STRING(36) NOT NULL,
+  quote       STRING(36) NOT NULL,
+) PRIMARY KEY(user_id, base, quote);
+

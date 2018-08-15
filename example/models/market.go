@@ -19,6 +19,8 @@ type Market struct {
 	Total    float64
 	Change   float64
 	QuoteUSD float64
+
+	IsLikedBy bool
 }
 
 var marketsColumnsFull = []string{"base", "quote", "price", "volume", "total", "change", "quote_usd"}
@@ -69,8 +71,8 @@ func GetMarket(ctx context.Context, base, quote string) (*Market, error) {
 	return m, nil
 }
 
-func ListActiveMarkets(ctx context.Context) ([]*Market, error) {
-	inputs, err := ListMarkets(ctx)
+func ListActiveMarkets(ctx context.Context, user *User) ([]*Market, error) {
+	inputs, err := ListMarkets(ctx, user)
 	if err != nil {
 		return inputs, err
 	}
@@ -84,13 +86,17 @@ func ListActiveMarkets(ctx context.Context) ([]*Market, error) {
 	return markets, nil
 }
 
-func ListMarkets(ctx context.Context) ([]*Market, error) {
+func ListMarkets(ctx context.Context, user *User) ([]*Market, error) {
+	var markets []*Market
+	favoritors, err := readFavoriteMarkets(ctx, user)
+	if err != nil {
+		return markets, nil
+	}
 	it := session.Database(ctx).Query(ctx, spanner.Statement{
 		SQL: fmt.Sprintf("SELECT %s FROM markets", strings.Join(marketsColumnsFull, ",")),
 	}, "markets", "ListMarkets")
 	defer it.Stop()
 
-	var markets []*Market
 	for {
 		row, err := it.Next()
 		if err == iterator.Done {
@@ -102,6 +108,7 @@ func ListMarkets(ctx context.Context) ([]*Market, error) {
 		if err != nil {
 			return nil, session.TransactionError(ctx, err)
 		}
+		m.IsLikedBy = favoritors[m.Base+m.Quote]
 		markets = append(markets, m)
 	}
 }

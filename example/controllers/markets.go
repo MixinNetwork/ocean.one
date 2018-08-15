@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/MixinNetwork/go-number"
+	"github.com/MixinNetwork/ocean.one/example/middlewares"
 	"github.com/MixinNetwork/ocean.one/example/models"
 	"github.com/MixinNetwork/ocean.one/example/session"
 	"github.com/MixinNetwork/ocean.one/example/views"
@@ -18,13 +19,41 @@ type marketsImpl struct{}
 func registerMarkets(router *httptreemux.TreeMux) {
 	impl := &marketsImpl{}
 
+	router.POST("/markets/:market/like", impl.like)
+	router.POST("/markets/:market/dislike", impl.dislike)
 	router.GET("/markets", impl.index)
 	router.GET("/markets/:market", impl.market)
 	router.GET("/markets/:market/candles/:granularity", impl.candles)
 }
 
+func (impl *marketsImpl) like(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	base, quote := getBaseQuote(params["market"])
+	if base == "" || quote == "" {
+		views.RenderErrorResponse(w, r, session.NotFoundError(r.Context()))
+		return
+	}
+	if _, err := middlewares.CurrentUser(r).LikeMarket(r.Context(), base, quote); err != nil {
+		views.RenderErrorResponse(w, r, err)
+	} else {
+		views.RenderBlankResponse(w, r)
+	}
+}
+
+func (impl *marketsImpl) dislike(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	base, quote := getBaseQuote(params["market"])
+	if base == "" || quote == "" {
+		views.RenderErrorResponse(w, r, session.NotFoundError(r.Context()))
+		return
+	}
+	if err := middlewares.CurrentUser(r).DislikeMarket(r.Context(), base, quote); err != nil {
+		views.RenderErrorResponse(w, r, err)
+	} else {
+		views.RenderBlankResponse(w, r)
+	}
+}
+
 func (impl *marketsImpl) index(w http.ResponseWriter, r *http.Request, params map[string]string) {
-	markets, err := models.ListActiveMarkets(r.Context())
+	markets, err := models.ListActiveMarkets(r.Context(), middlewares.CurrentUser(r))
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
 		return
@@ -42,6 +71,7 @@ func (impl *marketsImpl) index(w http.ResponseWriter, r *http.Request, params ma
 			"quote_usd":    fmt.Sprint(m.QuoteUSD),
 			"base_symbol":  m.BaseSymbol(),
 			"quote_symbol": m.QuoteSymbol(),
+			"is_liked_by":  m.IsLikedBy,
 		})
 	}
 	views.RenderDataResponse(w, r, data)
