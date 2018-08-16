@@ -7,7 +7,7 @@
     <div class="sub name">{{base.name}}</div>
   </td>
   <td class="price cell">
-    <div class="main price">{{price}}</div>
+    <div class="main price">{{price}}<span class="quote symbol">{{#if is_liked_by}}({{quote.symbol}}){{/if}}</span></div>
     <div class="sub price">${{price_usd}}</div>
   </td>
   <td class="change cell">
@@ -18,5 +18,5 @@
     <div class="main volume">{{volume}} {{base.symbol}}</div>
     <div class="sub volume">{{total}} {{quote.symbol}}</div>
   </td>
-  <td class="star cell"><i class="icon-star"></i></td>
+  <td class="star cell {{is_liked_by}}" data-like="{{is_liked_by}}" data-market="{{base.asset_id}}-{{quote.asset_id}}"><i class="icon-star"></i></td>
 </tr>

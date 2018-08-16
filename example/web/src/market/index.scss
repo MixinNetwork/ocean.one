@@ -183,6 +183,15 @@
   padding: 64px 32px;
   width: 100%;
 
+  .quote.symbol {
+    display: none;
+  }
+  &.favorite {
+    .quote.symbol {
+      display: inline-block;
+    }
+  }
+
   .content {
     position: relative;
     background: #FFFFFF;
@@ -342,10 +351,17 @@
       display: block;
     }
 
-    .star.cell i {
-      display: block;
-      padding-left: 8px;
-      cursor: pointer;
+    .star.cell {
+      i {
+        display: block;
+        padding-left: 8px;
+        cursor: pointer;
+      }
+      &.true {
+        i {
+          color: #00b0e9;
+        }
+      }
     }
 
     .up.cell .main {
