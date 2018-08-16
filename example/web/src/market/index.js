@@ -98,7 +98,7 @@ Market.prototype = {
       event.stopPropagation();
       var that = this;
       if ($(that).data('disabled')) {
-        return
+        return;
       }
 
       $(that).data('disabled', true);
@@ -109,7 +109,7 @@ Market.prototype = {
             return;
           }
           $(that).removeClass('true');
-        }, $(that).data('market'))
+        }, $(that).data('market'));
       } else {
         self.api.market.like(function (resp) {
           $(that).data('disabled', false);
@@ -117,7 +117,7 @@ Market.prototype = {
             return;
           }
           $(that).addClass('true');
-        }, $(that).data('market'))
+        }, $(that).data('market'));
       }
     });
     var markets = self.renderMarkets(inputs);
@@ -262,10 +262,10 @@ Market.prototype = {
       if (!m.is_liked_by) {
         $('.favorite.markets.block' + ' #market-item-' + m.base.symbol + '-' + m.quote.symbol).remove();
         if ($('.favorite.markets.block tbody').has('tr').length == 0) {
-          $('.favorite.markets.block').hide()
+          $('.favorite.markets.block').hide();
         }
       } else {
-        $('.favorite.markets.block').show()
+        $('.favorite.markets.block').show();
         if ($('.favorite.markets.block table tbody').has(item).length == 0) {
           $('.favorite.markets.block table tbody').append(self.itemMarket(m));
         }
