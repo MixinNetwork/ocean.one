@@ -15,6 +15,18 @@ Market.prototype = {
     });
   },
 
+  like: function (callback, market) {
+    this.api.request('POST', '/markets/' + market + '/like', undefined, function (resp) {
+      return callback(resp);
+    });
+  },
+
+  dislike: function (callback, market) {
+    this.api.request('POST', '/markets/' + market + '/dislike', undefined, function (resp) {
+      return callback(resp);
+    });
+  },
+
   candles: function (callback, market, granularity) {
     this.api.request('GET', '/markets/' + market + '/candles/' + granularity, undefined, function (resp) {
       return callback(resp);

@@ -92,6 +92,34 @@ Market.prototype = {
         window.location.href = '/trade/' + $(this).data('symbol');
       }
     });
+
+    $('.markets.container').on('click', 'td.star.cell', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      var that = this;
+      if ($(that).data('disabled')) {
+        return;
+      }
+
+      $(that).data('disabled', true);
+      if ($(that).hasClass('true')) {
+        self.api.market.dislike(function (resp) {
+          $(that).data('disabled', false);
+          if (resp.error) {
+            return;
+          }
+          $(that).removeClass('true');
+        }, $(that).data('market'));
+      } else {
+        self.api.market.like(function (resp) {
+          $(that).data('disabled', false);
+          if (resp.error) {
+            return;
+          }
+          $(that).addClass('true');
+        }, $(that).data('market'));
+      }
+    });
     var markets = self.renderMarkets(inputs);
     setInterval(function() {
       self.pollMarkets();
@@ -229,10 +257,20 @@ Market.prototype = {
       }
 
       m.price = new BigNumber(m.price).toFixed(8).replace(/\.?0+$/,"");
-      var item = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol);
-      if (item.length > 0) {
-        item.replaceWith(self.itemMarket(m));
+      var item = '#market-item-' + m.base.symbol + '-' + m.quote.symbol;
+      $(item).replaceWith(self.itemMarket(m));
+      if (!m.is_liked_by) {
+        $('.favorite.markets.block' + ' #market-item-' + m.base.symbol + '-' + m.quote.symbol).remove();
+        if ($('.favorite.markets.block tbody').has('tr').length == 0) {
+          $('.favorite.markets.block').hide();
+        }
       } else {
+        $('.favorite.markets.block').show();
+        if ($('.favorite.markets.block table tbody').has(item).length == 0) {
+          $('.favorite.markets.block table tbody').append(self.itemMarket(m));
+        }
+      }
+      if ($('.' + m.quote.symbol.toLowerCase() + '.markets.block table tbody').has(item).length == 0) {
         $('.' + m.quote.symbol.toLowerCase() + '.markets.block table tbody').append(self.itemMarket(m));
       }
       var cell = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol + ' .change.cell');

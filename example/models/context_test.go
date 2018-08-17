@@ -13,7 +13,7 @@ import (
 
 const (
 	testEnvironment = "test"
-	testDatabase    = "projects/mixin-183904/instances/development/databases/ocean-one-test"
+	testDatabase    = "projects/mixin-183904/instances/development/databases/ocean-one-test-test"
 )
 
 func TestClear(t *testing.T) {
@@ -32,6 +32,7 @@ func teardownTestContext(ctx context.Context) {
 		"sessions",
 		"candles",
 		"markets",
+		"favorite_markets",
 	}
 	for _, table := range tables {
 		err := db.Apply(ctx, []*spanner.Mutation{spanner.Delete(table, spanner.AllKeys())}, "all", "DELETE", "DELETE FROM all")
