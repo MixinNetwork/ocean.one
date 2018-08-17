@@ -185,7 +185,9 @@
 
   .quote.symbol {
     display: none;
+    opacity: 0.5;
   }
+
   &.favorite {
     .quote.symbol {
       display: inline-block;

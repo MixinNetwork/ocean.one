@@ -3,11 +3,11 @@
     <img src="{{base.icon_url}}" alt="{{base.symbol}}" class="base logo" />
   </td>
   <td class="name cell">
-    <div class="main name">{{base.symbol}}</div>
+    <div class="main name">{{base.symbol}}<span class="quote symbol">{{#if is_liked_by}}/{{quote.symbol}}{{/if}}</span></div>
     <div class="sub name">{{base.name}}</div>
   </td>
   <td class="price cell">
-    <div class="main price">{{price}}<span class="quote symbol">{{#if is_liked_by}}({{quote.symbol}}){{/if}}</span></div>
+    <div class="main price">{{price}}</div>
     <div class="sub price">${{price_usd}}</div>
   </td>
   <td class="change cell">
