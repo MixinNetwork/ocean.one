@@ -123,7 +123,7 @@ Market.prototype = {
     $('.account.balances').on('click', '.base.balance', function () {
       let amount = new BigNumber($('.asset.amount', this).html());
       if (amount.lte(0)) {
-        return
+        return;
       }
       let bid = new BigNumber($('.bid.order.item').first().data('price'));
       $('.limit.sell.form input[name="amount"]').val(amount.toString());
@@ -134,7 +134,7 @@ Market.prototype = {
     $('.account.balances').on('click', '.quote.balance', function () {
       var quote = new BigNumber($('.asset.amount', this).html());
       if (quote.lte(0)) {
-        return
+        return;
       }
       let ask = $('.ask.order.item').last().data('price');
       $('.limit.buy.form input[name="amount"]').val(parseFloat(quote.div(ask).toFixed(8)));
