@@ -24,6 +24,7 @@ Account.prototype = {
   },
 
   createUser: function (callback, params) {
+    const self = this;
     var pwd = uuid().toLowerCase();
     var ec = new KJUR.crypto.ECDSA({'curve': 'secp256r1'});
     var pub = ec.generateKeyPairHex().ecpubhex;
@@ -32,6 +33,7 @@ Account.prototype = {
     params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
     this.api.request('POST', '/users', params, function(resp) {
       if (resp.data) {
+        self.clear();
         Cookies.set('sid', pwd);
         window.localStorage.setItem('token.example', priv);
         window.localStorage.setItem('uid', resp.data.user_id);
@@ -42,6 +44,7 @@ Account.prototype = {
   },
 
   resetPassword: function (callback, params) {
+    const self = this;
     var pwd = uuid().toLowerCase();
     var ec = new KJUR.crypto.ECDSA({'curve': 'secp256r1'});
     var pub = ec.generateKeyPairHex().ecpubhex;
@@ -50,6 +53,7 @@ Account.prototype = {
     params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
     this.api.request('POST', '/passwords', params, function(resp) {
       if (resp.data) {
+        self.clear();
         Cookies.set('sid', pwd);
         window.localStorage.setItem('token.example', priv);
         window.localStorage.setItem('uid', resp.data.user_id);
@@ -60,6 +64,7 @@ Account.prototype = {
   },
 
   createSession: function (callback, params) {
+    const self = this;
     var pwd = uuid().toLowerCase();
     var ec = new KJUR.crypto.ECDSA({'curve': 'secp256r1'});
     var pub = ec.generateKeyPairHex().ecpubhex;
@@ -68,6 +73,7 @@ Account.prototype = {
     params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
     this.api.request('POST', '/sessions', params, function(resp) {
       if (resp.data) {
+        self.clear();
         Cookies.set('sid', pwd);
         window.localStorage.setItem('token.example', priv);
         window.localStorage.setItem('uid', resp.data.user_id);
