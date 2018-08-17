@@ -25,8 +25,8 @@ Chart.prototype = {
       ]);
 
       volume.push([
-        data[i][0] * 1000, // the date
-        data[i][5] // the volume
+        parseFloat(new BigNumber(data[i][0]).times(1000).toFixed(8)), // the date
+        parseFloat(new BigNumber(data[i][5]).toFixed(8)) // the volume
       ]);
     }
 
@@ -81,7 +81,10 @@ Chart.prototype = {
       yAxis: [{
         labels: {
           align: 'right',
-          x: -3
+          x: -3,
+          formatter: function () {
+            return new BigNumber(this.value).toString(10);
+          }
         },
         height: '70%',
         gridLineWidth: 0.5,
@@ -227,7 +230,12 @@ Chart.prototype = {
       xAxis: {
         gridLineWidth: 0.5,
         min: minPrice,
-        max: maxPrice
+        max: maxPrice,
+        labels: {
+          formatter: function () {
+            return new BigNumber(this.value).toString(10);
+          }
+        }
       },
 
       yAxis: {
@@ -235,7 +243,10 @@ Chart.prototype = {
         labels: {
           align: 'right',
           x: -3,
-          y: -2
+          y: -2,
+          formatter: function () {
+            return new BigNumber(this.value).toString(10);
+          }
         },
         lineWidth: 0,
         resize: {
