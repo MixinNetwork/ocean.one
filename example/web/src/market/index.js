@@ -164,8 +164,10 @@ Market.prototype = {
         return;
       }
       self.depth -= 0.1;
-      self.depthChart.destroy();
-      self.depthChart = new Chart().renderDepth($('.depth.chart')[0], self.book.bids, self.book.asks, self.depth);
+      if (self.depthChart != undefined) {
+        self.depthChart.destroy();
+        self.depthChart = new Chart().renderDepth($('.depth.chart')[0], self.book.bids, self.book.asks, self.depth);
+      }
     });
 
     $('.charts.container').on('click', '.icon-minus', function (e) {
@@ -176,8 +178,10 @@ Market.prototype = {
         return;
       }
       self.depth += 0.1;
-      self.depthChart.destroy();
-      self.depthChart = new Chart().renderDepth($('.depth.chart')[0], self.book.bids, self.book.asks, self.depth);
+      if (self.depthChart != undefined) {
+        self.depthChart.destroy();
+        self.depthChart = new Chart().renderDepth($('.depth.chart')[0], self.book.bids, self.book.asks, self.depth);
+      }
     });
 
     self.handleOrderCreate();
