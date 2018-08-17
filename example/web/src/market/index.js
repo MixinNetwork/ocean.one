@@ -120,6 +120,28 @@ Market.prototype = {
         }, $(that).data('market'));
       }
     });
+    $('.account.balances').on('click', '.base.balance', function () {
+      let amount = new BigNumber($('.asset.amount', this).html());
+      if (amount.isEqualTo(0)) {
+        return
+      }
+      let bid = new BigNumber($('.bid.order.item').first().data('price'));
+      $('.limit.sell.form input[name="amount"]').val(amount.toString());
+      $('.limit.sell.form input[name="price"]').val(parseFloat(amount.times(bid).toFixed(8)));
+      $('.market.form input[name="amount"]').val(amount.toString());
+      $('.sell.side.tab').click();
+    });
+    $('.account.balances').on('click', '.quote.balance', function () {
+      var quote = new BigNumber($('.asset.amount', this).html());
+      if (quote.isEqualTo(0)) {
+        return
+      }
+      let ask = $('.ask.order.item').last().data('price');
+      $('.limit.buy.form input[name="amount"]').val(parseFloat(quote.div(ask).toFixed(8)));
+      $('.limit.buy.form input[name="price"]').val(quote.toString());
+      $('.market.form input[name="funds"]').val(quote.toString());
+      $('.buy.side.tab').click();
+    });
     var markets = self.renderMarkets(inputs);
     setInterval(function() {
       self.pollMarkets();
