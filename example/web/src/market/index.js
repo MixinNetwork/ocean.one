@@ -127,20 +127,24 @@ Market.prototype = {
       }
       let bid = new BigNumber($('.bid.order.item').first().data('price'));
       $('.limit.sell.form input[name="amount"]').val(amount.toString());
-      $('.limit.sell.form input[name="price"]').val(parseFloat(amount.times(bid).toFixed(8)));
+      if ($('.limit.sell.form input[name="price"]').val() === '') {
+        $('.limit.sell.form input[name="price"]').val(parseFloat(bid));
+      }
       $('.market.form input[name="amount"]').val(amount.toString());
-      $('.sell.side.tab').click();
     });
     $('.account.balances').on('click', '.quote.balance', function () {
       var quote = new BigNumber($('.asset.amount', this).html());
       if (quote.lte(0)) {
         return;
       }
-      let ask = $('.ask.order.item').last().data('price');
+      var ask = $('.ask.order.item').last().data('price');
+      var price = new BigNumber(+$('.limit.buy.form input[name="price"]').val());
+      if (!price.isEqualTo(0)) {
+        ask = price.toString()
+      }
       $('.limit.buy.form input[name="amount"]').val(parseFloat(quote.div(ask).toFixed(8)));
-      $('.limit.buy.form input[name="price"]').val(quote.toString());
+      $('.limit.buy.form input[name="price"]').val(parseFloat(ask));
       $('.market.form input[name="funds"]').val(quote.toString());
-      $('.buy.side.tab').click();
     });
     var markets = self.renderMarkets(inputs);
     setInterval(function() {
