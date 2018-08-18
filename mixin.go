@@ -197,7 +197,10 @@ func (ex *Exchange) refundSnapshot(ctx context.Context, s *Snapshot) error {
 func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) (*OrderAction, error) {
 	payload, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		return nil, err
+		payload, err = base64.URLEncoding.DecodeString(data)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var action OrderAction
 	decoder := codec.NewDecoderBytes(payload, ex.codec)
