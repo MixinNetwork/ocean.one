@@ -78,6 +78,8 @@ Market.prototype = {
       $('.account.sign.out.button').show();
       $('.account.in.actions').show();
       $('.account.out.actions').hide();
+      $('.layout.header').remove();
+      $('.markets.container').css('padding-top', '96px');
     }
 
     $('.markets.container').on('click', '.market.item', function (event) {
