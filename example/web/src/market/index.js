@@ -508,7 +508,7 @@ Market.prototype = {
   renderDepthChart: function () {
     const self = this;
     const chart = new Chart();
-    $('.charts.container .icon').show();
+    $('.charts.container .icon').addClass('show');
     if (self.depthChart) {
       self.depthChart.destroy();
     }

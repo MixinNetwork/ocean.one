@@ -71,6 +71,9 @@
     z-index: 1000;
     top: calc(50% + 32px);
     left: calc(50% - 32px);
+    &.show {
+      display: inline-block;
+    }
     &.icon-plus {
       left: calc(50% + 32px);
     }
@@ -566,7 +569,7 @@
       display: none;
     }
 
-    .icon {
+    .icon.show {
       display: none;
     }
   }
