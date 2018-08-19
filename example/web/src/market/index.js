@@ -159,7 +159,7 @@ Market.prototype = {
     $('.charts.container').on('click', '.icon-minus', function (e) {
       e.preventDefault();
       $('.charts.container .icon').removeClass('disabled');
-      if (self.depthLevel < -0.5) {
+      if (self.depthLevel <= -0.5) {
         $(this).addClass('disabled');
         return;
       }
@@ -173,7 +173,7 @@ Market.prototype = {
     $('.charts.container').on('click', '.icon-plus', function (e) {
       e.preventDefault();
       $('.charts.container .icon').removeClass('disabled');
-      if (self.depthLevel > 0.4) {
+      if (self.depthLevel >= 0.5) {
         $(this).addClass('disabled');
         return;
       }
