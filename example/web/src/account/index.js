@@ -50,7 +50,7 @@ Account.prototype = {
     $('#layout-container').html(self.templateUser({title: window.i18n.t(title)}));
 
     $('.identity.tabs').on('click', '.tab', function (event) {
-      event.preventDefault()
+      event.preventDefault();
       $('.identity.tabs .tab').removeClass('active');
       $(this).addClass('active');
       if ($(this).hasClass('phone')) {
@@ -156,7 +156,7 @@ Account.prototype = {
     });
   },
 
-  renderCodeStep: function (phone, verificationId, purpose) {
+  renderCodeStep: function (receiver, verificationId, purpose) {
     const self = this;
     var title = 'home.sign.up';
     if (purpose === 'PASSWORD') {
@@ -165,7 +165,7 @@ Account.prototype = {
     $('body').attr('class', 'account layout');
     $('#layout-container').html(self.stepCode({
       title: window.i18n.t(title),
-      phone: phone,
+      receiver: receiver,
       verificationId: verificationId
     }));
     $('#enroll-verify-form #code').focus();
@@ -280,7 +280,7 @@ Account.prototype = {
     $('body').attr('class', 'account layout');
     $('#layout-container').html(self.templateSession());
     $('.identity.tabs').on('click', '.tab', function (event) {
-      event.preventDefault()
+      event.preventDefault();
       $('.identity.tabs .tab').removeClass('active');
       $(this).addClass('active');
       if ($(this).hasClass('phone')) {

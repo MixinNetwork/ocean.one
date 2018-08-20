@@ -27,7 +27,7 @@
       "email": "Email"
     },
     "code": {
-      "title": "Enter the 6-digit verification code sent to you at %{phone}."
+      "title": "Enter the 6-digit verification code sent to you at %{receiver}."
     },
     "notifications": {
       "password.mismatch": "Password mismatch.",

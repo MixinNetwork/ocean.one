@@ -27,7 +27,7 @@
       "email": "邮箱"
     },
     "code": {
-      "title": "请输入发送到 %{phone} 的 6 位数字验证码。"
+      "title": "请输入发送到 %{receiver} 的 6 位数字验证码。"
     },
     "notifications": {
       "password.mismatch": "两次密码输入不匹配。",

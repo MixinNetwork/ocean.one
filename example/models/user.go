@@ -78,7 +78,6 @@ func CreateUser(ctx context.Context, verificationId, password, sessionSecret str
 			if old != "" {
 				return session.PhoneOccupiedError(ctx)
 			}
-			user.FullName = vf.Receiver
 			user.Phone = spanner.NullString{vf.Receiver, true}
 		}
 
@@ -90,9 +89,9 @@ func CreateUser(ctx context.Context, verificationId, password, sessionSecret str
 			if old != "" {
 				return session.EmailOccupiedError(ctx)
 			}
-			user.FullName = vf.Receiver
 			user.Email = spanner.NullString{vf.Receiver, true}
 		}
+		user.FullName = vf.Receiver
 
 		key, err := consumePoolKey(ctx, txn)
 		if err != nil {
