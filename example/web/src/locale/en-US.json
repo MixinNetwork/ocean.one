@@ -28,7 +28,8 @@
     },
     "notifications": {
       "password.mismatch": "Password mismatch.",
-      "phone.verification.send.success": "We have sent the verification code to your phone."
+      "phone.verification.send.success": "We have sent the verification code to your phone.",
+      "email.verification.send.success": "We have sent the verification code to your email."
     },
     "buttons": {
       "get.code": "Get Verification Code",

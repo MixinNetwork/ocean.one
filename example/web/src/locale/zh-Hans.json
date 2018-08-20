@@ -28,7 +28,8 @@
     },
     "notifications": {
       "password.mismatch": "两次密码输入不匹配。",
-      "phone.verification.send.success": "我们已经将验证码发送到了你的手机。"
+      "phone.verification.send.success": "我们已经将验证码发送到了你的手机。",
+      "email.verification.send.success": "我们已经将验证码发送到了你的邮箱。"
     },
     "buttons": {
       "get.code": "获取验证码",

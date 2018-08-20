@@ -49,6 +49,21 @@ Account.prototype = {
     }
     $('#layout-container').html(self.templateUser({title: window.i18n.t(title)}));
 
+    $('.identity.tabs').on('click', '.tab', function (e) {
+      e.preventDefault()
+      $('.identity.tabs .tab').removeClass('active');
+      $(this).addClass('active');
+      if ($(this).hasClass('phone')) {
+        $('#enroll-email-form').hide();
+        $('#enroll-phone-form').show();
+        $('#enroll-phone-form #phone').focus();
+      } else {
+        $('#enroll-phone-form').hide();
+        $('#enroll-email-form').show();
+        $('#enroll-email-form #email').focus();
+      }
+    });
+
     var initialCountry = 'US';
     if (navigator.language && navigator.language.indexOf('zh') >= 0) {
       initialCountry = 'CN';
@@ -59,6 +74,10 @@ Account.prototype = {
     });
     phoneInput.focus();
 
+    var enroll = function (token) {
+      $('.recaptcha-response').val(token);
+      $('#enroll-phone-form').submit();
+    };
     $('#enroll-phone-form').submit(function (event) {
       event.preventDefault();
       var form = $(this);
@@ -82,11 +101,41 @@ Account.prototype = {
         self.renderCodeStep(phone, resp.data.verification_id, purpose);
       }, params);
     });
-    var enroll = function (token) {
-      $('.recaptcha-response').val(token);
-      $('#enroll-phone-form').submit();
-    };
     $('#enroll-phone-form :submit').click(function (event) {
+      event.preventDefault();
+      var form = $(this).parents('form');
+      $('.submit-loader', form).show();
+      $(this).hide();
+
+      var widgetId = grecaptcha.render("g-recaptcha", {
+        "sitekey": RECAPTCHA_SITE_KEY,
+        "size": "invisible",
+        "callback": enroll
+      });
+      grecaptcha.execute(widgetId);
+    });
+
+    $('#enroll-email-form').submit(function (e) {
+      event.preventDefault();
+      var form = $(this);
+      var email = $('#enroll-email-form #email').val();
+      var params = {
+        category: 'EMAIL',
+        receiver: email,
+        recaptcha_response: $('.recaptcha-response', this).val()
+      };
+      self.api.account.newVerification(function (resp) {
+        $('.submit-loader', form).hide();
+        $(':submit', form).show();
+
+        if (resp.error) {
+          return;
+        }
+        self.api.notify('success', i18n.t('account.notifications.email.verification.send.success'));
+        self.renderCodeStep(email, resp.data.verification_id, purpose);
+      }, params);
+    });
+    $('#enroll-email-form :submit').click(function (event) {
       event.preventDefault();
       var form = $(this).parents('form');
       $('.submit-loader', form).show();
@@ -224,6 +273,20 @@ Account.prototype = {
     const self = this;
     $('body').attr('class', 'account layout');
     $('#layout-container').html(self.templateSession());
+    $('.identity.tabs').on('click', '.tab', function (e) {
+      e.preventDefault()
+      $('.identity.tabs .tab').removeClass('active');
+      $(this).addClass('active');
+      if ($(this).hasClass('phone')) {
+        $('#enroll-email-form').hide();
+        $('#enroll-phone-form').show();
+        $('#enroll-phone-form #phone').focus();
+      } else {
+        $('#enroll-phone-form').hide();
+        $('#enroll-email-form').show();
+        $('#enroll-email-form #email').focus();
+      }
+    });
 
     var initialCountry = 'US';
     if (navigator.language && navigator.language.indexOf('zh') >= 0) {
@@ -255,6 +318,29 @@ Account.prototype = {
       }, params);
     });
     $('#enroll-phone-form :submit').click(function (event) {
+      event.preventDefault();
+      var form = $(this).parents('form');
+      $('.submit-loader', form).show();
+      $(this).hide();
+      form.submit();
+    });
+    $('#enroll-email-form').submit(function (event) {
+      event.preventDefault();
+      var form = $(this);
+      var email = $('#enroll-email-form #email').val().trim();
+      var params = FormUtils.serialize(form);
+      params.email = email;
+      self.api.account.createSession(function (resp) {
+        $('.submit-loader', form).hide();
+        $(':submit', form).show();
+
+        if (resp.error) {
+          return;
+        }
+        self.router.replace('/accounts');
+      }, params);
+    });
+    $('#enroll-email-form :submit').click(function (event) {
       event.preventDefault();
       var form = $(this).parents('form');
       $('.submit-loader', form).show();
