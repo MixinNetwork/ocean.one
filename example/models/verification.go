@@ -39,7 +39,7 @@ type Verification struct {
 }
 
 func CreateVerification(ctx context.Context, category, receiver string, recaptcha string) (*Verification, error) {
-	if category != VerificationCategoryPhone || category != VerificationCategoryEmail {
+	if category != VerificationCategoryPhone && category != VerificationCategoryEmail {
 		return nil, session.BadDataError(ctx)
 	}
 	provider := wire.SESProviderAWS

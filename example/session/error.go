@@ -138,6 +138,16 @@ func PhoneNonExistError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 20123, description, nil)
 }
 
+func EmailOccupiedError(ctx context.Context) Error {
+	description := "The email has been registered, please sign in with it."
+	return createError(ctx, http.StatusAccepted, 20124, description, nil)
+}
+
+func EmailNonExistError(ctx context.Context) Error {
+	description := "The email is not present."
+	return createError(ctx, http.StatusAccepted, 20125, description, nil)
+}
+
 func createError(ctx context.Context, status, code int, description string, err error) Error {
 	pc, file, line, _ := runtime.Caller(2)
 	funcName := runtime.FuncForPC(pc).Name()

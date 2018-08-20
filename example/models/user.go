@@ -66,19 +66,33 @@ func CreateUser(ctx context.Context, verificationId, password, sessionSecret str
 		if !vf.VerifiedAt.Valid {
 			return session.VerificationCodeInvalidError(ctx)
 		}
-		if vf.Category != VerificationCategoryPhone {
+		if vf.Category != VerificationCategoryPhone && vf.Category != VerificationCategoryEmail {
 			return session.BadDataError(ctx)
 		}
 
-		old, err := readUserIdByIndexKey(ctx, txn, "users_by_phone", vf.Receiver)
-		if err != nil {
-			return err
+		if vf.Category == VerificationCategoryPhone {
+			old, err := readUserIdByIndexKey(ctx, txn, "users_by_phone", vf.Receiver)
+			if err != nil {
+				return err
+			}
+			if old != "" {
+				return session.PhoneOccupiedError(ctx)
+			}
+			user.FullName = vf.Receiver
+			user.Phone = spanner.NullString{vf.Receiver, true}
 		}
-		if old != "" {
-			return session.PhoneOccupiedError(ctx)
+
+		if vf.Category == VerificationCategoryEmail {
+			old, err := readUserIdByIndexKey(ctx, txn, "users_by_email", vf.Receiver)
+			if err != nil {
+				return err
+			}
+			if old != "" {
+				return session.EmailOccupiedError(ctx)
+			}
+			user.FullName = vf.Receiver
+			user.Email = spanner.NullString{vf.Receiver, true}
 		}
-		user.FullName = vf.Receiver
-		user.Phone = spanner.NullString{vf.Receiver, true}
 
 		key, err := consumePoolKey(ctx, txn)
 		if err != nil {
@@ -156,18 +170,30 @@ func ResetPassword(ctx context.Context, verificationId, password, secret string)
 		if !vf.VerifiedAt.Valid {
 			return session.VerificationCodeInvalidError(ctx)
 		}
-		if vf.Category != VerificationCategoryPhone {
+		if vf.Category != VerificationCategoryPhone && vf.Category != VerificationCategoryEmail {
 			return session.BadDataError(ctx)
 		}
 
-		old, err := readUserIdByIndexKey(ctx, txn, "users_by_phone", vf.Receiver)
-		if err != nil {
-			return err
+		var userId string
+		if vf.Category == VerificationCategoryPhone {
+			userId, err = readUserIdByIndexKey(ctx, txn, "users_by_phone", vf.Receiver)
+			if err != nil {
+				return err
+			}
+			if userId == "" {
+				return session.PhoneNonExistError(ctx)
+			}
 		}
-		if old == "" {
-			return session.PhoneNonExistError(ctx)
+		if vf.Category == VerificationCategoryEmail {
+			userId, err = readUserIdByIndexKey(ctx, txn, "users_by_email", vf.Receiver)
+			if err != nil {
+				return err
+			}
+			if userId == "" {
+				return session.EmailNonExistError(ctx)
+			}
 		}
-		user, err = readUser(ctx, txn, old)
+		user, err = readUser(ctx, txn, userId)
 		if err != nil {
 			return err
 		}
