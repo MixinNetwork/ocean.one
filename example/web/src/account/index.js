@@ -69,7 +69,7 @@ Account.prototype = {
       var params = {
         category: 'PHONE',
         receiver: phone,
-        recaptcha_response: $('#recaptcha-response').val()
+        recaptcha_response: $('.recaptcha-response', this).val()
       };
       self.api.account.newVerification(function (resp) {
         $('.submit-loader', form).hide();
@@ -83,7 +83,7 @@ Account.prototype = {
       }, params);
     });
     var enroll = function (token) {
-      $('#recaptcha-response').val(token);
+      $('.recaptcha-response').val(token);
       $('#enroll-phone-form').submit();
     };
     $('#enroll-phone-form :submit').click(function (event) {

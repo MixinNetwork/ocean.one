@@ -39,13 +39,24 @@ type Verification struct {
 }
 
 func CreateVerification(ctx context.Context, category, receiver string, recaptcha string) (*Verification, error) {
-	if category != VerificationCategoryPhone {
+	if category != VerificationCategoryPhone || category != VerificationCategoryEmail {
 		return nil, session.BadDataError(ctx)
 	}
-	if phone, err := ValidatePhoneNumberFormat(ctx, receiver); err != nil {
-		return nil, err
-	} else {
-		receiver = phone
+	provider := wire.SESProviderAWS
+	if category == VerificationCategoryPhone {
+		provider = wire.SMSProviderTelesign
+		if phone, err := ValidatePhoneNumberFormat(ctx, receiver); err != nil {
+			return nil, err
+		} else {
+			receiver = phone
+		}
+	}
+	if category == VerificationCategoryEmail {
+		if email, err := ValidateEmailFormat(ctx, receiver); err != nil {
+			return nil, err
+		} else {
+			receiver = email
+		}
 	}
 
 	code, err := generateSixDigitCode(ctx)
@@ -69,7 +80,7 @@ func CreateVerification(ctx context.Context, category, receiver string, recaptch
 		Category:       category,
 		Receiver:       receiver,
 		Code:           code,
-		Provider:       wire.SMSProviderTelesign,
+		Provider:       provider,
 		CreatedAt:      time.Now(),
 	}
 
@@ -83,7 +94,7 @@ func CreateVerification(ctx context.Context, category, receiver string, recaptch
 			vf, shouldDeliver = last, false
 			return nil
 		}
-		if last != nil && last.Provider == wire.SMSProviderTelesign {
+		if category == VerificationCategoryPhone && last != nil && last.Provider == wire.SMSProviderTelesign {
 			vf.Provider = wire.SMSProviderTwilio
 		}
 		txn.BufferWrite([]*spanner.Mutation{spanner.Insert("verifications", verificationsColumnsFull, vf.valuesFull())})
@@ -108,9 +119,7 @@ func CreateVerification(ctx context.Context, category, receiver string, recaptch
 		} else if limiterCount < 1 {
 			return vf, nil
 		}
-		if err := wire.SendVerificationCode(vf.Provider, vf.Receiver, vf.Code); err != nil {
-			session.PhoneSMSDeliveryError(ctx, vf.Receiver, err)
-		}
+		wire.SendVerificationCode(ctx, vf.Category, vf.Provider, vf.Receiver, vf.Code)
 	}
 
 	return vf, nil

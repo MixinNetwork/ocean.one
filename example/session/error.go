@@ -93,6 +93,11 @@ func MixinNotConnectedError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 10006, description, nil)
 }
 
+func EmailSMSDeliveryError(ctx context.Context, email string, err error) Error {
+	description := fmt.Sprintf("Failed to deliver email to %s.", email)
+	return createError(ctx, http.StatusAccepted, 10007, description, err)
+}
+
 func PhoneInvalidFormatError(ctx context.Context, phone string) Error {
 	description := fmt.Sprintf("Invalid phone number %s.", phone)
 	return createError(ctx, http.StatusAccepted, 20110, description, nil)
@@ -111,6 +116,11 @@ func VerificationCodeInvalidError(ctx context.Context) Error {
 func VerificationCodeExpiredError(ctx context.Context) Error {
 	description := "Expired verification code."
 	return createError(ctx, http.StatusAccepted, 20114, description, nil)
+}
+
+func EmailInvalidFormatError(ctx context.Context, email string) Error {
+	description := fmt.Sprintf("Invalid email format %s.", email)
+	return createError(ctx, http.StatusAccepted, 20115, description, nil)
 }
 
 func PasswordTooSimpleError(ctx context.Context) Error {

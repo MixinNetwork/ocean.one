@@ -88,6 +88,10 @@
   }
 }
 
+#enroll-email-form {
+  display: none;
+}
+
 .field {
   margin: 32px 0;
 }
@@ -118,7 +122,8 @@ label {
 input[type="password"],
 input[type="text"],
 input[type="number"],
-input[type="tel"] {
+input[type="tel"],
+input[type="email"] {
   border: 0 none;
   outline: 0 none;
   border-radius: 0;

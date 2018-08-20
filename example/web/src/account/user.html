@@ -14,7 +14,21 @@
         <div class="field">
           <input type="tel" id="phone" />
         </div>
-        <input type="hidden" id="recaptcha-response"/>
+        <input type="hidden" class="recaptcha-response"/>
+        <input type="submit" value="{{t 'account.buttons.get.code'}}">
+        <div class="submit-loader">
+          <div class="spinner">
+            <div class="bounce1"></div>
+            <div class="bounce2"></div>
+            <div class="bounce3"></div>
+          </div>
+        </div>
+      </form>
+      <form action="javascript:void(0)" id="enroll-email-form">
+        <div class="field">
+          <input type="email" id="email" />
+        </div>
+        <input type="hidden" class="recaptcha-response"/>
         <input type="submit" value="{{t 'account.buttons.get.code'}}">
         <div class="submit-loader">
           <div class="spinner">
