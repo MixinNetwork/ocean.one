@@ -49,8 +49,8 @@ Account.prototype = {
     }
     $('#layout-container').html(self.templateUser({title: window.i18n.t(title)}));
 
-    $('.identity.tabs').on('click', '.tab', function (e) {
-      e.preventDefault()
+    $('.identity.tabs').on('click', '.tab', function (event) {
+      event.preventDefault()
       $('.identity.tabs .tab').removeClass('active');
       $(this).addClass('active');
       if ($(this).hasClass('phone')) {
@@ -121,7 +121,7 @@ Account.prototype = {
       grecaptcha.execute(widgetId);
     });
 
-    $('#enroll-email-form').submit(function (e) {
+    $('#enroll-email-form').submit(function (event) {
       event.preventDefault();
       var form = $(this);
       var email = $('#enroll-email-form #email').val();
@@ -279,8 +279,8 @@ Account.prototype = {
     const self = this;
     $('body').attr('class', 'account layout');
     $('#layout-container').html(self.templateSession());
-    $('.identity.tabs').on('click', '.tab', function (e) {
-      e.preventDefault()
+    $('.identity.tabs').on('click', '.tab', function (event) {
+      event.preventDefault()
       $('.identity.tabs .tab').removeClass('active');
       $(this).addClass('active');
       if ($(this).hasClass('phone')) {

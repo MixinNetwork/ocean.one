@@ -11,7 +11,8 @@ func SendVerificationCode(ctx context.Context, category, provider, receiver, cod
 		if err := SendVerificationCodeByPhone(provider, receiver, code); err != nil {
 			return session.PhoneSMSDeliveryError(ctx, receiver, err)
 		}
-	} else {
+	}
+	if category == "EMAIL" {
 		if err := SendVerificationCodeByEmail(receiver, code); err != nil {
 			return session.EmailSMSDeliveryError(ctx, receiver, err)
 		}

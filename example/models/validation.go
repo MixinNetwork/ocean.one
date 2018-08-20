@@ -59,7 +59,7 @@ func ValidateEmailFormat(ctx context.Context, email string) (string, error) {
 	if result.Result == "deliverable" {
 		return email, nil
 	}
-	return email, session.EmailInvalidFormatError(ctx, email)
+	return "", session.EmailInvalidFormatError(ctx, email)
 }
 
 func ValidateAndEncryptPassword(ctx context.Context, password string) (string, error) {
