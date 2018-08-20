@@ -74,9 +74,12 @@ Account.prototype = {
     });
     phoneInput.focus();
 
+    var widgetId;
     var enroll = function (token) {
       $('.recaptcha-response').val(token);
-      grecaptcha.reset();
+      if (widgetId != undefined) {
+        grecaptcha.reset(widgetId);
+      }
       if ($('.identity.tabs .phone').hasClass('active')) {
         $('#enroll-phone-form').submit();
       }
@@ -113,11 +116,13 @@ Account.prototype = {
       $('.submit-loader', form).show();
       $(this).hide();
 
-      var widgetId = grecaptcha.render("g-recaptcha", {
-        "sitekey": RECAPTCHA_SITE_KEY,
-        "size": "invisible",
-        "callback": enroll
-      });
+      if (widgetId == undefined) {
+        widgetId = grecaptcha.render("g-recaptcha", {
+          "sitekey": RECAPTCHA_SITE_KEY,
+          "size": "invisible",
+          "callback": enroll
+        });
+      }
       grecaptcha.execute(widgetId);
     });
 
@@ -147,11 +152,13 @@ Account.prototype = {
       $('.submit-loader', form).show();
       $(this).hide();
 
-      var widgetId = grecaptcha.render("g-recaptcha", {
-        "sitekey": RECAPTCHA_SITE_KEY,
-        "size": "invisible",
-        "callback": enroll
-      });
+      if (widgetId == undefined) {
+        widgetId = grecaptcha.render("g-recaptcha", {
+          "sitekey": RECAPTCHA_SITE_KEY,
+          "size": "invisible",
+          "callback": enroll
+        });
+      }
       grecaptcha.execute(widgetId);
     });
   },
@@ -325,7 +332,7 @@ Account.prototype = {
     });
     $('#enroll-phone-form :submit').click(function (event) {
       event.preventDefault();
-      var form = $(this).parents('form');
+      var form = $(this).parents('#enroll-phone-form');
       $('.submit-loader', form).show();
       $(this).hide();
       form.submit();
@@ -348,7 +355,7 @@ Account.prototype = {
     });
     $('#enroll-email-form :submit').click(function (event) {
       event.preventDefault();
-      var form = $(this).parents('form');
+      var form = $(this).parents('#enroll-email-form');
       $('.submit-loader', form).show();
       $(this).hide();
       form.submit();
