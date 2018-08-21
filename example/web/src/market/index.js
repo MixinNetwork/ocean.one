@@ -16,6 +16,7 @@ function Market(router, api) {
   this.itemOrder = require('./order_item.html');
   this.itemTrade = require('./trade_item.html');
   this.itemMarket = require('./market_item.html');
+  this.depthLevel = 0;
   jQueryColor($);
 }
 
@@ -181,6 +182,34 @@ Market.prototype = {
     $('.order.book').on('click', 'li', function (event) {
       event.preventDefault();
       $('.trade.form input[name="price"]').val($(this).data('price'));
+    });
+
+    $('.charts.container').on('click', '.icon-minus', function (e) {
+      e.preventDefault();
+      $('.charts.container .icon').removeClass('disabled');
+      if (self.depthLevel <= -0.5) {
+        $(this).addClass('disabled');
+        return;
+      }
+      self.depthLevel -= 0.1;
+      if (self.depthChart) {
+        self.depthChart.destroy();
+        self.depthChart = new Chart().renderDepth($('.depth.chart')[0], self.book.bids, self.book.asks, self.depthLevel);
+      }
+    });
+
+    $('.charts.container').on('click', '.icon-plus', function (e) {
+      e.preventDefault();
+      $('.charts.container .icon').removeClass('disabled');
+      if (self.depthLevel >= 0.5) {
+        $(this).addClass('disabled');
+        return;
+      }
+      self.depthLevel += 0.1;
+      if (self.depthChart) {
+        self.depthChart.destroy();
+        self.depthChart = new Chart().renderDepth($('.depth.chart')[0], self.book.bids, self.book.asks, self.depthLevel);
+      }
     });
 
     self.handleOrderCreate();
@@ -507,7 +536,13 @@ Market.prototype = {
   renderDepthChart: function () {
     const self = this;
     const chart = new Chart();
-    self.depthChart = chart.renderDepth($('.depth.chart')[0], self.book.bids, self.book.asks);
+    if (self.depthChart) {
+      self.depthChart.destroy();
+    }
+    self.depthChart = chart.renderDepth($('.depth.chart')[0], self.book.bids, self.book.asks, self.depthLevel);
+    if (self.depthChart) {
+      $('.charts.container .icon').addClass('show');
+    }
   },
 
   render: function (msg) {

@@ -146,7 +146,7 @@ Chart.prototype = {
     return chart;
   },
 
-  renderDepth: function (ele, bids, asks) {
+  renderDepth: function (ele, bids, asks, depth) {
     if (bids.length === 0 || asks.length === 0) {
       return undefined;
     }
@@ -163,9 +163,7 @@ Chart.prototype = {
       });
     }
     bidsData = bidsData.reverse();
-    if (bidsData.length > 40) {
-      bidsData = bidsData.splice(bidsData.length / 2);
-    }
+    bidsData = bidsData.splice(bidsData.length * 1 / 4 + bidsData.length * depth / 2);
 
     var asksInput = [];
     for(var i = 0; i < asks.length; i++) {
