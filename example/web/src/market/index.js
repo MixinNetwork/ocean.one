@@ -508,11 +508,13 @@ Market.prototype = {
   renderDepthChart: function () {
     const self = this;
     const chart = new Chart();
-    $('.charts.container .icon').addClass('show');
     if (self.depthChart) {
       self.depthChart.destroy();
     }
     self.depthChart = chart.renderDepth($('.depth.chart')[0], self.book.bids, self.book.asks, self.depthLevel);
+    if (self.depthChart) {
+      $('.charts.container .icon').addClass('show');
+    }
   },
 
   render: function (msg) {
