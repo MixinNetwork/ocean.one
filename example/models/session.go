@@ -46,6 +46,12 @@ func CreateSession(ctx context.Context, receiver, password string, secret string
 			return err
 		}
 		if u == nil {
+			u, err = readUserByEmail(ctx, txn, receiver)
+			if err != nil {
+				return err
+			}
+		}
+		if u == nil {
 			return session.AuthorizationError(ctx)
 		}
 		err = bcrypt.CompareHashAndPassword([]byte(u.EncryptedPassword), []byte(password))

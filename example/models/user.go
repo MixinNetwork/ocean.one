@@ -185,6 +185,25 @@ func readUserByPhone(ctx context.Context, txn durable.Transaction, phone string)
 	return userFromRow(row)
 }
 
+func readUserByEmail(ctx context.Context, txn durable.Transaction, email string) (*User, error) {
+	id, err := readUserIdByIndexKey(ctx, txn, "users_by_email", email)
+	if err != nil || id == "" {
+		return nil, err
+	}
+
+	it := txn.Read(ctx, "users", spanner.Key{id}, usersColumnsFull)
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return userFromRow(row)
+}
+
 func readUser(ctx context.Context, txn durable.Transaction, userId string) (*User, error) {
 	it := txn.Read(ctx, "users", spanner.Key{userId}, usersColumnsFull)
 	defer it.Stop()
