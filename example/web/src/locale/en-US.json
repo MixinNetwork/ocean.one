@@ -14,11 +14,7 @@
       "20113": "Invalid phone verification code.",
       "20114": "Expired phone verification code.",
       "20117": "Insufficient balance.",
-      "20118": "Password too simple, at least 8 characters required.",
-      "20122": "This phone is already registered, please log in.",
-      "20123": "The phone is not present.",
-      "20124": "This email is already registered, please log in.",
-      "20125": "The email is not present."
+      "20118": "Password too simple, at least 8 characters required."
     }
   },
   "account": {
