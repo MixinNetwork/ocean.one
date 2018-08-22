@@ -18,6 +18,14 @@ function Market(router, api) {
   this.itemMarket = require('./market_item.html');
   this.depthLevel = 0;
   jQueryColor($);
+  BigNumber.config({ 
+    FORMAT: {
+      decimalSeparator: '.',
+      groupSeparator: ',',
+      groupSize: 3,
+      secondaryGroupSize: 0
+    }
+  });
 }
 
 Market.prototype = {
@@ -405,6 +413,121 @@ Market.prototype = {
     });
   },
 
+  validateOrder: function(data) {
+    const self = this;
+    const maximumPrice = new BigNumber(1000000000);
+    const maximumAmount = new BigNumber(5000000000);
+    const maximumFunds = maximumPrice.times(maximumAmount);
+    const amountPrecision = 4;
+
+    var priceDecimal = new BigNumber(data.price);
+    const amountDecimal = new BigNumber(data.type === 'MARKET' && data.side === 'BID' ? data.funds : data.amount);
+
+    if (data.type === 'LIMIT' && (isNaN(priceDecimal) || priceDecimal.isZero())) {
+      self.api.notify('error', window.i18n.t('market.errors.price_zero'));
+      return false;
+    }
+
+    if (isNaN(amountDecimal) || amountDecimal.isZero()) {
+      self.api.notify('error', window.i18n.t('market.errors.amount_zero'));
+      return false;
+    }
+    const minAmount = new BigNumber(1).shiftedBy(-self.basePrecision(self.base.asset_id));
+    if (amountDecimal.isLessThan(minAmount)) {
+      self.api.notify('error', window.i18n.t('market.errors.amount_min', { amount: minAmount.toFormat(), symbol: self.base.symbol}));
+      return false;
+    }
+
+    const quotePrecision = self.quotePrecision(self.quote.asset_id);
+    const maxPrice = maximumPrice.shiftedBy(-quotePrecision);
+
+    if (priceDecimal.isGreaterThan(maxPrice)) {
+      self.api.notify('error', window.i18n.t('market.errors.price_max', { price: maxPrice.toFormat(), symbol: self.quote.symbol}));
+      return false;
+    }
+
+    if (data.type === 'LIMIT') {
+      if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
+        priceDecimal = new BigNumber(priceDecimal.toFixed(4));
+      } else {
+        priceDecimal = new BigNumber(priceDecimal.toFixed(8));
+      }
+
+      const minPrice = new BigNumber(1).shiftedBy(-quotePrecision);
+      if (priceDecimal.isLessThan(minPrice)) {
+        self.api.notify('error', window.i18n.t('market.errors.price_min', { price: minPrice.toFormat(), symbol: self.quote.symbol}));
+        return false;
+      }
+    }
+
+    var fundsDecimal;
+    if (data.type === 'LIMIT' && data.side === 'BID') {
+      fundsDecimal = new BigNumber(amountDecimal.times(priceDecimal).toFixed(8));
+    } else {
+      fundsDecimal = new BigNumber(amountDecimal.toFixed(8));
+    }
+    const fundsPrecision = amountPrecision + quotePrecision;
+    const quoteMinimum = new BigNumber(self.quoteMinimum(self.quote.asset_id));
+
+    if (data.side === 'BID') {
+      const maxFunds = maximumFunds.shiftedBy(-fundsPrecision);
+      if (fundsDecimal.isGreaterThan(maxFunds)) {
+        self.api.notify('error', window.i18n.t('market.errors.fund_max', { fund: maxFunds.toFormat(), symbol: self.quote.symbol}));
+        return false;
+      }
+
+      if (fundsDecimal.isLessThan(quoteMinimum)) {
+        self.api.notify('error', window.i18n.t('market.errors.fund_min', { fund: quoteMinimum.toString(), symbol: self.quote.symbol}));
+        return false;
+      }
+    } else {
+      const maxAmount = maximumAmount.shiftedBy(-amountPrecision);
+      if (fundsDecimal.isGreaterThan(maxAmount)) {
+        self.api.notify('error', window.i18n.t('market.errors.fund_max', { fund: maxAmount.toFormat(), symbol: self.base.symbol}));
+        return false;
+      }
+
+      if (data.type === 'LIMIT' && priceDecimal.times(amountDecimal).isLessThan(quoteMinimum)) {
+        self.api.notify('error', window.i18n.t('market.errors.fund_min', { fund: quoteMinimum.toString(), symbol: self.quote.symbol}));
+        return false;
+      }
+    }
+
+    return true;
+  },
+
+  quotePrecision: function(asset) {
+    switch (asset) {
+      case 'c94ac88f-4671-3976-b60a-09064f1811e8':
+        return 8;
+      case 'c6d0c728-2624-429b-8e0d-d9d19b6592fa':
+        return 8;
+      case '815b0b1a-2764-3736-8faa-42d694fa620a':
+        return 4;
+      default:
+        break;
+    }
+    return 0;
+  },
+
+  basePrecision: function(asset) {
+    return asset === '815b0b1a-2764-3736-8faa-42d694fa620a' ? 4 : 8;
+  },
+
+  quoteMinimum: function(asset) {
+    switch (asset) {
+      case 'c94ac88f-4671-3976-b60a-09064f1811e8':  // xin
+        return 0.0001;
+      case 'c6d0c728-2624-429b-8e0d-d9d19b6592fa':  // btc
+        return 0.0001;
+      case '815b0b1a-2764-3736-8faa-42d694fa620a':  // usdt
+        return 1;
+      default:
+        break;
+    }
+    return 0;
+  },
+
   handleOrderCreate: function () {
     const self = this;
 
@@ -415,6 +538,14 @@ Market.prototype = {
       if (data.type === 'LIMIT' && data.side === 'BID') {
         data.funds = new BigNumber(data.amount).times(data.price).toFixed(8);
       }
+
+      if (!self.validateOrder(data)) {
+        $('.submit-loader', form).hide();
+        $(':submit', form).show();
+        $(':submit', form).prop('disabled', false);
+        return;
+      }
+
       self.api.order.create(function (resp) {
         $('.submit-loader', form).hide();
         $(':submit', form).show();

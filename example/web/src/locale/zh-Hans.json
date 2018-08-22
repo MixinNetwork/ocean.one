@@ -94,6 +94,16 @@
     "form.button.buy": "下单买入",
     "form.button.sell": "下单卖出",
     "account.wallet": "钱包",
-    "account.orders": "我的挂单"
+    "account.orders": "我的挂单",
+    "errors": {
+      "price_zero": "价格不能为空或 0",
+      "amount_zero": "数量不能为空或 0",
+      "price_max": "最大价格不能超过 %{price} %{symbol}",
+      "price_min": "最小价格不能小于 %{price} %{symbol}",
+      "fund_max": "下单总量不能超过 %{fund} %{symbol}",
+      "fund_min": "下单总量至少为 %{fund} %{symbol}",
+      "amount_max": "数量最多不能超过 %{amount} %{symbol}",
+      "amount_min": "数量必须大于 %{amount} %{symbol}"
+    }
   }
 }
