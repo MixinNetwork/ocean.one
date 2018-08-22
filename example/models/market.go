@@ -217,6 +217,7 @@ var symbolsMap = map[string]string{
 	"23dfb5a5-5d7b-48b6-905f-3970e3176e27": "XRP",
 	"990c4c29-57e9-48f6-9819-7d986ea44985": "SC",
 	"c94ac88f-4671-3976-b60a-09064f1811e8": "XIN",
+	"43b645fc-a52c-38a3-8d3b-705e7aaefa15": "CANDY",
 }
 
 var usdtMarkets = []string{
