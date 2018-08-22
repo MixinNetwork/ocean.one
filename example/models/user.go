@@ -60,10 +60,7 @@ func CreateOrResetUser(ctx context.Context, verificationId, password, sessionSec
 		if err != nil {
 			return err
 		}
-		if vf == nil {
-			return session.VerificationCodeInvalidError(ctx)
-		}
-		if !vf.VerifiedAt.Valid {
+		if vf == nil || !vf.VerifiedAt.Valid {
 			return session.VerificationCodeInvalidError(ctx)
 		}
 		if vf.Category != VerificationCategoryPhone && vf.Category != VerificationCategoryEmail {

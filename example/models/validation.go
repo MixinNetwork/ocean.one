@@ -45,7 +45,7 @@ func ValidateEmailFormat(ctx context.Context, email string) (string, error) {
 	client := &http.Client{Timeout: config.ExternalNetworkTimeout}
 	resp, err := client.Get(fmt.Sprintf("https://api.kickbox.io/v2/verify?email=%s&apikey=%s", email, config.KickboxApikey))
 	if err != nil {
-		return "", session.EmailInvalidFormatError(ctx, email)
+		return "", session.ServerError(ctx, err)
 	}
 	defer resp.Body.Close()
 
