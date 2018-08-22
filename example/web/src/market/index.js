@@ -298,7 +298,9 @@ Market.prototype = {
       m.volume = new BigNumber(m.volume).toFixed(2);
       m.total = new BigNumber(m.total).toFixed(2);
       m.price_usd = new BigNumber(m.price).times(m.quote_usd);
-      if (m.price_usd.toFixed(4).indexOf('0.00') === 0) {
+      if (m.price_usd.toFixed(6).indexOf('0.0000') === 0) {
+        m.price_usd = new BigNumber(m.price_usd).toFixed(6);
+      } else if (m.price_usd.toFixed(4).indexOf('0.00') === 0) {
         m.price_usd = new BigNumber(m.price_usd).toFixed(4);
       } else {
         m.price_usd = new BigNumber(m.price_usd).toFixed(2);
@@ -606,7 +608,9 @@ Market.prototype = {
     $('.book.data .spread').attr('data-price', price);
     $('.quote.price').html(new BigNumber(price).toFixed(8).replace(/\.?0+$/,""));
     var price_usd = new BigNumber(price).times(self.quote_usd);
-    if (price_usd.toFixed(4).indexOf('0.00') === 0) {
+    if (price_usd.toFixed(6).indexOf('0.0000') === 0) {
+      price_usd = new BigNumber(price_usd).toFixed(6);
+    } else if (price_usd.toFixed(4).indexOf('0.00') === 0) {
       price_usd = new BigNumber(price_usd).toFixed(4);
     } else {
       price_usd = new BigNumber(price_usd).toFixed(2);
