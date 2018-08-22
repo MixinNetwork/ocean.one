@@ -7,7 +7,7 @@ const (
 	SMSProviderTwilio   = "twilio"
 )
 
-func SendVerificationCode(provider, phone, code string) error {
+func SendVerificationCodeByPhone(provider, phone, code string) error {
 	if !config.SMSDeliveryEnabled {
 		return nil
 	}

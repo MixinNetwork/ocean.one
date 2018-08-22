@@ -7,8 +7,8 @@
   <section class="content">
     <div class="orders container">
       <div class="navi">
-        <a href="/orders/{{ pair }}" class="item {{#if pending}}active{{/if}}">Pending</a>
-        <a href="/orders/{{ pair }}?state=DONE" class="item {{#unless pending}}active{{/unless}}">Done</a>
+        <a href="/orders/{{ pair }}" class="item {{#if pending}}active{{/if}}">{{t 'orders.table.pending'}}</a>
+        <a href="/orders/{{ pair }}?state=DONE" class="item {{#unless pending}}active{{/unless}}">{{t 'orders.table.done'}}</a>
       </div>
       <table class="orders list">
         <thead>

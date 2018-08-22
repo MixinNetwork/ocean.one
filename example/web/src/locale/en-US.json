@@ -14,8 +14,7 @@
       "20113": "Invalid phone verification code.",
       "20114": "Expired phone verification code.",
       "20117": "Insufficient balance.",
-      "20118": "Password too simple, at least 8 characters required.",
-      "20122": "This phone is already registered, please log in."
+      "20118": "Password too simple, at least 8 characters required."
     }
   },
   "account": {
@@ -24,11 +23,12 @@
       "email": "Email"
     },
     "code": {
-      "title": "Enter the 6-digit verification code sent to you at %{phone}."
+      "title": "Enter the 6-digit verification code sent to you at %{receiver}."
     },
     "notifications": {
       "password.mismatch": "Password mismatch.",
-      "phone.verification.send.success": "We have sent the verification code to your phone."
+      "phone.verification.send.success": "We have sent the verification code to your phone.",
+      "email.verification.send.success": "We have sent the verification code to your email."
     },
     "buttons": {
       "get.code": "Get Verification Code",
@@ -44,7 +44,9 @@
     "title": "My Orders",
     "table.price": "Price",
     "table.amount": "Amount",
-    "table.time": "Time"
+    "table.time": "Time",
+    "table.pending": "Pending",
+    "table.done": "Done"
   },
   "deposit": {
     "title": "Deposit",

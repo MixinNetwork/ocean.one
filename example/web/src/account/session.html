@@ -32,6 +32,29 @@
           <a href="/passwords/new">{{t 'home.forgot.password'}}</a>
         </div>
       </form>
+
+      <form action="javascript:void(0)" id="enroll-email-form">
+        <div class="field">
+          <input type="email" id="email" />
+        </div>
+        <div class="field">
+          <input type="password" name="password" id="password" placeholder="{{t 'account.placeholder.password'}}">
+        </div>
+        <input type="submit" value="{{t 'home.log.in'}}">
+        <div class="submit-loader">
+          <div class="spinner">
+            <div class="bounce1"></div>
+            <div class="bounce2"></div>
+            <div class="bounce3"></div>
+          </div>
+        </div>
+        <div class="link field">
+          <a href="/users/new">{{t 'home.sign.up'}}</a>
+        </div>
+        <div class="link field">
+          <a href="/passwords/new">{{t 'home.forgot.password'}}</a>
+        </div>
+      </form>
     </div>
   </section>
 </div>

@@ -93,6 +93,11 @@ func MixinNotConnectedError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 10006, description, nil)
 }
 
+func EmailSMSDeliveryError(ctx context.Context, email string, err error) Error {
+	description := fmt.Sprintf("Failed to deliver email to %s.", email)
+	return createError(ctx, http.StatusAccepted, 10007, description, err)
+}
+
 func PhoneInvalidFormatError(ctx context.Context, phone string) Error {
 	description := fmt.Sprintf("Invalid phone number %s.", phone)
 	return createError(ctx, http.StatusAccepted, 20110, description, nil)
@@ -113,19 +118,14 @@ func VerificationCodeExpiredError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 20114, description, nil)
 }
 
+func EmailInvalidFormatError(ctx context.Context, email string) Error {
+	description := fmt.Sprintf("Invalid email format %s.", email)
+	return createError(ctx, http.StatusAccepted, 20115, description, nil)
+}
+
 func PasswordTooSimpleError(ctx context.Context) Error {
 	description := "Password too simple, at least 8 characters required."
 	return createError(ctx, http.StatusAccepted, 20118, description, nil)
-}
-
-func PhoneOccupiedError(ctx context.Context) Error {
-	description := "The phone number has been registered, please sign in with it."
-	return createError(ctx, http.StatusAccepted, 20122, description, nil)
-}
-
-func PhoneNonExistError(ctx context.Context) Error {
-	description := "The phone number is not present."
-	return createError(ctx, http.StatusAccepted, 20123, description, nil)
 }
 
 func createError(ctx context.Context, status, code int, description string, err error) Error {

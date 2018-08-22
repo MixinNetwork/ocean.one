@@ -14,8 +14,7 @@
       "20113": "手机验证码无效。",
       "20114": "过期的手机验证码。",
       "20117": "余额不足。",
-      "20118": "密码太简单，至少需要8个字符。",
-      "20122": "此手机已经注册，请登录。"
+      "20118": "密码太简单，至少需要8个字符。"
     }
   },
   "account": {
@@ -24,11 +23,12 @@
       "email": "邮箱"
     },
     "code": {
-      "title": "请输入发送到 %{phone} 的 6 位数字验证码。"
+      "title": "请输入发送到 %{receiver} 的 6 位数字验证码。"
     },
     "notifications": {
       "password.mismatch": "两次密码输入不匹配。",
-      "phone.verification.send.success": "我们已经将验证码发送到了你的手机。"
+      "phone.verification.send.success": "我们已经将验证码发送到了你的手机。",
+      "email.verification.send.success": "我们已经将验证码发送到了你的邮箱。"
     },
     "buttons": {
       "get.code": "获取验证码",
@@ -44,7 +44,9 @@
     "title": "我的挂单",
     "table.price": "价格",
     "table.amount": "数量",
-    "table.time": "时间"
+    "table.time": "时间",
+    "table.pending": "未成交",
+    "table.done": "已成交"
   },
   "deposit": {
     "title": "充值",

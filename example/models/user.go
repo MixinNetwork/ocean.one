@@ -33,7 +33,7 @@ type User struct {
 	Key       *Key
 }
 
-func CreateUser(ctx context.Context, verificationId, password, sessionSecret string) (*User, error) {
+func CreateOrResetUser(ctx context.Context, verificationId, password, sessionSecret string) (*User, error) {
 	pkix, err := hex.DecodeString(sessionSecret)
 	if err != nil {
 		return nil, session.BadDataError(ctx)
@@ -60,40 +60,58 @@ func CreateUser(ctx context.Context, verificationId, password, sessionSecret str
 		if err != nil {
 			return err
 		}
-		if vf == nil {
+		if vf == nil || !vf.VerifiedAt.Valid {
 			return session.VerificationCodeInvalidError(ctx)
 		}
-		if !vf.VerifiedAt.Valid {
-			return session.VerificationCodeInvalidError(ctx)
-		}
-		if vf.Category != VerificationCategoryPhone {
+		if vf.Category != VerificationCategoryPhone && vf.Category != VerificationCategoryEmail {
 			return session.BadDataError(ctx)
 		}
 
-		old, err := readUserIdByIndexKey(ctx, txn, "users_by_phone", vf.Receiver)
-		if err != nil {
-			return err
-		}
-		if old != "" {
-			return session.PhoneOccupiedError(ctx)
-		}
 		user.FullName = vf.Receiver
-		user.Phone = spanner.NullString{vf.Receiver, true}
-
-		key, err := consumePoolKey(ctx, txn)
-		if err != nil {
-			return err
+		var userId string
+		if vf.Category == VerificationCategoryPhone {
+			userId, err = readUserIdByIndexKey(ctx, txn, "users_by_phone", vf.Receiver)
+			if err != nil {
+				return err
+			}
+			user.Phone = spanner.NullString{vf.Receiver, true}
 		}
-		if key == nil {
-			return session.InsufficientKeyPoolError(ctx)
+		if vf.Category == VerificationCategoryEmail {
+			userId, err = readUserIdByIndexKey(ctx, txn, "users_by_email", vf.Receiver)
+			if err != nil {
+				return err
+			}
+			user.Email = spanner.NullString{vf.Receiver, true}
 		}
-		user.UserId = key.UserId
 
-		err = txn.BufferWrite([]*spanner.Mutation{
+		if userId != "" {
+			user, err = readUser(ctx, txn, userId)
+			if err != nil {
+				return err
+			}
+			user.EncryptedPassword = password
+			user.ActiveAt = createdAt
+			cleanupSessions(ctx, txn, user.UserId)
+		}
+		var key *Key
+		if userId == "" {
+			key, err = consumePoolKey(ctx, txn)
+			if err != nil {
+				return err
+			}
+			if key == nil {
+				return session.InsufficientKeyPoolError(ctx)
+			}
+			user.UserId = key.UserId
+		}
+		mutations := []*spanner.Mutation{
 			spanner.Delete("verifications", spanner.Key{vf.VerificationId}),
-			spanner.Insert("users", usersColumnsFull, user.valuesFull()),
-			spanner.Insert("keys", keysColumnsFull, key.valuesFull()),
-		})
+			spanner.InsertOrUpdate("users", usersColumnsFull, user.valuesFull()),
+		}
+		if key != nil {
+			mutations = append(mutations, spanner.Insert("keys", keysColumnsFull, key.valuesFull()))
+		}
+		err = txn.BufferWrite(mutations)
 		if err != nil {
 			return err
 		}
@@ -104,7 +122,7 @@ func CreateUser(ctx context.Context, verificationId, password, sessionSecret str
 		}
 		user.SessionId = session.SessionId
 		return nil
-	}, "users", "INSERT", "CreateUser")
+	}, "users", "INSERT", "CreateOrResetUser")
 
 	if err != nil {
 		if se, ok := session.ParseError(spanner.ErrDesc(err)); ok {
@@ -129,74 +147,6 @@ func (current *User) UpdateName(ctx context.Context, name string) (*User, error)
 	return current, nil
 }
 
-func ResetPassword(ctx context.Context, verificationId, password, secret string) (*User, error) {
-	pkix, err := hex.DecodeString(secret)
-	if err != nil {
-		return nil, session.BadDataError(ctx)
-	}
-	_, err = x509.ParsePKIXPublicKey(pkix)
-	if err != nil {
-		return nil, session.BadDataError(ctx)
-	}
-
-	password, err = ValidateAndEncryptPassword(ctx, password)
-	if err != nil {
-		return nil, err
-	}
-
-	var user *User
-	_, err = session.Database(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		vf, err := readVerification(ctx, txn, verificationId)
-		if err != nil {
-			return err
-		}
-		if vf == nil {
-			return session.VerificationCodeInvalidError(ctx)
-		}
-		if !vf.VerifiedAt.Valid {
-			return session.VerificationCodeInvalidError(ctx)
-		}
-		if vf.Category != VerificationCategoryPhone {
-			return session.BadDataError(ctx)
-		}
-
-		old, err := readUserIdByIndexKey(ctx, txn, "users_by_phone", vf.Receiver)
-		if err != nil {
-			return err
-		}
-		if old == "" {
-			return session.PhoneNonExistError(ctx)
-		}
-		user, err = readUser(ctx, txn, old)
-		if err != nil {
-			return err
-		}
-		err = cleanupSessions(ctx, txn, user.UserId)
-		if err != nil {
-			return err
-		}
-		s, err := addSession(ctx, txn, user.UserId, secret)
-		if err != nil {
-			return err
-		}
-		user.EncryptedPassword = password
-		user.SessionId = s.SessionId
-		user.ActiveAt = s.ActiveAt
-		user.CreatedAt = s.CreatedAt
-		return txn.BufferWrite([]*spanner.Mutation{
-			spanner.Delete("verifications", spanner.Key{vf.VerificationId}),
-			spanner.Update("users", []string{"user_id", "encrypted_password", "active_at", "created_at"}, []interface{}{user.UserId, user.EncryptedPassword, user.ActiveAt, user.CreatedAt}),
-		})
-	}, "users", "UPDATE", "ResetPassword")
-	if err != nil {
-		if se, ok := session.ParseError(spanner.ErrDesc(err)); ok {
-			return nil, se
-		}
-		return nil, session.TransactionError(ctx, err)
-	}
-	return user, nil
-}
-
 func readUserIdByIndexKey(ctx context.Context, txn durable.Transaction, index, key string) (string, error) {
 	it := txn.ReadUsingIndex(ctx, "users", index, spanner.Key{key}, []string{"user_id"})
 	defer it.Stop()
@@ -215,6 +165,25 @@ func readUserIdByIndexKey(ctx context.Context, txn durable.Transaction, index, k
 
 func readUserByPhone(ctx context.Context, txn durable.Transaction, phone string) (*User, error) {
 	id, err := readUserIdByIndexKey(ctx, txn, "users_by_phone", phone)
+	if err != nil || id == "" {
+		return nil, err
+	}
+
+	it := txn.Read(ctx, "users", spanner.Key{id}, usersColumnsFull)
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return userFromRow(row)
+}
+
+func readUserByEmail(ctx context.Context, txn durable.Transaction, email string) (*User, error) {
+	id, err := readUserIdByIndexKey(ctx, txn, "users_by_email", email)
 	if err != nil || id == "" {
 		return nil, err
 	}
