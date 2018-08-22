@@ -13,7 +13,7 @@
       "20111": "Too many users registered, please wait.",
       "20113": "Invalid phone verification code.",
       "20114": "Expired phone verification code.",
-      "20115": "Invalid email format.",
+      "20115": "Invalid email.",
       "20117": "Insufficient balance.",
       "20118": "Password too simple, at least 8 characters required."
     }
