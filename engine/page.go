@@ -132,9 +132,10 @@ func (page *Page) List(count int, filterEmpty bool) []*Entry {
 		} else if entry.Funds.IsZero() {
 			entry.Funds = price.Mul(entry.Amount)
 		}
-		if !filterEmpty || !entry.Funds.IsZero() {
-			entries = append(entries, entry)
+		if filterEmpty && entry.Funds.IsZero() {
+			continue
 		}
+		entries = append(entries, entry)
 		if count = count - 1; count == 0 {
 			it.End()
 		}
