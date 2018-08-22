@@ -238,4 +238,5 @@ var xinMarkets = []string{
 	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d", // EOS
 	"43d61dcd-e413-450d-80b8-101d5e903357", // ETH
 	"990c4c29-57e9-48f6-9819-7d986ea44985", // SC
+	"43b645fc-a52c-38a3-8d3b-705e7aaefa15", // CANDY
 }

@@ -40,5 +40,12 @@
     "icon_url": "https://images.mixin.one/UasWtBZO0TZyLTLCFQjvE_UYekjC7eHCuT_9_52ZpzmCC-X-NPioVegng7Hfx0XmIUavZgz5UL-HIgPCBECc-Ws=s128",
     "name": "Mixin",
     "symbol": "XIN"
+  },
+  {
+    "chain_id": "43d61dcd-e413-450d-80b8-101d5e903357",
+    "asset_id": "43b645fc-a52c-38a3-8d3b-705e7aaefa15",
+    "icon_url": "https://images.mixin.one/wrGUPXYeb4zw1cm9KL27ftmqEWdu2-ltzKQlRAlHe4ulneHj7IdTwgPdsX4csuxYBAuIi8_iBfMI7yX6xQmlQA=s128",
+    "name": "Candy",
+    "symbol": "CANDY"
   }
 ]
