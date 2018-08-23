@@ -47,7 +47,7 @@
     "table.amount": "数量",
     "table.time": "时间",
     "table.pending": "未成交",
-    "table.done": "已成交"
+    "table.done": "已完成"
   },
   "deposit": {
     "title": "充值",
