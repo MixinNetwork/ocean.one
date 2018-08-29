@@ -72,6 +72,11 @@ func GetMarket(ctx context.Context, base, quote string) (*Market, error) {
 }
 
 func ListActiveMarkets(ctx context.Context, user *User) ([]*Market, error) {
+	filter := make(map[string]bool)
+	for _, m := range AllMarkets() {
+		filter[m.Base+m.Quote] = true
+	}
+
 	inputs, err := ListMarkets(ctx, user)
 	if err != nil {
 		return inputs, err
@@ -79,7 +84,7 @@ func ListActiveMarkets(ctx context.Context, user *User) ([]*Market, error) {
 
 	var markets []*Market
 	for _, m := range inputs {
-		if m.Volume > 0 {
+		if filter[m.Base+m.Quote] {
 			markets = append(markets, m)
 		}
 	}
