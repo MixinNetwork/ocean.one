@@ -1,0 +1,34 @@
+<div class="container">
+  <header class="header">
+    <a class="nav back" href="/"><i class="icon-arrow-left"></i></a>
+    <h1 class="title">{{title}}</h1>
+    <a class="nav support" href="javascript:void(0);"><i class="icon-question"></i></a>
+  </header>
+  <section class="content">
+    <div class="form container">
+
+      <h2>{{ t 'account.code.title' receiver=receiver}}</h2>
+
+      <form action="javascript:void(0)" id="session-verify-form">
+        <div class="field">
+          <input type="number" name="code" id="code">
+          <input type="hidden" name="user_id" value="{{user_id}}">
+          <input type="hidden" name="session_id" value="{{session_id}}">
+        </div>
+        <input type="submit" value="{{t 'account.buttons.submit'}}">
+        <div class="submit-loader">
+          <div class="spinner">
+            <div class="bounce1"></div>
+            <div class="bounce2"></div>
+            <div class="bounce3"></div>
+          </div>
+        </div>
+
+        <div class="link field">
+          <a href="/sessions/new">{{t 'home.log.in'}}</a>
+        </div>
+      </form>
+
+    </div>
+  </section>
+</div>

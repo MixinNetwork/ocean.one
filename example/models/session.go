@@ -130,8 +130,8 @@ func addSession(ctx context.Context, txn *spanner.ReadWriteTransaction, user *Us
 		return nil, err
 	}
 	go func() {
-		id := bot.UniqueConversationId(config.ClientId, user.UserId)
-		data := base64.StdEncoding.EncodeToString([]byte(s.Code.StringVal))
+		id := bot.UniqueConversationId(config.ClientId, user.MixinUserId())
+		data := base64.StdEncoding.EncodeToString([]byte("Ocean Code " + s.Code.StringVal))
 		bot.PostMessage(ctx, id, user.MixinUserId(), uuid.NewV4().String(), "PLAIN_TEXT", data, config.ClientId, config.SessionId, config.SessionKey)
 	}()
 	return s, nil

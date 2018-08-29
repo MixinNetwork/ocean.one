@@ -128,11 +128,6 @@ func TwoFAInvalidError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, 20116, description, nil)
 }
 
-func TwoFARequiredError(ctx context.Context) Error {
-	description := "2FA code is required."
-	return createError(ctx, http.StatusAccepted, 20117, description, nil)
-}
-
 func PasswordTooSimpleError(ctx context.Context) Error {
 	description := "Password too simple, at least 8 characters required."
 	return createError(ctx, http.StatusAccepted, 20118, description, nil)

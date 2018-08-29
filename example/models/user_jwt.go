@@ -43,8 +43,7 @@ func AuthenticateWithToken(ctx context.Context, jwtToken string) (*User, error) 
 		} else if s == nil {
 			return nil, nil
 		} else if user.MixinId.Valid && s.Code.Valid {
-			queryErr = session.TwoFARequiredError(ctx)
-			return nil, queryErr
+			return nil, nil
 		}
 		user.SessionId = s.SessionId
 
