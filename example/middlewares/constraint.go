@@ -51,7 +51,6 @@ func Constraint(handler http.Handler) http.Handler {
 			}
 		}
 
-		w.Header().Set("X-Frame-Options", "DENY")
 		if origin := r.Header.Get("Origin"); origin != "" {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization,Mixin-Conversation-ID")
