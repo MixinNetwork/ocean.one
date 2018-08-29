@@ -46,3 +46,11 @@ func (current *User) MixinIdentityNumber() string {
 	}
 	return pair[1]
 }
+
+func (current *User) MixinId() string {
+	pair := strings.Split(current.MixinId.StringVal, ":")
+	if len(pair) == 1 {
+		return ""
+	}
+	return pair[0]
+}

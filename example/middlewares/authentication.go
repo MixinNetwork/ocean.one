@@ -20,7 +20,7 @@ var whitelist = [][2]string{
 	{"POST", "^/verifications"},
 	{"POST", "^/users$"},
 	{"POST", "^/passwords$"},
-	{"POST", "^/sessions$"},
+	{"POST", "^/sessions"},
 	{"POST", "^/callbacks/twilio/"},
 }
 

@@ -17,12 +17,15 @@ type sessionRequest struct {
 	Phone         string `json:"phone"`
 	Password      string `json:"password"`
 	SessionSecret string `json:"session_secret"`
+	Code          string `json:"code"`
+	UserId        string `json:"user_id"`
 }
 
 func registerSessions(router *httptreemux.TreeMux) {
 	impl := &sessionsImpl{}
 
 	router.POST("/sessions", impl.create)
+	router.POST("/sessions/:id", impl.verify)
 }
 
 func (impl *sessionsImpl) create(w http.ResponseWriter, r *http.Request, _ map[string]string) {
@@ -47,4 +50,18 @@ func (impl *sessionsImpl) create(w http.ResponseWriter, r *http.Request, _ map[s
 		return
 	}
 	views.RenderUserWithAuthentication(w, r, user)
+}
+
+func (impl *sessionsImpl) verify(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	var body sessionRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		views.RenderErrorResponse(w, r, session.BadRequestError(r.Context()))
+		return
+	}
+
+	if err := models.VerifySession(r.Context(), body.UserId, params["id"], body.Code); err != nil {
+		views.RenderErrorResponse(w, r, err)
+	} else {
+		views.RenderBlankResponse(w, r)
+	}
 }
