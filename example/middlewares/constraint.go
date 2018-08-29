@@ -51,10 +51,13 @@ func Constraint(handler http.Handler) http.Handler {
 			}
 		}
 
-		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
-		w.Header().Add("Access-Control-Allow-Headers", "Content-Type,Authorization,Mixin-Conversation-ID")
-		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS,GET,POST,DELETE")
-		w.Header().Set("Access-Control-Max-Age", "600")
+		r.Header().Set("X-Frame-Options", "DENY")
+		if origin := r.Header.Get("Origin"); origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization,Mixin-Conversation-ID")
+			w.Header().Set("Access-Control-Allow-Methods", "OPTIONS,GET,POST,DELETE")
+			w.Header().Set("Access-Control-Max-Age", "86400")
+		}
 		if r.Method == "OPTIONS" {
 			views.RenderBlankResponse(w, r)
 		} else {
