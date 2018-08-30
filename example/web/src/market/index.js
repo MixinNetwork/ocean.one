@@ -240,9 +240,9 @@ Market.prototype = {
     };
     setTimeout(function() { fetchTrades(); }, 500);
 
-    self.pollCandles(300);
+    self.pollCandles(3600);
     self.candleInterval = setInterval(function () {
-      self.pollCandles(300);
+      self.pollCandles(3600);
     }, 60000);
     self.handleCandleSwitch();
 
