@@ -70,7 +70,8 @@ Account.prototype = {
     }
     var phoneInput = $('#enroll-phone-form #phone');
     phoneInput.intlTelInput({
-      "initialCountry": initialCountry
+      "initialCountry": initialCountry,
+      "preferredCountries": ["us", "cn"]
     });
     phoneInput.focus();
 
@@ -307,7 +308,8 @@ Account.prototype = {
     }
     var phoneInput = $('#enroll-phone-form #phone');
     phoneInput.intlTelInput({
-      "initialCountry": initialCountry
+      "initialCountry": initialCountry,
+      "preferredCountries": ["us", "cn"]
     });
     phoneInput.focus();
 
