@@ -284,7 +284,7 @@ Market.prototype = {
       if (a.favorite) {
         type = self.marketsSort['favorite'];
       }
-      if (!a.favorite) {
+      if (a.favorite == undefined || a.favorite == null) {
         if (a.quote.symbol < b.quote.symbol) {
           return -1;
         }
@@ -334,7 +334,7 @@ Market.prototype = {
     var favorites = [], usdt = [], btc = [], xin = [];
     for (let i = 0; i < markets.length; i++) {
       if (markets[i].is_liked_by) {
-        let m = $.extend({}, markets[i])
+        let m = $.extend({}, markets[i]);
         m.favorite = true;
         favorites.push(m);
       }
