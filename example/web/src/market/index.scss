@@ -194,6 +194,22 @@
     }
   }
 
+  .logo.cell {
+    min-width: 48px;
+  }
+
+  th.down:after {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 2px;
+    margin-bottom: 2px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid black;
+  }
+
   .content {
     position: relative;
     background: #FFFFFF;
