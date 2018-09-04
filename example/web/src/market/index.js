@@ -431,7 +431,7 @@ Market.prototype = {
       }
     }
 
-    if (data.type === 'BID') {
+    if (data.side === 'BID') {
       let funds = new BigNumber(data.funds);
       var minFunds = '0.0001';
       if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
@@ -459,9 +459,11 @@ Market.prototype = {
         self.api.notify('error', window.i18n.t('market.errors.fund.min', { fund: minFunds, symbol: self.quote.symbol}));
         return false;
       }
-      if (amount.lt('0.00000001')) {
-        self.api.notify('error', window.i18n.t('market.errors.amount.min', { amount: '0.00000001', symbol: self.base.symbol}));
-        return false;
+      if (data.type !== 'LIMIT') {
+        if (amount.lt('0.0001')) {
+          self.api.notify('error', window.i18n.t('market.errors.amount.min', { amount: '0.0001', symbol: self.base.symbol}));
+          return false;
+        }
       }
       if (amount.gt(maxAmount)) {
         self.api.notify('error', window.i18n.t('market.errors.amount.max', { amount: maxAmount.toString(), symbol: self.base.symbol}));
