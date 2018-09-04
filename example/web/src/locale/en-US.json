@@ -96,14 +96,12 @@
     "account.wallet": "Wallet",
     "account.orders": "My Orders",
     "errors": {
-      "price_zero": "Price cann't be zero",
-      "amount_zero": "Amount cann't be zero",
-      "price_max": "Price must be at most %{price} %{symbol}",
-      "price_min": "Price must be at least %{price} %{symbol}",
-      "fund_max": "Total must be at most %{fund} %{symbol}",
-      "fund_min": "Total must be at least %{fund} %{symbol}",
-      "amount_max": "Amount must be at most %{amount} %{symbol}",
-      "amount_min": "Amount must be at least %{amount} %{symbol}"
+      "price.max": "Price must be equal to or less than %{price} %{symbol}",
+      "price.min": "Price must be equal to or greater than %{price} %{symbol}",
+      "fund.max": "Price * amount must be equal to or less than %{fund} %{symbol}",
+      "fund.min": "Price * amount must be equal to or greater than %{fund} %{symbol}",
+      "amount.max": "Amount must be equal to or less than %{amount} %{symbol}",
+      "amount.min": "Amount must be be equal to or greater than %{amount} %{symbol}"
     }
   }
 }
