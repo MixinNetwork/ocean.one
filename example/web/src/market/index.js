@@ -407,6 +407,68 @@ Market.prototype = {
     });
   },
 
+  validateOrder: function(data) {
+    const self = this;
+    const maxPrice = new BigNumber(10);
+    const maxAmount = new BigNumber(500000);
+    const maxFunds = maxPrice.times(maxAmount);
+
+    if (data.type === 'LIMIT') {
+      let price = new BigNumber(data.price);
+      var quoteMaxPrice = maxPrice;
+      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+        quoteMaxPrice = maxPrice.times(10000);
+      }
+      if (price.gt(quoteMaxPrice)) {
+        self.api.notify('error', window.i18n.t('market.errors.price.max', { price: quoteMaxPrice.toString(), symbol: self.quote.symbol}));
+        return false;
+      }
+    }
+
+    if (data.side === 'BID') {
+      let funds = new BigNumber(data.funds);
+      var minFunds = '0.0001';
+      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+        minFunds = '1';
+      }
+      if (funds.lt(minFunds)) {
+        self.api.notify('error', window.i18n.t('market.errors.fund.min', { fund: minFunds, symbol: self.quote.symbol}));
+        return false;
+      }
+      var quoteMaxFunds = maxFunds;
+      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+        quoteMaxFunds = maxFunds.times(10000);
+      }
+      if (funds.gt(quoteMaxFunds)) {
+        self.api.notify('error', window.i18n.t('market.errors.funds.max', { fund: quoteMaxFunds.toString(), symbol: self.quote.symbol}));
+        return false;
+      }
+    }
+
+    if (data.side === 'ASK') {
+      let amount = new BigNumber(data.amount);
+      var minFunds = '0.0001';
+      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+        minFunds = '1';
+      }
+      if (data.type === 'LIMIT' && amount.times(data.price).lt(minFunds)) {
+        self.api.notify('error', window.i18n.t('market.errors.fund.min', { fund: minFunds, symbol: self.quote.symbol}));
+        return false;
+      }
+      if (data.type !== 'LIMIT') {
+        if (amount.lt('0.0001')) {
+          self.api.notify('error', window.i18n.t('market.errors.amount.min', { amount: '0.0001', symbol: self.base.symbol}));
+          return false;
+        }
+      }
+      if (amount.gt(maxAmount)) {
+        self.api.notify('error', window.i18n.t('market.errors.amount.max', { amount: maxAmount.toString(), symbol: self.base.symbol}));
+        return false;
+      }
+    }
+    return true;
+  },
+
   handleOrderCreate: function () {
     const self = this;
 
@@ -417,6 +479,14 @@ Market.prototype = {
       if (data.type === 'LIMIT' && data.side === 'BID') {
         data.funds = new BigNumber(data.amount).times(data.price).toFixed(8);
       }
+
+      if (!self.validateOrder(data)) {
+        $(':submit', form).prop('disabled', false);
+        $('.submit-loader', form).hide();
+        $(':submit', form).show();
+        return;
+      }
+
       self.api.order.create(function (resp) {
         $('.submit-loader', form).hide();
         $(':submit', form).show();
