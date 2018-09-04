@@ -473,38 +473,6 @@ Market.prototype = {
     return true;
   },
 
-  quotePrecision: function(asset) {
-    switch (asset) {
-      case 'c94ac88f-4671-3976-b60a-09064f1811e8':
-        return 8;
-      case 'c6d0c728-2624-429b-8e0d-d9d19b6592fa':
-        return 8;
-      case '815b0b1a-2764-3736-8faa-42d694fa620a':
-        return 4;
-      default:
-        break;
-    }
-    return 0;
-  },
-
-  basePrecision: function(asset) {
-    return asset === '815b0b1a-2764-3736-8faa-42d694fa620a' ? 4 : 8;
-  },
-
-  quoteMinimum: function(asset) {
-    switch (asset) {
-      case 'c94ac88f-4671-3976-b60a-09064f1811e8':  // xin
-        return 0.0001;
-      case 'c6d0c728-2624-429b-8e0d-d9d19b6592fa':  // btc
-        return 0.0001;
-      case '815b0b1a-2764-3736-8faa-42d694fa620a':  // usdt
-        return 1;
-      default:
-        break;
-    }
-    return 0;
-  },
-
   handleOrderCreate: function () {
     const self = this;
 
