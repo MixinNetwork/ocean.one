@@ -413,14 +413,6 @@ Market.prototype = {
 
     if (data.type === 'LIMIT') {
       let price = new BigNumber(data.price);
-      var minPrice = '0.00000001';
-      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
-        minPrice = '0.0001';
-      }
-      if (price.lt(minPrice)) {
-        self.api.notify('error', window.i18n.t('market.errors.price.min', { price: minPrice, symbol: self.quote.symbol}));
-        return false;
-      }
       var quoteMaxPrice = maxPrice;
       if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
         quoteMaxPrice = maxPrice.times(10000);
@@ -449,7 +441,9 @@ Market.prototype = {
         self.api.notify('error', window.i18n.t('market.errors.funds.max', { fund: quoteMaxFunds.toString(), symbol: self.quote.symbol}));
         return false;
       }
-    } else {
+    }
+
+    if (data.side === 'ASK') {
       let amount = new BigNumber(data.amount);
       var minFunds = '0.0001';
       if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
