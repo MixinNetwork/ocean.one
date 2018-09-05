@@ -65,7 +65,9 @@
     border-radius: 4px;
     color: $color-main-background;
     font-size: 20px;
-    padding: 12px 32px;
+    padding: 12px 0;
+    width: 144px;
+    box-sizing: border-box;
     margin: 16px;
   }
 
