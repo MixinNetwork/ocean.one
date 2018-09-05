@@ -17,6 +17,7 @@ function Market(router, api) {
   this.itemTrade = require('./trade_item.html');
   this.itemMarket = require('./market_item.html');
   this.depthLevel = 0;
+  this.marketsSort = {'favorite': 'volume', 'usdt': 'volume', 'btc': 'volume', 'xin': 'volume'};
   jQueryColor($);
 }
 
@@ -82,6 +83,21 @@ Market.prototype = {
       $('.layout.header').remove();
       $('.markets.container').css('padding-top', '96px');
     }
+
+    $('.markets.block').on('click', 'th', function (event) {
+      event.preventDefault();
+      if ($(this).hasClass('logo')) {
+        return;
+      }
+
+      $('th', $(this).parent()).removeClass('down');
+      $('tbody', $(this).parents('.markets.block')).empty();
+      $(this).addClass('down');
+      let key = $(this).parents('.markets.block').attr('class').split(' ')[0];
+      let val = $(this).attr('class').split(' ')[0];
+      self.marketsSort[key] = val;
+      self.pollMarkets();
+    });
 
     $('.markets.container').on('click', '.market.item', function (event) {
       event.preventDefault();
@@ -263,29 +279,82 @@ Market.prototype = {
       }
     }
 
-    markets.sort(function (a, b) {
-      if (a.quote.symbol < b.quote.symbol) {
-        return -1;
+    var sortability = function (a, b) {
+      var type = self.marketsSort[a.quote.symbol.toLowerCase()];
+      if (a.favorite) {
+        type = self.marketsSort['favorite'];
       }
-      if (a.quote.symbol > b.quote.symbol) {
-        return 1;
+      if (a.favorite == undefined || a.favorite == null) {
+        if (a.quote.symbol < b.quote.symbol) {
+          return -1;
+        }
+        if (a.quote.symbol > b.quote.symbol) {
+          return 1;
+        }
       }
-      var at = new BigNumber(a.total);
-      var bt = new BigNumber(b.total);
+      if (type === 'name') {
+        if (a.base.symbol < b.base.symbol) {
+          return -1;
+        }
+        if (a.base.symbol > b.base.symbol) {
+          return 1;
+        }
+      }
+      if (type === 'price') {
+        let at = new BigNumber(a.price);
+        let bt = new BigNumber(b.price);
+        if (at.isGreaterThan(bt)) {
+          return -1;
+        }
+        if (at.isLessThan(bt)) {
+          return 1;
+        }
+      }
+      if (type === 'change') {
+        let at = new BigNumber(a.change);
+        let bt = new BigNumber(b.change);
+        if (at.isGreaterThan(bt)) {
+          return -1;
+        }
+        if (at.isLessThan(bt)) {
+          return 1;
+        }
+      }
+      let at = new BigNumber(a.total);
+      let bt = new BigNumber(b.total);
       if (at.isGreaterThan(bt)) {
         return -1;
       }
       if (at.isLessThan(bt)) {
         return 1;
       }
-      if (a.base.symbol < b.base.symbol) {
-        return -1;
-      }
-      if (a.base.symbol > b.base.symbol) {
-        return 1;
-      }
       return 0;
-    });
+    };
+
+    var favorites = [], usdt = [], btc = [], xin = [];
+    for (let i = 0; i < markets.length; i++) {
+      if (markets[i].is_liked_by) {
+        let m = $.extend({}, markets[i]);
+        m.favorite = true;
+        favorites.push(m);
+      }
+      switch (markets[i].quote.symbol) {
+        case 'USDT':
+          usdt.push(markets[i]);
+          break;
+        case 'BTC':
+          btc.push(markets[i]);
+          break;
+        case 'XIN':
+          xin.push(markets[i]);
+          break;
+      }
+    }
+    favorites.sort(sortability);
+    usdt.sort(sortability);
+    btc.sort(sortability);
+    xin.sort(sortability);
+    markets = usdt.concat(btc).concat(xin).concat(favorites);
 
     for (var i = 0; i < markets.length; i++) {
       var m = markets[i];
@@ -318,7 +387,7 @@ Market.prototype = {
       m.price = new BigNumber(m.price).toFixed(8).replace(/\.?0+$/,"");
       var item = '#market-item-' + m.base.symbol + '-' + m.quote.symbol;
       $(item).replaceWith(self.itemMarket(m));
-      if (!m.is_liked_by) {
+      if (!m.favorite) {
         $('.favorite.markets.block' + ' #market-item-' + m.base.symbol + '-' + m.quote.symbol).remove();
         if ($('.favorite.markets.block tbody').has('tr').length == 0) {
           $('.favorite.markets.block').hide();
