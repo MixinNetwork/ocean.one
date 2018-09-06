@@ -91,7 +91,6 @@ Market.prototype = {
       }
 
       $('th', $(this).parent()).removeClass('down');
-      $('tbody', $(this).parents('.markets.block')).empty();
       $(this).addClass('down');
       let key = $(this).parents('.markets.block').attr('class').split(' ')[0];
       let val = $(this).attr('class').split(' ')[0];
@@ -356,6 +355,7 @@ Market.prototype = {
     xin.sort(sortability);
     markets = usdt.concat(btc).concat(xin).concat(favorites);
 
+    var quotes = {favorite: $('<tbody>'), usdt: $('<tbody>'), btc: $('<tbody>'), xin: $('<tbody>')};
     for (var i = 0; i < markets.length; i++) {
       var m = markets[i];
       m.change_amount = new BigNumber(m.price).minus(new BigNumber(m.price).div(new BigNumber(m.change).plus(1))).toFixed(8).replace(/\.?0+$/,"");
@@ -385,31 +385,24 @@ Market.prototype = {
       }
 
       m.price = new BigNumber(m.price).toFixed(8).replace(/\.?0+$/,"");
-      var item = '#market-item-' + m.base.symbol + '-' + m.quote.symbol;
-      $(item).replaceWith(self.itemMarket(m));
-      if (!m.favorite) {
-        $('.favorite.markets.block' + ' #market-item-' + m.base.symbol + '-' + m.quote.symbol).remove();
-        if ($('.favorite.markets.block tbody').has('tr').length == 0) {
-          $('.favorite.markets.block').hide();
-        }
+      var itemDom = $(self.itemMarket(m));
+      $('.change.cell', itemDom).addClass(m.direction);
+      $('.price.cell', itemDom).addClass(m.direction);
+      if (m.favorite) {
+        quotes['favorite'].append(itemDom);
       } else {
-        $('.favorite.markets.block').show();
-        if ($('.favorite.markets.block table tbody').has(item).length == 0) {
-          $('.favorite.markets.block table tbody').append(self.itemMarket(m));
-        }
+        quotes[m.quote.symbol.toLowerCase()].append(itemDom);
       }
-      if ($('.' + m.quote.symbol.toLowerCase() + '.markets.block table tbody').has(item).length == 0) {
-        $('.' + m.quote.symbol.toLowerCase() + '.markets.block table tbody').append(self.itemMarket(m));
-      }
-      var cell = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol + ' .change.cell');
-      cell.removeClass('up');
-      cell.removeClass('down');
-      cell.addClass(m.direction);
-      cell = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol + ' .price.cell');
-      cell.removeClass('up');
-      cell.removeClass('down');
-      cell.addClass(m.direction);
     }
+
+    if (favorites.length === 0) {
+      $('.favorite.markets.block').hide();
+    } else {
+      $('.favorite.markets.block').show();
+    }
+    Object.keys(quotes).map(function (key, i) {
+      $('.'+key+'.markets tbody').replaceWith(quotes[key]);
+    });
 
     var totalUSD = 0;
     for (var i = 0; i < markets.length; i++) {
