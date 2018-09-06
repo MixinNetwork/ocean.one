@@ -400,7 +400,7 @@ Market.prototype = {
     } else {
       $('.favorite.markets.block').show();
     }
-    Object.keys(quotes).map(function (key, i) {
+    Object.keys(quotes).map(function (key) {
       $('.'+key+'.markets tbody').replaceWith(quotes[key]);
     });
 
