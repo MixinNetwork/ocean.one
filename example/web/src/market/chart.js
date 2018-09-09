@@ -162,11 +162,12 @@ Chart.prototype = {
         y: bids[i].volume
       });
     }
+    var start = bidsData.length * 1 / 4 + bidsData.length * depth / 2;
     if (bidsData.length > 1000) {
-      bidsData = bidsData.slice(0, 1000);
+      start = bidsData.length - 1000 + 1000 * 1 / 4 + 1000 * depth / 2;
     }
     bidsData = bidsData.reverse();
-    bidsData = bidsData.splice(bidsData.length * 1 / 4 + bidsData.length * depth / 2);
+    bidsData = bidsData.splice(start);
 
     var asksInput = [];
     for(var i = 0; i < asks.length; i++) {
