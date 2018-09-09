@@ -165,7 +165,7 @@ Chart.prototype = {
     bidsData = bidsData.reverse();
     var length = bidsData.length;
     if (length > 1000) {
-      length = 1000;
+      length = bidsData.length - 1000;
     }
     bidsData = bidsData.splice(length * 1 / 4 + length * depth / 2);
 
