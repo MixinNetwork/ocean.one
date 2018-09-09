@@ -152,6 +152,9 @@ Chart.prototype = {
     }
 
     var bidsData = [];
+    if (bids.length > 1000) {
+      bids = bids.slice(0, 1000);
+    }
     for(var i = 0; i < bids.length; i++) {
       bids[i].volume = parseFloat(bids[i].amount);
       if (i > 0) {
