@@ -152,9 +152,6 @@ Chart.prototype = {
     }
 
     var bidsData = [];
-    if (bids.length > 1000) {
-      bids = bids.slice(0, 1000);
-    }
     for(var i = 0; i < bids.length; i++) {
       bids[i].volume = parseFloat(bids[i].amount);
       if (i > 0) {
@@ -166,7 +163,11 @@ Chart.prototype = {
       });
     }
     bidsData = bidsData.reverse();
-    bidsData = bidsData.splice(bidsData.length * 1 / 4 + bidsData.length * depth / 2);
+    var length = bidsData.length;
+    if (length > 1000) {
+      length = 1000;
+    }
+    bidsData = bidsData.splice(length * 1 / 4 + length * depth / 2);
 
     var asksInput = [];
     for(var i = 0; i < asks.length; i++) {
@@ -189,6 +190,9 @@ Chart.prototype = {
       asksData.push(point);
     }
 
+    if (asksData.length > 1000) {
+      asksData = asksData.slice(0, 1000);
+    }
     var minPrice = bidsData[0].x;
     var maxPrice = asksData[asksData.length-1].x;
     var maxVolume = bidsData[0].y;
