@@ -79,6 +79,9 @@ Account.prototype = {
         window.localStorage.setItem('uid', resp.data.user_id);
         window.localStorage.setItem('sid', resp.data.session_id);
       }
+      if (resp.error) {
+        self.api.notify('error', window.i18n.t('general.errors.'+resp.error.code));
+      }
       return callback(resp);
     });
   },
