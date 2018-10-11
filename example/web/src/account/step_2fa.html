@@ -1,14 +1,12 @@
 <div class="container">
   <header class="header">
-    <a class="nav back" href="/"><i class="icon-arrow-left"></i></a>
+    <a class="nav back" href="/sessions/new"><i class="icon-arrow-left"></i></a>
     <h1 class="title">{{title}}</h1>
     <a class="nav support" href="javascript:void(0);"><i class="icon-question"></i></a>
   </header>
   <section class="content">
     <div class="form container">
-
       <h2>{{ t 'account.code.title' receiver=receiver}}</h2>
-
       <form action="javascript:void(0)" id="session-verify-form">
         <div class="field">
           <input type="number" name="code" id="code">
@@ -23,12 +21,7 @@
             <div class="bounce3"></div>
           </div>
         </div>
-
-        <div class="link field">
-          <a href="/sessions/new">{{t 'home.log.in'}}</a>
-        </div>
       </form>
-
     </div>
   </section>
 </div>
