@@ -17,6 +17,7 @@ function Market(router, api) {
   this.itemTrade = require('./trade_item.html');
   this.itemMarket = require('./market_item.html');
   this.depthLevel = 0;
+  this.marketsSort = {'favorite': 'volume', 'usdt': 'volume', 'btc': 'volume', 'xin': 'volume'};
   jQueryColor($);
 }
 
@@ -82,6 +83,20 @@ Market.prototype = {
       $('.layout.header').remove();
       $('.markets.container').css('padding-top', '96px');
     }
+
+    $('.markets.block').on('click', 'th', function (event) {
+      event.preventDefault();
+      if ($(this).hasClass('logo')) {
+        return;
+      }
+
+      $('th', $(this).parent()).removeClass('down');
+      $(this).addClass('down');
+      let key = $(this).parents('.markets.block').attr('class').split(' ')[0];
+      let val = $(this).attr('class').split(' ')[0];
+      self.marketsSort[key] = val;
+      self.pollMarkets();
+    });
 
     $('.markets.container').on('click', '.market.item', function (event) {
       event.preventDefault();
@@ -240,9 +255,9 @@ Market.prototype = {
     };
     setTimeout(function() { fetchTrades(); }, 500);
 
-    self.pollCandles(300);
+    self.pollCandles(3600);
     self.candleInterval = setInterval(function () {
-      self.pollCandles(300);
+      self.pollCandles(3600);
     }, 60000);
     self.handleCandleSwitch();
 
@@ -263,30 +278,84 @@ Market.prototype = {
       }
     }
 
-    markets.sort(function (a, b) {
-      if (a.quote.symbol < b.quote.symbol) {
-        return -1;
+    var sortability = function (a, b) {
+      var type = self.marketsSort[a.quote.symbol.toLowerCase()];
+      if (a.favorite) {
+        type = self.marketsSort['favorite'];
       }
-      if (a.quote.symbol > b.quote.symbol) {
-        return 1;
+      if (a.favorite == undefined || a.favorite == null) {
+        if (a.quote.symbol < b.quote.symbol) {
+          return -1;
+        }
+        if (a.quote.symbol > b.quote.symbol) {
+          return 1;
+        }
       }
-      var at = new BigNumber(a.total);
-      var bt = new BigNumber(b.total);
+      if (type === 'name') {
+        if (a.base.symbol < b.base.symbol) {
+          return -1;
+        }
+        if (a.base.symbol > b.base.symbol) {
+          return 1;
+        }
+      }
+      if (type === 'price') {
+        let at = new BigNumber(a.price);
+        let bt = new BigNumber(b.price);
+        if (at.isGreaterThan(bt)) {
+          return -1;
+        }
+        if (at.isLessThan(bt)) {
+          return 1;
+        }
+      }
+      if (type === 'change') {
+        let at = new BigNumber(a.change);
+        let bt = new BigNumber(b.change);
+        if (at.isGreaterThan(bt)) {
+          return -1;
+        }
+        if (at.isLessThan(bt)) {
+          return 1;
+        }
+      }
+      let at = new BigNumber(a.total);
+      let bt = new BigNumber(b.total);
       if (at.isGreaterThan(bt)) {
         return -1;
       }
       if (at.isLessThan(bt)) {
         return 1;
       }
-      if (a.base.symbol < b.base.symbol) {
-        return -1;
-      }
-      if (a.base.symbol > b.base.symbol) {
-        return 1;
-      }
       return 0;
-    });
+    };
 
+    var favorites = [], usdt = [], btc = [], xin = [];
+    for (let i = 0; i < markets.length; i++) {
+      if (markets[i].is_liked_by) {
+        let m = $.extend({}, markets[i]);
+        m.favorite = true;
+        favorites.push(m);
+      }
+      switch (markets[i].quote.symbol) {
+        case 'USDT':
+          usdt.push(markets[i]);
+          break;
+        case 'BTC':
+          btc.push(markets[i]);
+          break;
+        case 'XIN':
+          xin.push(markets[i]);
+          break;
+      }
+    }
+    favorites.sort(sortability);
+    usdt.sort(sortability);
+    btc.sort(sortability);
+    xin.sort(sortability);
+    markets = usdt.concat(btc).concat(xin).concat(favorites);
+
+    var quotes = {favorite: $('<tbody>'), usdt: $('<tbody>'), btc: $('<tbody>'), xin: $('<tbody>')};
     for (var i = 0; i < markets.length; i++) {
       var m = markets[i];
       m.change_amount = new BigNumber(m.price).minus(new BigNumber(m.price).div(new BigNumber(m.change).plus(1))).toFixed(8).replace(/\.?0+$/,"");
@@ -316,31 +385,24 @@ Market.prototype = {
       }
 
       m.price = new BigNumber(m.price).toFixed(8).replace(/\.?0+$/,"");
-      var item = '#market-item-' + m.base.symbol + '-' + m.quote.symbol;
-      $(item).replaceWith(self.itemMarket(m));
-      if (!m.is_liked_by) {
-        $('.favorite.markets.block' + ' #market-item-' + m.base.symbol + '-' + m.quote.symbol).remove();
-        if ($('.favorite.markets.block tbody').has('tr').length == 0) {
-          $('.favorite.markets.block').hide();
-        }
+      var itemDom = $(self.itemMarket(m));
+      $('.change.cell', itemDom).addClass(m.direction);
+      $('.price.cell', itemDom).addClass(m.direction);
+      if (m.favorite) {
+        quotes['favorite'].append(itemDom);
       } else {
-        $('.favorite.markets.block').show();
-        if ($('.favorite.markets.block table tbody').has(item).length == 0) {
-          $('.favorite.markets.block table tbody').append(self.itemMarket(m));
-        }
+        quotes[m.quote.symbol.toLowerCase()].append(itemDom);
       }
-      if ($('.' + m.quote.symbol.toLowerCase() + '.markets.block table tbody').has(item).length == 0) {
-        $('.' + m.quote.symbol.toLowerCase() + '.markets.block table tbody').append(self.itemMarket(m));
-      }
-      var cell = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol + ' .change.cell');
-      cell.removeClass('up');
-      cell.removeClass('down');
-      cell.addClass(m.direction);
-      cell = $('#market-item-' + m.base.symbol + '-' + m.quote.symbol + ' .price.cell');
-      cell.removeClass('up');
-      cell.removeClass('down');
-      cell.addClass(m.direction);
     }
+
+    if (favorites.length === 0) {
+      $('.favorite.markets.block').hide();
+    } else {
+      $('.favorite.markets.block').show();
+    }
+    Object.keys(quotes).map(function (key) {
+      $('.'+key+'.markets tbody').replaceWith(quotes[key]);
+    });
 
     var totalUSD = 0;
     for (var i = 0; i < markets.length; i++) {
@@ -407,6 +469,68 @@ Market.prototype = {
     });
   },
 
+  validateOrder: function(data) {
+    const self = this;
+    const maxPrice = new BigNumber(10);
+    const maxAmount = new BigNumber(500000);
+    const maxFunds = maxPrice.times(maxAmount);
+
+    if (data.type === 'LIMIT') {
+      let price = new BigNumber(data.price);
+      var quoteMaxPrice = maxPrice;
+      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+        quoteMaxPrice = maxPrice.times(10000);
+      }
+      if (price.gt(quoteMaxPrice)) {
+        self.api.notify('error', window.i18n.t('market.errors.price.max', { price: quoteMaxPrice.toString(), symbol: self.quote.symbol}));
+        return false;
+      }
+    }
+
+    if (data.side === 'BID') {
+      let funds = new BigNumber(data.funds);
+      var minFunds = '0.0001';
+      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+        minFunds = '1';
+      }
+      if (funds.lt(minFunds)) {
+        self.api.notify('error', window.i18n.t('market.errors.fund.min', { fund: minFunds, symbol: self.quote.symbol}));
+        return false;
+      }
+      var quoteMaxFunds = maxFunds;
+      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+        quoteMaxFunds = maxFunds.times(10000);
+      }
+      if (funds.gt(quoteMaxFunds)) {
+        self.api.notify('error', window.i18n.t('market.errors.funds.max', { fund: quoteMaxFunds.toString(), symbol: self.quote.symbol}));
+        return false;
+      }
+    }
+
+    if (data.side === 'ASK') {
+      let amount = new BigNumber(data.amount);
+      var minFunds = '0.0001';
+      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+        minFunds = '1';
+      }
+      if (data.type === 'LIMIT' && amount.times(data.price).lt(minFunds)) {
+        self.api.notify('error', window.i18n.t('market.errors.fund.min', { fund: minFunds, symbol: self.quote.symbol}));
+        return false;
+      }
+      if (data.type !== 'LIMIT') {
+        if (amount.lt('0.0001')) {
+          self.api.notify('error', window.i18n.t('market.errors.amount.min', { amount: '0.0001', symbol: self.base.symbol}));
+          return false;
+        }
+      }
+      if (amount.gt(maxAmount)) {
+        self.api.notify('error', window.i18n.t('market.errors.amount.max', { amount: maxAmount.toString(), symbol: self.base.symbol}));
+        return false;
+      }
+    }
+    return true;
+  },
+
   handleOrderCreate: function () {
     const self = this;
 
@@ -417,6 +541,14 @@ Market.prototype = {
       if (data.type === 'LIMIT' && data.side === 'BID') {
         data.funds = new BigNumber(data.amount).times(data.price).toFixed(8);
       }
+
+      if (!self.validateOrder(data)) {
+        $(':submit', form).prop('disabled', false);
+        $('.submit-loader', form).hide();
+        $(':submit', form).show();
+        return;
+      }
+
       self.api.order.create(function (resp) {
         $('.submit-loader', form).hide();
         $(':submit', form).show();
@@ -564,15 +696,21 @@ Market.prototype = {
       case 'BOOK-T0':
         var book = data.data;
         self.book.asks = book.asks;
+        if (book.asks.length > 1000) {
+          self.book.asks = book.asks.slice(0, 1000);
+        }
         self.book.bids = book.bids;
+        if (book.bids.length > 1000) {
+          self.book.bids = book.bids.slice(0, 1000);
+        }
         $('.order.book .spinner-container').remove();
         $('.order.book .book.data').show();
         $('.order.book .order.item').remove();
         for (var i = 0; i < book.asks.length; i++) {
-          self.orderOpenOnPage(book.asks[i], true);
+          self.orderOpenOnPage(book.asks[i], true, 'asks');
         }
         for (var i = 0; i < book.bids.length; i++) {
-          self.orderOpenOnPage(book.bids[i], true);
+          self.orderOpenOnPage(book.bids[i], true, 'bids');
         }
         self.fixListItemHeight();
         break;
@@ -643,7 +781,15 @@ Market.prototype = {
     $('.history.data li:nth-of-type(1n+100)').remove();
   },
 
-  orderOpenOnPage: function (o, instant) {
+  orderOpenOnPage: function (o, instant, type) {
+    var list = $('.order.item');
+    var maxOrders = 50;
+    if (type === 'bids') {
+      maxOrders = 100;
+    }
+    if (instant && list.length > maxOrders) {
+      return;
+    }
     const self = this;
     const price = new BigNumber(o.price);
     const amount = new BigNumber(o.amount);
@@ -674,7 +820,6 @@ Market.prototype = {
       return;
     }
 
-    var list = $('.order.item');
     var item = self.itemOrder(o);
     if (!instant) {
       item = $(item).css('background-color', bgColor).animate({ backgroundColor: "transparent" }, 500);

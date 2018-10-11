@@ -65,7 +65,9 @@
     border-radius: 4px;
     color: $color-main-background;
     font-size: 20px;
-    padding: 12px 32px;
+    padding: 12px 0;
+    width: 144px;
+    box-sizing: border-box;
     margin: 16px;
   }
 
@@ -192,6 +194,22 @@
     .quote.symbol {
       display: inline-block;
     }
+  }
+
+  .logo.cell {
+    min-width: 48px;
+  }
+
+  th.down:after {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 2px;
+    margin-bottom: 2px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid black;
   }
 
   .content {

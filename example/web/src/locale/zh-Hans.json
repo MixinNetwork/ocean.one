@@ -48,7 +48,7 @@
     "table.amount": "数量",
     "table.time": "时间",
     "table.pending": "未成交",
-    "table.done": "已成交"
+    "table.done": "已完成"
   },
   "deposit": {
     "title": "充值",
@@ -98,6 +98,14 @@
     "form.button.buy": "下单买入",
     "form.button.sell": "下单卖出",
     "account.wallet": "钱包",
-    "account.orders": "我的挂单"
+    "account.orders": "我的挂单",
+    "errors": {
+      "price.max": "价格不能大于 %{price} %{symbol}",
+      "price.min": "价格不能小于 %{price} %{symbol}",
+      "fund.max": "挂单总价不能大于 %{fund} %{symbol}",
+      "fund.min": "挂单总价不能小于 %{fund} %{symbol}",
+      "amount.max": "数量不能大于 %{amount} %{symbol}",
+      "amount.min": "数量不能小于 %{amount} %{symbol}"
+    }
   }
 }

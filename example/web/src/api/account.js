@@ -73,6 +73,9 @@ Account.prototype = {
         Cookies.set('sid', pwd);
         self.store(priv, resp.data);
       }
+      if (resp.error) {
+        self.api.notify('error', window.i18n.t('general.errors.'+resp.error.code));
+      }
       return callback(resp);
     });
   },
