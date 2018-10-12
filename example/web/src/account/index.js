@@ -16,6 +16,7 @@ function Account(router, api) {
   this.templateOrders = require('./orders.html');
   this.templateAssets = require('./assets.html');
   this.templateAsset = require('./asset.html');
+  this.templateTwoFactor = require('./two_factor.html');
   this.stepCode = require('./step_code.html');
   this.step2FACode = require('./step_2fa.html');
   this.stepUser = require('./step_user.html');
@@ -424,6 +425,12 @@ Account.prototype = {
         preset[i].depositEnabled = true;
         resp.data.push(preset[i]);
       }
+      for (var i = 0; i < resp.data.length; i++) {
+        resp.data[i].withdrawal_url = '/accounts/' + resp.data[i].asset_id + '/withdrawal';
+        if (self.api.account.isNotMixinUser()) {
+          resp.data[i].withdrawal_url = '/two_factor';
+        }
+      }
       resp.data.sort(function (a, b) {
         var at = parseFloat(a.price_usd) * parseFloat(a.balance);
         var bt = parseFloat(b.price_usd) * parseFloat(b.balance);
@@ -444,6 +451,7 @@ Account.prototype = {
       $('body').attr('class', 'account layout');
       $('#layout-container').html(self.templateAssets({
         assets: resp.data,
+        isNotMixinUser: self.api.account.isNotMixinUser()
       }));
       self.router.updatePageLinks();
     });
@@ -594,6 +602,12 @@ Account.prototype = {
         $(item).fadeOut().remove();
       }, id);
     });
+  },
+
+  twoFactor: function () {
+    const self = this;
+    $('body').attr('class', 'account layout');
+    $('#layout-container').html(self.templateTwoFactor());
   }
 };
 

@@ -190,6 +190,14 @@ Account.prototype = {
     window.localStorage.setItem('token.example', priv);
     window.localStorage.setItem('uid', user.user_id);
     window.localStorage.setItem('sid', user.session_id);
+    if (user.mixin_id != null && user.mixin_id != undefined) {
+      window.localStorage.setItem('mixin.id', user.mixin_id);
+    }
+  },
+
+  isNotMixinUser: function () {
+    let mixinId = window.localStorage.getItem('mixin.id');
+    return mixinId == null || mixinId == undefined;
   }
 }
 

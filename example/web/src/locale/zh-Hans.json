@@ -40,7 +40,8 @@
     },
     "password.hint": "请输入一个复杂的密码",
     "password.confirmation": "请重复确认密码",
-    "placeholder.password": "密码"
+    "placeholder.password": "密码",
+    "notice.hint": "提示: <a href='/two_factor'>关联</a> Mixin Messenger 启用两步验证和提现功能, 如果需要请先<a href='https://mixin.one/messenger'>下载 Mixin Messenger</a>."
   },
   "orders": {
     "title": "我的挂单",
@@ -66,7 +67,7 @@
     "disconnected": {
       "button": "关联 Mixin Messenger",
       "notice": "Mixin Messenger 连接是永久性的，关联以后无法断开连接。",
-      "steps": "<li>为了保护帐户安全，只能向 Mixin Messenger 帐户提款。</li><li>从唯一的官方下载页面获取 Mixin Messenger <a href =\"https://mixin.one\">https://mixin.one</a>。</li><li>找到 Mixin Messenger 应用程序底部的圆形按钮，它是 QR 二维码扫描仪。</li><li>点击下面按钮将重定向到 Mixin Messenger 网站。</li><li>使用 Mixin Messenger 二维码扫描器扫描二维码。</li><li>允许 Ocean ONE 访问您的 Mixin 个人资料。</li>"
+      "steps": "<li>为了保护帐户安全，只能通过绑定 Mixin Messenger 来开启两步验证跟提现。</li><li>从唯一的官方下载页面获取 Mixin Messenger <a href =\"https://mixin.one/messenger\">https://mixin.one/messenger</a>。</li><li>找到 Mixin Messenger 应用程序底部的圆形按钮，它是 QR 二维码扫描仪。</li><li>点击下面按钮将重定向到 Mixin Messenger 网站。</li><li>使用 Mixin Messenger 二维码扫描器扫描二维码。</li><li>允许 Ocean ONE 访问您的 Mixin 个人资料。</li>"
     }
   },
   "home": {

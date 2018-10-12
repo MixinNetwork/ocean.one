@@ -5,6 +5,13 @@
     <a class="nav power account sign out button" href="javascript:void(0);"><i class="icon-power"></i></a>
   </header>
   <section class="content">
+    {{#if isNotMixinUser}}
+    <div class="notice twofa">
+      <div>
+        {{{t 'account.notice.hint'}}}
+      </div>
+    </div>
+    {{/if}}
 
     <table class="accounts list">
       <tbody>
@@ -15,7 +22,7 @@
           <td>
             {{#if depositEnabled}}
             <a class="action" href="/accounts/{{this.asset_id}}/deposit" data-navigo>{{t 'deposit.title'}}</a>
-            <a class="action" href="/accounts/{{this.asset_id}}/withdrawal" data-navigo>{{t 'withdrawal.title'}}</a>
+            <a class="action" href="{{this.withdrawal_url}}" data-navigo>{{t 'withdrawal.title'}}</a>
             {{/if}}
           </td>
         </tr>
