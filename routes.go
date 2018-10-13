@@ -76,7 +76,7 @@ func (impl *R) tokens(w http.ResponseWriter, r *http.Request, _ map[string]strin
 		URI string `json:"uri"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		render.New().JSON(w, http.StatusBadGateway, map[string]interface{}{"error": err.Error()})
+		render.New().JSON(w, http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 		return
 	}
 	if !strings.HasPrefix(body.URI, "/network/snapshots") {
