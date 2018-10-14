@@ -223,6 +223,8 @@ var symbolsMap = map[string]string{
 	"990c4c29-57e9-48f6-9819-7d986ea44985": "SC",
 	"c94ac88f-4671-3976-b60a-09064f1811e8": "XIN",
 	"43b645fc-a52c-38a3-8d3b-705e7aaefa15": "CANDY",
+	"23dfb5a5-5d7b-48b6-905f-3970e3176e27": "XRP",
+	"27921032-f73e-434e-955f-43d55672ee31": "XEM",
 }
 
 var usdtMarkets = []string{
@@ -230,6 +232,8 @@ var usdtMarkets = []string{
 	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d", // EOS
 	"43d61dcd-e413-450d-80b8-101d5e903357", // ETH
 	"990c4c29-57e9-48f6-9819-7d986ea44985", // SC
+	"23dfb5a5-5d7b-48b6-905f-3970e3176e27", // XRP
+	"27921032-f73e-434e-955f-43d55672ee31", // XEM
 	"c94ac88f-4671-3976-b60a-09064f1811e8", // XIN
 }
 
@@ -237,6 +241,8 @@ var btcMarkets = []string{
 	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d", // EOS
 	"43d61dcd-e413-450d-80b8-101d5e903357", // ETH
 	"990c4c29-57e9-48f6-9819-7d986ea44985", // SC
+	"23dfb5a5-5d7b-48b6-905f-3970e3176e27", // XRP
+	"27921032-f73e-434e-955f-43d55672ee31", // XEM
 	"c94ac88f-4671-3976-b60a-09064f1811e8", // XIN
 }
 
@@ -244,5 +250,7 @@ var xinMarkets = []string{
 	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d", // EOS
 	"43d61dcd-e413-450d-80b8-101d5e903357", // ETH
 	"990c4c29-57e9-48f6-9819-7d986ea44985", // SC
+	"23dfb5a5-5d7b-48b6-905f-3970e3176e27", // XRP
+	"27921032-f73e-434e-955f-43d55672ee31", // XEM
 	"43b645fc-a52c-38a3-8d3b-705e7aaefa15", // CANDY
 }

@@ -35,6 +35,20 @@
     "symbol": "SC"
   },
   {
+    "chain_id": "23dfb5a5-5d7b-48b6-905f-3970e3176e27",
+    "asset_id": "23dfb5a5-5d7b-48b6-905f-3970e3176e27",
+    "icon_url": "https://images.mixin.one/zgBBzgQ8x2XZbNdRhibMlVLyG0x1PEr8ENepLODl_mBDIXJJSCZNoaa2jHCc4VpJ59hPgUVnL6W24v1utEVqb0A=s128",
+    "name": "Ripple",
+    "symbol": "XRP"
+  },
+  {
+    "chain_id": "27921032-f73e-434e-955f-43d55672ee31",
+    "asset_id": "27921032-f73e-434e-955f-43d55672ee31",
+    "icon_url": "https://images.mixin.one/I9f9bWw457YiAGMxyrNtu4aCezzgnnIYuxnNBzkN3aGG32HeOzFl-nA4miBRnU-3qnNylyiDZqoS-JfzfstnuQ=s128",
+    "name": "NEM",
+    "symbol": "XEM"
+  },
+  {
     "chain_id": "43d61dcd-e413-450d-80b8-101d5e903357",
     "asset_id": "c94ac88f-4671-3976-b60a-09064f1811e8",
     "icon_url": "https://images.mixin.one/UasWtBZO0TZyLTLCFQjvE_UYekjC7eHCuT_9_52ZpzmCC-X-NPioVegng7Hfx0XmIUavZgz5UL-HIgPCBECc-Ws=s128",
