@@ -1,5 +1,13 @@
+import moment from 'moment';
+import 'moment-timezone';
+import Highcharts from 'highcharts/highstock';
+import Indicators from 'highcharts/indicators/indicators.js';
+import Ema from 'highcharts/indicators/ema.js';
 import $ from 'jquery';
 import {BigNumber} from 'bignumber.js';
+Indicators(Highcharts);
+Ema(Highcharts);
+Highcharts.win.moment = moment;
 
 function Chart() {
   Highcharts.setOptions({
@@ -43,7 +51,7 @@ Chart.prototype = {
     var ohlc = data[0];
     var volume = data[1];
 
-    var chart = Highcharts.stockChart(ele, {
+    var chart = Highcharts.StockChart(ele, {
       chart: {
         zoomType: 'none',
         pinchType: 'none',
