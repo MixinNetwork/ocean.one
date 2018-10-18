@@ -113,14 +113,14 @@ func UserOrders(ctx context.Context, userId string, market, state string, offset
 	}
 
 	base, quote := getBaseQuote(market)
-	query := "SELECT order_id FROM orders@{FORCE_INDEX=orders_by_user_created_%s} WHERE user_id=@user_id AND created_at%s=@offset AND state=@state"
+	query := "SELECT order_id FROM orders@{FORCE_INDEX=orders_by_user_state_created_%s} WHERE user_id=@user_id AND created_at%s=@offset AND state=@state"
 	query = fmt.Sprintf(query, strings.ToLower(order), cmp)
 	params := map[string]interface{}{"user_id": userId, "offset": offset, "state": state}
 	if base != "" && quote != "" {
 		query = query + " AND base_asset_id=@base AND quote_asset_id=@quote"
 		params["base"], params["quote"] = base, quote
 	}
-	query = query + " ORDER BY user_id,created_at " + order
+	query = query + " ORDER BY user_id,state,created_at " + order
 	query = fmt.Sprintf("%s LIMIT %d", query, limit)
 
 	iit := txn.Query(ctx, spanner.Statement{query, params})
