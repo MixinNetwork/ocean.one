@@ -33,8 +33,8 @@ CREATE TABLE orders (
   broker_id         STRING(36) NOT NULL,
 ) PRIMARY KEY(order_id);
 
-CREATE INDEX orders_by_user_state_created_desc ON orders(user_id, state, created_at DESC) STORING(quote_asset_id,base_asset_id,state);
-CREATE INDEX orders_by_user_state_created_asc ON orders(user_id, state, created_at ASC) STORING(quote_asset_id,base_asset_id,state);
+CREATE INDEX orders_by_user_state_created_desc ON orders(user_id, state, created_at DESC) STORING(quote_asset_id,base_asset_id);
+CREATE INDEX orders_by_user_state_created_asc ON orders(user_id, state, created_at ASC) STORING(quote_asset_id,base_asset_id);
 
 
 CREATE TABLE actions (
