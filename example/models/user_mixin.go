@@ -30,6 +30,10 @@ func (current *User) ConnectMixin(ctx context.Context, authorizationCode string)
 	}
 	current.MixinId = spanner.NullString{Valid: true, StringVal: userId.String() + ":" + me.IdentityNumber}
 
+	err = createConversation(ctx, "CONTACT", userId.String())
+	if err != nil {
+		return nil, session.ServerError(ctx, err)
+	}
 	err = session.Database(ctx).Apply(ctx, []*spanner.Mutation{
 		spanner.Update("users", []string{"user_id", "mixin_id"}, []interface{}{current.UserId, current.MixinId}),
 	}, "users", "UPDATE", "ConnectMixin")
@@ -53,4 +57,15 @@ func (current *User) MixinUserId() string {
 		return ""
 	}
 	return pair[0]
+}
+
+func createConversation(ctx context.Context, category, participantId string) error {
+	conversationId := bot.UniqueConversationId(config.ClientId, participantId)
+	participant := bot.Participant{
+		UserId: participantId,
+		Role:   "",
+	}
+	participants := []bot.Participant{participant}
+	_, err := bot.CreateConversation(ctx, category, conversationId, participants, config.ClientId, config.SessionId, config.SessionKey)
+	return err
 }
