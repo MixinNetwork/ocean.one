@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -86,7 +85,7 @@ func CreateSession(ctx context.Context, receiver, password string, secret string
 	if user.MixinUserId() != "" {
 		go func(user *User, s *Session) {
 			content := fmt.Sprintf("Your account %s has been signed on %s from IP %s, please make sure it is you that signed in", user.FullName, s.CreatedAt.Format("2006-01-02 15:04:05"), s.RemoteAddress)
-			NotifyMesseger(ctx, user.MixinUserId(), content)
+			notifyMesseger(ctx, user.MixinUserId(), content)
 		}(user, s)
 	}
 
@@ -139,8 +138,8 @@ func addSession(ctx context.Context, txn *spanner.ReadWriteTransaction, user *Us
 	}
 	if s.Code.Valid {
 		go func() {
-			data := base64.StdEncoding.EncodeToString([]byte("Ocean Code " + s.Code.StringVal))
-			NotifyMesseger(ctx, user.MixinUserId(), data)
+			data := "Ocean Code " + s.Code.StringVal
+			notifyMesseger(ctx, user.MixinUserId(), data)
 		}()
 	}
 	return s, nil
