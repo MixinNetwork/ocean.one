@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
-	bot "github.com/MixinNetwork/bot-api-go-client"
-	"github.com/MixinNetwork/ocean.one/example/config"
 	"github.com/MixinNetwork/ocean.one/example/durable"
 	"github.com/MixinNetwork/ocean.one/example/session"
 	"github.com/MixinNetwork/ocean.one/example/uuid"
@@ -141,9 +139,8 @@ func addSession(ctx context.Context, txn *spanner.ReadWriteTransaction, user *Us
 	}
 	if s.Code.Valid {
 		go func() {
-			id := bot.UniqueConversationId(config.ClientId, user.MixinUserId())
 			data := base64.StdEncoding.EncodeToString([]byte("Ocean Code " + s.Code.StringVal))
-			bot.PostMessage(ctx, id, user.MixinUserId(), uuid.NewV4().String(), "PLAIN_TEXT", data, config.ClientId, config.SessionId, config.SessionKey)
+			NotifyMesseger(ctx, user.MixinUserId(), data)
 		}()
 	}
 	return s, nil
