@@ -44,7 +44,6 @@ CREATE TABLE users (
 
 CREATE UNIQUE NULL_FILTERED INDEX users_by_email ON users(email);
 CREATE UNIQUE NULL_FILTERED INDEX users_by_phone ON users(phone);
-CREATE UNIQUE NULL_FILTERED INDEX users_by_mixin_id ON users(mixin_id);
 
 
 CREATE TABLE keys (
