@@ -138,7 +138,7 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 		if err == nil {
 			break
 		}
-		log.Println("processTransfer", err)
+		log.Println("processTransfer", err, "TransferId:", transfer.TransferId)
 		time.Sleep(PollInterval)
 	}
 }
