@@ -146,12 +146,16 @@ func (page *Page) List(count int, filterEmpty bool) []*Entry {
 func entryCompare(a, b interface{}) int {
 	entry := a.(*Entry)
 	opponent := b.(*Entry)
+	if entry.Price.Cmp(opponent.Price) == 0 {
+		log.Panicln(entry, opponent)
+	}
 	switch entry.Side {
 	case PageSideAsk:
 		return entry.Price.Cmp(opponent.Price)
 	case PageSideBid:
 		return opponent.Price.Cmp(entry.Price)
 	default:
+		log.Panicln(entry, opponent)
 		return 0
 	}
 }
