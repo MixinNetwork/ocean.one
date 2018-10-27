@@ -146,6 +146,9 @@ func (page *Page) List(count int, filterEmpty bool) []*Entry {
 func entryCompare(a, b interface{}) int {
 	entry := a.(*Entry)
 	opponent := b.(*Entry)
+	if entry == opponent {
+		return 0
+	}
 	if entry.Price.Cmp(opponent.Price) == 0 {
 		log.Panicln(entry, opponent)
 	}
