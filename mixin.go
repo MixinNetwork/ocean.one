@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -67,7 +66,7 @@ func (ex *Exchange) ensureProcessSnapshot(ctx context.Context, s *Snapshot) {
 		if err == nil {
 			break
 		}
-		log.Println("ensureProcessSnapshot", err)
+		ex.logger.Debug("ensureProcessSnapshot", err)
 		time.Sleep(100 * time.Millisecond)
 	}
 }
