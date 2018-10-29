@@ -54,6 +54,7 @@
     "address": "Address",
     "account.name": "Account",
     "account.tag": "Memo",
+    "eos.confirmations": "Both an Account Memo and an Account Name are required to successfully deposit your EOS to OceanONE, deposit will arrive after at least %{confirmations} block confirmations.",
     "confirmations": "The deposit will arrive after at least %{confirmations} confirmations."
   },
   "withdrawal": {

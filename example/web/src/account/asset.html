@@ -25,13 +25,14 @@
           <div class="label account name"><label>{{t 'deposit.account.name'}}</label></div>
           <input class="account name" type="text" value="{{account_name}}" readonly />
           <div class="deposit account name code container"><canvas></canvas></div>
+          <div class="deposit notice">{{t 'deposit.eos.confirmations' confirmations=confirmations}}</div>
         </div>
         <div class="address deposit container">
           <div class="label"><label>{{t 'deposit.address'}}</label></div>
           <input class="address" type="text" value="{{public_key}}" readonly />
           <div class="deposit address code container"><canvas></canvas></div>
+          <div class="deposit notice">{{t 'deposit.confirmations' confirmations=confirmations}}</div>
         </div>
-        <div class="deposit notice">{{t 'deposit.confirmations' confirmations=confirmations}}</div>
       </div>
 
       <div class="withdrawal action container">
