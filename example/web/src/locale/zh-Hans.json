@@ -54,6 +54,7 @@
     "address": "地址",
     "account.name": "账户",
     "account.tag": "Memo",
+    "eos.confirmations": "账号名和备注同时使用才能充值到 OceanONE，充值到账至少需要 %{confirmations} 个区块确认。",
     "confirmations": "充值需要至少 %{confirmations} 个确认才能到账。"
   },
   "withdrawal": {
