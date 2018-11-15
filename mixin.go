@@ -263,23 +263,20 @@ func (ex *Exchange) sendTransfer(ctx context.Context, brokerId, recipientId, ass
 }
 
 type tmap struct {
-	mutex sync.Mutex
-	m     map[string]*sync.Mutex
+	sync.Map
 }
 
 func newTmap() *tmap {
 	return &tmap{
-		m: make(map[string]*sync.Mutex),
+		Map: sync.Map{},
 	}
 }
 
 func (m *tmap) fetch(user, asset string) *sync.Mutex {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
 	key := fmt.Sprintf("%x", md5.Sum([]byte(user+asset)))
-	if m.m[key] == nil {
-		m.m[key] = &sync.Mutex{}
+	if _, found := m.Load(key); !found {
+		m.Store(key, new(sync.Mutex))
 	}
-	return m.m[key]
+	val, _ := m.Load(key)
+	return val.(*sync.Mutex)
 }
