@@ -26,6 +26,7 @@ type Exchange struct {
 	snapshots map[string]bool
 	brokers   map[string]*persistence.Broker
 	mutexes   *tmap
+	logger    *Logger
 }
 
 func QuotePrecision(assetId string) uint8 {
@@ -57,19 +58,24 @@ func QuoteMinimum(assetId string) number.Decimal {
 }
 
 func NewExchange() *Exchange {
+	client, err := NewLoggerClient(config.GoogleCloudProject, config.Environment != "production")
+	if err != nil {
+		log.Panicln(err)
+	}
 	return &Exchange{
 		codec:     new(codec.MsgpackHandle),
 		books:     make(map[string]*engine.Book),
 		snapshots: make(map[string]bool),
 		brokers:   make(map[string]*persistence.Broker),
 		mutexes:   newTmap(),
+		logger:    BuildLogger(client, "oceanone", nil),
 	}
 }
 
 func (ex *Exchange) Run(ctx context.Context) {
 	brokers, err := persistence.AllBrokers(ctx, true)
 	if err != nil {
-		log.Panicln(err)
+		ex.logger.Panicln(err)
 	}
 	for _, b := range brokers {
 		ex.brokers[b.BrokerId] = b
@@ -85,7 +91,7 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 	for {
 		actions, err := persistence.ListPendingActions(ctx, checkpoint, limit)
 		if err != nil {
-			log.Println("ListPendingActions", err)
+			ex.logger.Debug("ListPendingActions", err)
 			time.Sleep(PollInterval)
 			continue
 		}
@@ -104,7 +110,7 @@ func (ex *Exchange) PollTransfers(ctx context.Context, brokerId string) {
 	for {
 		transfers, err := persistence.ListPendingTransfers(ctx, brokerId, limit)
 		if err != nil {
-			log.Println("ListPendingTransfers", brokerId, err)
+			ex.logger.Debug("ListPendingTransfers", brokerId, err)
 			time.Sleep(PollInterval)
 			continue
 		}
@@ -116,7 +122,7 @@ func (ex *Exchange) PollTransfers(ctx context.Context, brokerId string) {
 			if err == nil {
 				break
 			}
-			log.Println("ExpireTransfers", err)
+			ex.logger.Debug("ExpireTransfers", err)
 			time.Sleep(PollInterval)
 		}
 		if len(transfers) < limit {
@@ -138,7 +144,7 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 		if err == nil {
 			break
 		}
-		log.Println("processTransfer", err, "TransferId:", transfer.TransferId)
+		ex.logger.Debug("processTransfer", err, "TransferId:", transfer.TransferId)
 		time.Sleep(PollInterval)
 	}
 }
@@ -158,21 +164,21 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 			return err
 		}
 		if trade == nil {
-			log.Panicln(transfer)
+			ex.logger.Panicln(transfer)
 		}
 		data = &TransferAction{S: "MATCH", A: uuid.FromStringOrNil(trade.AskOrderId), B: uuid.FromStringOrNil(trade.BidOrderId)}
 	default:
-		log.Panicln(transfer)
+		ex.logger.Panicln(transfer)
 	}
 	out := make([]byte, 140)
 	encoder := codec.NewEncoderBytes(&out, ex.codec)
 	err := encoder.Encode(data)
 	if err != nil {
-		log.Panicln(err)
+		ex.logger.Panicln(err)
 	}
 	memo := base64.StdEncoding.EncodeToString(out)
 	if len(memo) > 140 {
-		log.Panicln(transfer, memo)
+		ex.logger.Panicln(transfer, memo)
 	}
 	return ex.sendTransfer(ctx, transfer.BrokerId, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
 }
@@ -184,7 +190,7 @@ func (ex *Exchange) buildBook(ctx context.Context, market string) *engine.Book {
 			if err == nil {
 				return tradeId
 			}
-			log.Println("Engine Transact CALLBACK", err)
+			ex.logger.Debug("Engine Transact CALLBACK", err)
 			time.Sleep(PollInterval)
 		}
 	}, func(order *engine.Order) {
@@ -193,7 +199,7 @@ func (ex *Exchange) buildBook(ctx context.Context, market string) *engine.Book {
 			if err == nil {
 				break
 			}
-			log.Println("Engine Cancel CALLBACK", err)
+			ex.logger.Debug("Engine Cancel CALLBACK", err)
 			time.Sleep(PollInterval)
 		}
 	})
@@ -236,7 +242,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 	for {
 		checkpoint, err := persistence.ReadPropertyAsTime(ctx, CheckpointMixinNetworkSnapshots)
 		if err != nil {
-			log.Println("ReadPropertyAsTime CheckpointMixinNetworkSnapshots", err)
+			ex.logger.Debug("ReadPropertyAsTime CheckpointMixinNetworkSnapshots", err)
 			time.Sleep(PollInterval)
 			continue
 		}
@@ -245,7 +251,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 		}
 		snapshots, err := ex.requestMixinNetwork(ctx, checkpoint, limit)
 		if err != nil {
-			log.Println("PollMixinNetwork ERROR", err)
+			ex.logger.Debug("PollMixinNetwork ERROR", err)
 			time.Sleep(PollInterval)
 			continue
 		}
@@ -262,7 +268,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 		}
 		err = persistence.WriteTimeProperty(ctx, CheckpointMixinNetworkSnapshots, checkpoint)
 		if err != nil {
-			log.Println("WriteTimeProperty CheckpointMixinNetworkSnapshots", err)
+			ex.logger.Debug("WriteTimeProperty CheckpointMixinNetworkSnapshots", err)
 		}
 	}
 }
@@ -272,7 +278,7 @@ func (ex *Exchange) PollMixinMessages(ctx context.Context) {
 		blazeClient := bot.NewBlazeClient(config.ClientId, config.SessionId, config.SessionKey)
 		err := blazeClient.Loop(ctx, ex)
 		if err != nil {
-			log.Println("PollMixinMessages", err)
+			ex.logger.Debug("PollMixinMessages", err)
 			time.Sleep(1 * time.Second)
 		}
 	}
