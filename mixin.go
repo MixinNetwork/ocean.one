@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"math/big"
 	"sync"
 	"time"
 
@@ -273,7 +273,18 @@ func newTmap() *tmap {
 }
 
 func (m *tmap) fetch(user, asset string) *sync.Mutex {
-	key := fmt.Sprintf("%x", md5.Sum([]byte(user+asset)))
+	uu, err := uuid.FromString(user)
+	if err != nil {
+		panic(user)
+	}
+	u := new(big.Int).SetBytes(uu.Bytes())
+	au, err := uuid.FromString(asset)
+	if err != nil {
+		panic(asset)
+	}
+	a := new(big.Int).SetBytes(au.Bytes())
+	s := new(big.Int).Add(u, a)
+	key := new(big.Int).Mod(s, big.NewInt(100)).String()
 	if _, found := m.Load(key); !found {
 		m.Store(key, new(sync.Mutex))
 	}
