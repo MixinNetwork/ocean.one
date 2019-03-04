@@ -11,7 +11,7 @@ import (
 
 	"cloud.google.com/go/spanner"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 	"google.golang.org/api/iterator"
 )
 
