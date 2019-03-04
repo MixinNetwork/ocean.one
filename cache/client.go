@@ -10,8 +10,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/satori/go.uuid"
 )
 
 const (

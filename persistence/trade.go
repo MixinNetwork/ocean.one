@@ -9,7 +9,7 @@ import (
 	"cloud.google.com/go/spanner"
 	"github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/ocean.one/engine"
-	"github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 )
 
 const (

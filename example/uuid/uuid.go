@@ -3,7 +3,7 @@ package uuid
 import (
 	"log"
 
-	_uuid "github.com/satori/go.uuid"
+	_uuid "github.com/gofrs/uuid"
 )
 
 var Nil = _uuid.Nil
