@@ -67,7 +67,7 @@ module.exports = {
       RECAPTCHA_SITE_KEY: JSON.stringify("6Leo5WkUAAAAACT-jCLijZ1yyFvMMxy_yhoiJa3H")
     }),
     new CompressionPlugin({
-      asset: "[path]",
+      filename: "[path]",
       algorithm: "gzip",
       test: /\.(js|css)$/,
       threshold: process.env.NODE_ENV === 'production' ? 0 : 100000000000000,
