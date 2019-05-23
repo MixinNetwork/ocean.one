@@ -1,7 +1,7 @@
 import './index.scss';
 import $ from 'jquery';
 import 'intl-tel-input/build/css/intlTelInput.css';
-import 'intl-tel-input';
+import intlTelInput from 'intl-tel-input';
 import uuid from 'uuid/v4';
 import QRious from 'qrious';
 import FormUtils from '../utils/form.js';
@@ -68,11 +68,11 @@ Account.prototype = {
     if (navigator.language && navigator.language.indexOf('zh') >= 0) {
       initialCountry = 'CN';
     }
-    var phoneInput = $('#enroll-phone-form #phone');
-    phoneInput.intlTelInput({
+    var phoneTextInput = $('#enroll-phone-form #phone');
+    var phoneInput = intlTelInput(document.querySelector("#phone"), {
       "initialCountry": initialCountry
     });
-    phoneInput.focus();
+    phoneTextInput.focus();
 
     var widgetId;
     var enroll = function (token) {
@@ -90,9 +90,9 @@ Account.prototype = {
     $('#enroll-phone-form').submit(function (event) {
       event.preventDefault();
       var form = $(this);
-      var phone = phoneInput.val().trim();
+      var phone = phoneTextInput.val().trim();
       if (phone.indexOf('+') !== 0) {
-        phone = '+' + phoneInput.intlTelInput("getSelectedCountryData")['dialCode'] + phone;
+        phone = '+' + phoneInput.getSelectedCountryData().dialCode + phone;
       }
       var params = {
         category: 'PHONE',
@@ -305,18 +305,19 @@ Account.prototype = {
     if (navigator.language && navigator.language.indexOf('zh') >= 0) {
       initialCountry = 'CN';
     }
-    var phoneInput = $('#enroll-phone-form #phone');
-    phoneInput.intlTelInput({
+   ;
+    var phoneTextInput = $('#enroll-phone-form #phone');
+    var phoneInput = intlTelInput(document.querySelector("#phone"), {
       "initialCountry": initialCountry
     });
-    phoneInput.focus();
+    phoneTextInput.focus();
 
     $('#enroll-phone-form').submit(function (event) {
       event.preventDefault();
       var form = $(this);
-      var phone = phoneInput.val().trim();
+      var phone = phoneTextInput.val().trim();
       if (phone.indexOf('+') !== 0) {
-        phone = '+' + phoneInput.intlTelInput("getSelectedCountryData")['dialCode'] + phone;
+        phone = '+' + phoneInput.getSelectedCountryData().dialCode + phone;
       }
       var params = FormUtils.serialize(form);
       params.phone = phone;
