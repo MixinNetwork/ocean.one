@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bignumber.js": "^8.1.1",
+    "bignumber.js": "^9.0.0",
     "handlebars": "^4.1.2",
     "highcharts": "^7.1.1",
     "intl-tel-input": "^15.0.2",
