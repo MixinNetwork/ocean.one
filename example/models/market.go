@@ -257,5 +257,4 @@ var xinMarkets = []string{
 	"27921032-f73e-434e-955f-43d55672ee31", // XEM
 	"fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0", // BCH
 	"76c802a2-7c88-447f-a93e-c29c9e5dd9c8", // LTC
-	"43b645fc-a52c-38a3-8d3b-705e7aaefa15", // CANDY
 }
