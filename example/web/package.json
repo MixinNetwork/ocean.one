@@ -22,7 +22,7 @@
     "moment-timezone": "^0.5.25",
     "navigo": "^7.1.2",
     "node-forge": "^0.8.3",
-    "node-polyglot": "^2.3.0",
+    "node-polyglot": "^2.3.1",
     "noty": "^3.2.0-beta",
     "pako": "^1.0.10",
     "qrious": "^4.0.2",
