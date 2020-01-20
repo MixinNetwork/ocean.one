@@ -49,7 +49,7 @@ func (k *Key) MixinToken(ctx context.Context, uri string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
 		"uid": k.UserId,
 		"sid": k.SessionId,
-		"scp": "ASSETS:READ",
+		"scp": "ASSETS:READ SNAPSHOTS:READ",
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 		"sig": hex.EncodeToString(sum[:]),
 	})

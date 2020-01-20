@@ -88,7 +88,7 @@ func (impl *R) tokens(w http.ResponseWriter, r *http.Request, _ map[string]strin
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
 		"uid": config.ClientId,
 		"sid": config.SessionId,
-		"scp": "ASSETS:READ",
+		"scp": "SNAPSHOTS:READ",
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 		"sig": hex.EncodeToString(sum[:]),
 	})
