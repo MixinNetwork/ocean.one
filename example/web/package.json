@@ -28,7 +28,7 @@
     "qrious": "^4.0.2",
     "reconnecting-websocket": "^4.1.10",
     "simple-line-icons": "^2.4.1",
-    "uuid": "^3.3.2"
+    "uuid": "^8.1.0"
   },
   "devDependencies": {
     "compression-webpack-plugin": "^3.0.0",
