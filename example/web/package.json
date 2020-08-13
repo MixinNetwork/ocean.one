@@ -16,7 +16,7 @@
     "highcharts": "^7.1.2",
     "intl-tel-input": "^17.0.3",
     "jquery": "^3.5.0",
-    "js-cookie": "^2.2.0",
+    "js-cookie": "^2.2.1",
     "jsrsasign": "^8.0.19",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",
