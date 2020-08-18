@@ -430,23 +430,23 @@ Account.prototype = {
         return self.handleWithdrawal(me, resp.data);
       }
 
-      if (resp.data.public_key !== '') {
+      if (resp.data.destination !== '' && resp.data.tag === '') {
         $('.address.deposit.container').show();
         new QRious({
           element: $('.deposit.address.code.container canvas')[0],
-          value: resp.data.public_key,
+          value: resp.data.destination,
           size: 500
         });
-      } else if (resp.data.account_name !== '') {
+      } else if (resp.data.tag !== '') {
         $('.account.deposit.container').show();
         new QRious({
           element: $('.deposit.account.name.code.container canvas')[0],
-          value: resp.data.account_name,
+          value: resp.data.destination,
           size: 500
         });
         new QRious({
           element: $('.deposit.account.tag.code.container canvas')[0],
-          value: resp.data.account_tag,
+          value: resp.data.tag,
           size: 500
         });
       }
