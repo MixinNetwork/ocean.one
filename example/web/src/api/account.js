@@ -1,7 +1,7 @@
 import forge from 'node-forge';
 import moment from 'moment';
 import KJUR from 'jsrsasign';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import Cookies from 'js-cookie';
 
 function Account(api) {

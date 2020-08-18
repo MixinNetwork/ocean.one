@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const CompressionPlugin = require("compression-webpack-plugin");
 const ScriptExtHtmlWebpackPlugin = require("script-ext-html-webpack-plugin");
-const WebappWebpackPlugin = require('webapp-webpack-plugin');
+const WebappWebpackPlugin = require('favicons-webpack-plugin');
 
 const extractSass = new ExtractTextPlugin({
     filename: "[name]-[hash].css"

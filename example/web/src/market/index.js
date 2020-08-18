@@ -2,7 +2,7 @@ import './index.scss';
 import './trade.scss';
 import $ from 'jquery';
 import jQueryColor from '../jquery-color-plus-names.js';
-import uuid from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import {BigNumber} from 'bignumber.js';
 import Chart from './chart.js';
 import FormUtils from '../utils/form.js';
@@ -67,7 +67,7 @@ Market.prototype = {
     })).append(self.templateTrade({
       base: self.base,
       quote: self.quote,
-      trace: uuid().toLowerCase()
+      trace: uuidv4().toLowerCase()
     }));
 
     if (self.api.account.token() === '') {
@@ -559,7 +559,7 @@ Market.prototype = {
 
         $('.trade.form input[name="amount"]').val('');
         $('.trade.form input[name="funds"]').val('');
-        $('.trade.form input[name="trace_id"]').val(uuid().toLowerCase());
+        $('.trade.form input[name="trace_id"]').val(uuidv4().toLowerCase());
         if (data.side === 'BID') {
           self.pollAccountBalance($('.trade.form form input[name="quote"]').val());
         } else {
