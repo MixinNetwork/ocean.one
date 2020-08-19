@@ -7,6 +7,8 @@ import {BigNumber} from 'bignumber.js';
 import Chart from './chart.js';
 import FormUtils from '../utils/form.js';
 import TimeUtils from '../utils/time.js';
+import logoUrl from './logo.png';
+import symbolUrl from './symbol.png';
 
 function Market(router, api) {
   this.router = router;
@@ -61,8 +63,8 @@ Market.prototype = {
 
     $('body').attr('class', 'market layout');
     $('#layout-container').html(self.templateIndex({
-      logoURL: require('./logo.png'),
-      symbolURL: require('./symbol.png'),
+      logoURL: logoUrl,
+      symbolURL: symbolUrl,
       title: self.base.symbol + '-' + self.quote.symbol
     })).append(self.templateTrade({
       base: self.base,
