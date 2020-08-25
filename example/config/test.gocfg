@@ -1,0 +1,101 @@
+package config
+
+import "time"
+
+const (
+	Environment  = "test"
+	BuildVersion = "BUILD_VERSION"
+
+	GoroutineLogEnabled    = true
+	ExternalNetworkTimeout = 10 * time.Second
+
+	OOOAssetId = "de5a6414-c181-3ecc-b401-ce375d08c399"
+)
+
+const (
+	ClientId        = "5fa13575-f078-4c92-b913-fdfd1611f573"
+	ClientSecret    = "3166a5798f3ea2298e85d78545ff31106f220188aacb28245f0b65a1ffae7eab"
+	SessionAssetPIN = "705153"
+	PinToken        = "C42WOQ3CwMglJeCasEKSk2kdvh2Rbb+l7IqaYvmG4A3JCRyBoO4XWXlf4fQO4FjnXhtSQuLhqodHlmKUiDv4d/OmMYE/1UWdoMdvtlMFtXVWpjEk3o0lbaj5Fp/v4bthRmpi1OPUzAVLHGhu5YkvgavQT+D6dLH4v4AgfXAzjNI="
+	SessionId       = "b327210c-907c-4f8a-8dd7-a6fa87c1767b"
+	SessionKey      = `-----BEGIN RSA PRIVATE KEY-----
+MIICXgIBAAKBgQDQ35PWC7C6a7P3dpoglE1F6DJIKj7wpsmFEbz1i1o/d3C/bdeJ
+Yk0E44GcGaUBiLwG1QSQfhBToQ8ZdnQdVXZutIJqy4aob0iVQp9JKZ5brSbcoXtR
+EhFH8YgAs+KRK+hZIShI1t925BqA8eC0ZPXXsPIfh4wfVS0tbv1nhwOitQIDAQAB
+AoGAaaL5iMKG0fGQpjIUhy+Z2SYy7+51wI4J00QCVgjxTrHgkuBBptjRbQyGy2To
+39rAhZAMa+tl5HXLRixzUzaa2z5n/TQWzU+QX6qbqwD0vT59cE4x9zMfJC78r4Jy
+sRxtZpO0TkOSf5AojOywvYNTNQw1bKzF/PTnBBIDjdpNreECQQDu3IfDak5SZEI3
+d6HhjjdXq2s7e2SHVor1JIYygb9zGaleQZxP8E1HTUasNY7VJhVh3yVN4rMcomFb
+DPAOywUtAkEA39w3ylBaKAglFJFDAiaR4GL16m1Xe5SsfLm/bCEAkJoUsWpol0WE
+/le2Ohni/cCCej7hJxy7JFBuCtgBxyUYqQJBAI1A1Ph3EUIgEBiFIrIkTA4ITS2r
+1tNCFoLJyqJroDAM6N/YpPuQ++JCjJyiP4lFMDfkokbg3VL9o90YVY4p+TECQQDL
+LzqEKwJpq1rcnCxR22g0Xh4OtUfeJ0eXvZB9OEcm+HMnxQlBpBveLwZ7HdvlrcG/
+6yq5MV66yzXWKdETTBxhAkEAzTR1JCK7FQa5kT9CpQI3KOclxTRQ/KOjsFZHwY3s
+0MxqAbnf7LURR++MndpsflfOcj2ZE6/QfWgNF/aFoOXksg==
+-----END RSA PRIVATE KEY-----`
+
+	AssetPublicKey  = "MIGJAoGBAMhwRncObAz8Mk9x5AE86/TPhILIgHngQrWB6qN4YZYLXg8BcvW/BLFnO5XXUKNPSDuzeS7p5+BJm8J/J0wRRIJxpJREgHw4JXJrNVAa6JtceOFJ5aEiCvM4ua8eJrEbU8Gsq+oifj01grzEryPN+/+gwA+KaIlkR+pTTFD5Q/XnAgMBAAE="
+	AssetPrivateKey = `-----BEGIN RSA PRIVATE KEY-----
+MIICXAIBAAKBgQChSFVBlIKUjUD66v8XzefpEe2+sMelaXx5lzo2biaJqJ3VzpLZ
+yIPtLar3OCqxARRBULSVHYwTlBvm+loa9A2CkQBCPa0LFTaYL3+f6L6tDKjUJa6w
+x9qhmzSXIW2SwJkDJqZ5vKdyqvMMFJcJ31V5nnRFYIoVotiA/w+TXxbvhwIDAQAB
+AoGAbXUn13AxBxyuoxxlsAQghn+SeL6FYG+s+OB3s4UiRn7XT8n4xDFfx9Icm9fU
+sXhoBMP/Ksx4yrjUDviNuokzuPViSGlG4BfkYmcQ9RV+djm9F8BRn3iNM0akxmY/
+xvFKmMdrL6NKs42Gg/o9Tidmg6HXvLy4Ch50GoH8JGGtDwECQQD6IkbR+TJuUery
+XAT3vxE4h9N3c4jR/ReDhIGoq28/RQXJdP4xuyO4qoxgRpbph7wRyBqzI1ta0Fqk
+Z8oTCZ7BAkEApRCfHTMSqh0ae/umDBZSd0Vng7Y/a2FnB6zgsq6nmlJgse2g/Hf7
+U7P4pjqBmTbg974qxE3nin8xug6x/83oRwJAGZwk0B7JkQ4GFiZhw9PmOXl+pz5H
+Bej53VdVxyU2UK4Kd6Po2sKkV6XulXTkwqhJEzD/utOl6NhoT2jpAaX8gQJAIsR5
+f0D+sW4n4e2DcBBTlmO8BfYhLZD6jpdPTNOU4eBwFYoj2om7GkpSGVFBcvAoOoaH
+o4l1N6rK4pGt1F+eiQJBAKwT58rksOuXsRESK0/9j1cd+YpoqJUR0SUEaWpJqonL
+4E0oJn6lsCPwCSp8RVKSkqC5Gsh4bAHoRXcrF0sshKY=
+-----END RSA PRIVATE KEY-----`
+)
+
+const (
+	GoogleCloudProject = "mixin-183904"
+	GoogleCloudSpanner = "projects/mixin-183904/instances/development/databases/o1-test"
+)
+
+const (
+	BugsnagAPIKey = ""
+
+	Name            = ""
+	NewRelicAPIKey  = ""
+	NewRelicEnabled = false
+
+	RedisRateLimiterAddress  = ""
+	RedisRateLimiterDatabase = 1
+
+	HTTPLogRequestBody = false
+	HTTPListenPort     = 7000
+)
+
+const (
+	RecaptchaURL    = ""
+	RecaptchaSecret = ""
+	KickboxApikey   = ""
+	RecaptchaEnable = false
+
+	SMSDeliveryInterval       = 1 * time.Minute
+	VerificationSendLimit     = 100
+	VerificationValidateLimit = 100
+)
+
+const (
+	SMTPFromEmail = ""
+	SMTPFromName  = ""
+
+	SESServer          = ""
+	SESPort            = 1000
+	SESAddress         = ""
+	SESPassword        = ""
+	SMSDeliveryEnabled = true
+
+	TelesignSecret = ""
+	TelesignId     = ""
+
+	TwilioAccountSid          = ""
+	TwilioMessagingServiceSid = ""
+	TwilioAuthToken           = ""
+)
