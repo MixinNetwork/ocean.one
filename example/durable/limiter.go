@@ -37,7 +37,7 @@ func (limiter *Limiter) Available(key string, window time.Duration, max int, sho
 	_, err := limiter.pool.Pipelined(func(pipe redis.Pipeliner) error {
 		pipe.ZRemRangeByScore(key, "-inf", fmt.Sprint(now.Add(-window).UnixNano()/1000000))
 		if shouldIncr {
-			pipe.ZAdd(key, &redis.Z{Score: float64(now.UnixNano() / 1000000), Member: uuid.NewV4().String()})
+			pipe.ZAdd(key, redis.Z{Score: float64(now.UnixNano() / 1000000), Member: uuid.NewV4().String()})
 		}
 		pipe.Expire(key, time.Second*time.Duration(int64(window.Seconds())+60))
 		zcount = pipe.ZCount(key, "-inf", "+inf")
