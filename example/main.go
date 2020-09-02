@@ -10,10 +10,6 @@ import (
 	"github.com/MixinNetwork/ocean.one/example/services"
 )
 
-func init() {
-	setupBugsnag()
-}
-
 func main() {
 	service := flag.String("service", "http", "run a service")
 	flag.Parse()
