@@ -5,6 +5,7 @@ import "encoding/json"
 var (
 	ErrInvalidParams         = &Error{10001, "invalid params"}
 	ErrInvalidLiquidityPrice = &Error{20001, "invalid liquidity price"}
+	ErrLiquidityEmpty        = &Error{20002, "invalid liquidity empty"}
 )
 
 type Error struct {

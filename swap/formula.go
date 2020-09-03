@@ -6,17 +6,13 @@ import (
 
 var (
 	zero     = number.FromString("0")
+	one      = number.FromString("1")
 	decimals = int32(8)
 )
 
 type Formula interface {
 	Price(x, y number.Decimal) number.Decimal
 	Swap(x, y number.Decimal, in number.Decimal) (*Output, error)
-}
-
-type Input struct {
-	Amount number.Decimal
-	Quote  bool
 }
 
 type Output struct {
