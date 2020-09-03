@@ -11,7 +11,7 @@ var (
 
 type Formula interface {
 	Price(x, y number.Decimal) number.Decimal
-	Swap(p *Pool, in *Input) (*Output, error)
+	Swap(x, y number.Decimal, in number.Decimal) (*Output, error)
 }
 
 type Input struct {
@@ -34,29 +34,20 @@ func (cpf *ConstantProductFormula) Price(x, y number.Decimal) number.Decimal {
 	return x.Div(y).RoundFloor(decimals)
 }
 
-func (cpf *ConstantProductFormula) Swap(p *Pool, in *Input) (*Output, error) {
-	if p.X.Sign() <= 0 || p.Y.Sign() <= 0 || in.Amount.Sign() <= 0 {
+func (cpf *ConstantProductFormula) Swap(x, y number.Decimal, in number.Decimal) (*Output, error) {
+	if x.Sign() <= 0 || y.Sign() <= 0 || in.Sign() <= 0 {
 		return nil, ErrInvalidParams
 	}
 
-	k := p.X.Mul(p.Y)
+	k := x.Mul(y)
 	out := &Output{}
 
-	if in.Quote {
-		out.PriceInitial = cpf.Price(p.X, p.Y)
-		p.Y = p.Y.Add(in.Amount)
-		x := k.Div(p.Y).RoundCeil(decimals)
-		out.Amount = p.X.Sub(x)
-		p.X = x
-		out.PriceFinal = cpf.Price(p.X, p.Y)
-	} else {
-		out.PriceInitial = cpf.Price(p.Y, p.X)
-		p.X = p.X.Add(in.Amount)
-		y := k.Div(p.X).RoundCeil(decimals)
-		out.Amount = p.Y.Sub(y)
-		p.Y = y
-		out.PriceFinal = cpf.Price(p.Y, p.X)
-	}
+	out.PriceInitial = cpf.Price(x, y)
+	pY := y.Add(in)
+	out.Amount = x.Sub(k.Div(pY).RoundCeil(decimals))
+	pX := x.Sub(out.Amount)
+	out.PriceFinal = cpf.Price(pX, pY)
+
 	slip := out.PriceFinal.Sub(out.PriceInitial).Abs().String()
 	out.PriceSlippage = number.FromString(slip).Div(out.PriceInitial)
 	out.PriceSlippage = out.PriceSlippage.RoundFloor(decimals)

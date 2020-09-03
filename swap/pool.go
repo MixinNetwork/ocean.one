@@ -72,14 +72,21 @@ func (p *Pool) Swap(amount number.Decimal, quote bool) (*Output, error) {
 		return nil, ErrInvalidParams
 	}
 
-	out, err := p.f.Swap(p, &Input{amount, quote})
-	if err != nil {
-		return nil, err
-	}
 	if quote {
-		p.Y = p.Y.Add(fee)
+		out, err := p.f.Swap(p.X, p.Y, amount)
+		if err != nil {
+			return nil, err
+		}
+		p.X = p.X.Sub(out.Amount)
+		p.Y = p.Y.Add(amount).Add(fee)
+		return out, nil
 	} else {
-		p.X = p.X.Add(fee)
+		out, err := p.f.Swap(p.Y, p.X, amount)
+		if err != nil {
+			return nil, err
+		}
+		p.X = p.X.Add(amount).Add(fee)
+		p.Y = p.Y.Sub(out.Amount)
+		return out, nil
 	}
-	return out, nil
 }
