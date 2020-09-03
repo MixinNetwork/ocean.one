@@ -56,6 +56,7 @@ func (p *Pool) ProvideLiquidity(x, y number.Decimal) (number.Decimal, error) {
 	if lY := p.Liquidity.Mul(y).Div(p.Y); lY.Cmp(liquidity) < 0 {
 		liquidity = lY
 	}
+	liquidity = liquidity.RoundFloor(decimals)
 	p.Liquidity = p.Liquidity.Add(liquidity)
 	p.X = p.X.Add(x)
 	p.Y = p.Y.Add(y)
@@ -104,7 +105,7 @@ func (p *Pool) Swap(amount number.Decimal, quote bool) (*Output, number.Decimal,
 		}
 		p.X = p.X.Sub(out.Amount)
 		p.Y = p.Y.Add(amount).Add(poolFee)
-		return out, zero, nil
+		return out, extraFee, nil
 	} else {
 		out, err := p.f.Swap(p.Y, p.X, amount)
 		if err != nil {
@@ -112,6 +113,6 @@ func (p *Pool) Swap(amount number.Decimal, quote bool) (*Output, number.Decimal,
 		}
 		p.X = p.X.Add(amount).Add(poolFee)
 		p.Y = p.Y.Sub(out.Amount)
-		return out, zero, nil
+		return out, extraFee, nil
 	}
 }
