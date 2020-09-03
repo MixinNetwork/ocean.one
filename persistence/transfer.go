@@ -15,6 +15,10 @@ const (
 	TransferSourceOrderCancelled = "ORDER_CANCELLED"
 	TransferSourceOrderFilled    = "ORDER_FILLED"
 	TransferSourceOrderInvalid   = "ORDER_INVALID"
+
+	TransferSourceSwapAdd    = "SWAP_ADD"
+	TransferSourceSwapTrade  = "SWAP_TRADE"
+	TransferSourceSwapRemove = "SWAP_REMOVE"
 )
 
 type Transfer struct {
