@@ -26,8 +26,25 @@ type Pool struct {
 	X         number.Decimal
 	Y         number.Decimal
 	Liquidity number.Decimal
-	Fee       *Fee
-	f         Formula
+	fee       *Fee
+	formula   Formula
+}
+
+func BuildConstantProductPool(x, y, liquidity number.Decimal) *Pool {
+	return &Pool{
+		X:         x,
+		Y:         y,
+		Liquidity: liquidity,
+		fee:       &Fee{zero, zero},
+		formula:   &ConstantProductFormula{},
+	}
+}
+
+func (p *Pool) SetFeeRate(pool, extra number.Decimal) {
+	p.fee = &Fee{
+		PoolRate:  pool,
+		ExtraRate: extra,
+	}
 }
 
 func (p *Pool) ProvideLiquidity(x, y number.Decimal) (number.Decimal, error) {
@@ -46,8 +63,8 @@ func (p *Pool) ProvideLiquidity(x, y number.Decimal) (number.Decimal, error) {
 		return liquidity, nil
 	}
 
-	ip := p.f.Price(x, y)
-	pp := p.f.Price(p.X, p.Y)
+	ip := p.formula.Price(x, y)
+	pp := p.formula.Price(p.X, p.Y)
 	if ip.Sub(pp).Div(pp).Cmp(liquiditySlippage) > 0 {
 		return zero, ErrInvalidLiquidityPrice
 	}
@@ -90,8 +107,8 @@ func (p *Pool) Swap(amount number.Decimal, quote bool) (*Output, number.Decimal,
 		return nil, zero, ErrInvalidParams
 	}
 
-	poolFee := amount.Mul(p.Fee.PoolRate)
-	extraFee := amount.Mul(p.Fee.ExtraRate)
+	poolFee := amount.Mul(p.fee.PoolRate)
+	extraFee := amount.Mul(p.fee.ExtraRate)
 	totalFee := poolFee.Add(extraFee)
 	amount = amount.Sub(totalFee).RoundFloor(decimals)
 	if amount.Sign() <= 0 {
@@ -99,7 +116,7 @@ func (p *Pool) Swap(amount number.Decimal, quote bool) (*Output, number.Decimal,
 	}
 
 	if quote {
-		out, err := p.f.Swap(p.X, p.Y, amount)
+		out, err := p.formula.Swap(p.X, p.Y, amount)
 		if err != nil {
 			return nil, zero, err
 		}
@@ -107,7 +124,7 @@ func (p *Pool) Swap(amount number.Decimal, quote bool) (*Output, number.Decimal,
 		p.Y = p.Y.Add(amount).Add(poolFee)
 		return out, extraFee, nil
 	} else {
-		out, err := p.f.Swap(p.Y, p.X, amount)
+		out, err := p.formula.Swap(p.Y, p.X, amount)
 		if err != nil {
 			return nil, zero, err
 		}

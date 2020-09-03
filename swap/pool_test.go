@@ -10,13 +10,8 @@ import (
 func TestPool(t *testing.T) {
 	assert := assert.New(t)
 
-	pool := &Pool{
-		Fee: &Fee{
-			PoolRate:  number.FromString("0.002"),
-			ExtraRate: number.FromString("0.001"),
-		},
-		f: &ConstantProductFormula{},
-	}
+	pool := BuildConstantProductPool(zero, zero, zero)
+	pool.SetFeeRate(number.FromString("0.002"), number.FromString("0.001"))
 
 	liquidity, err := pool.ProvideLiquidity(number.FromString("2100"), number.FromString("100"))
 	assert.Nil(err)
