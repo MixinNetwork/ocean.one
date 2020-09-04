@@ -23,6 +23,9 @@ type SwapAction struct {
 	Action       string    `spanner:"action"`
 	AssetId      string    `spanner:"asset_id"`
 	Amount       string    `spanner:"amount"`
+	BrokerId     string    `spanner:"broker_id"`
+	UserId       string    `spanner:"user_id"`
+	TraceId      string    `spanner:"trace_id"`
 	CreatedAt    time.Time `spanner:"created_at"`
 }
 

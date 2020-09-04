@@ -83,10 +83,13 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return nil
 	}
 
-	action, err := ex.decryptOrderAction(ctx, s.Data)
+	action, swap, err := ex.decryptOrderOrSwapAction(ctx, s)
 	if err != nil {
 		return ex.refundSnapshot(ctx, s)
+	} else if swap != nil {
+		return ex.handleSwapAction(ctx, s, swap)
 	}
+
 	if len(action.U) > 16 {
 		return persistence.UpdateUserPublicKey(ctx, s.OpponentId, hex.EncodeToString(action.U))
 	}
@@ -194,19 +197,25 @@ func (ex *Exchange) refundSnapshot(ctx context.Context, s *Snapshot) error {
 	return persistence.CreateRefundTransfer(ctx, s.UserId, s.OpponentId, s.Asset.AssetId, amount, s.TraceId)
 }
 
-func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) (*OrderAction, error) {
-	payload, err := base64.StdEncoding.DecodeString(data)
+func (ex *Exchange) decryptOrderOrSwapAction(ctx context.Context, s *Snapshot) (*OrderAction, *SwapAction, error) {
+	if pl := ex.swaps[s.Asset.AssetId]; pl != nil {
+		swap, err := ex.decryptSwapAction(s, pl)
+		return nil, swap, err
+	}
+
+	payload, err := base64.StdEncoding.DecodeString(s.Data)
 	if err != nil {
-		payload, err = base64.URLEncoding.DecodeString(data)
+		payload, err = base64.URLEncoding.DecodeString(s.Data)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	var action OrderAction
 	decoder := codec.NewDecoderBytes(payload, ex.codec)
 	err = decoder.Decode(&action)
 	if err != nil {
-		return nil, err
+		swap, err := ex.decryptSwapAction(s, payload)
+		return nil, swap, err
 	}
 	switch action.T {
 	case "L":
@@ -220,7 +229,7 @@ func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) (*Order
 	case "B":
 		action.S = engine.PageSideBid
 	}
-	return &action, nil
+	return &action, nil, nil
 }
 
 func (ex *Exchange) requestMixinNetwork(ctx context.Context, checkpoint time.Time, limit int) ([]*Snapshot, error) {
