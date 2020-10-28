@@ -30,6 +30,7 @@ func NewRouter() *httptreemux.TreeMux {
 	router.GET("/markets/:id/book", impl.marketBook)
 	router.GET("/markets/:id/trades", impl.marketTrades)
 	router.GET("/orders", impl.orders)
+	router.GET("/orders/:id", impl.order)
 	router.POST("/tokens", impl.tokens)
 	registerHanders(router)
 	return router
@@ -222,6 +223,44 @@ func (impl *R) orders(w http.ResponseWriter, r *http.Request, params map[string]
 			"state":            o.State,
 			"created_at":       o.CreatedAt,
 		})
+	}
+	render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": data})
+}
+
+func (impl *R) order(w http.ResponseWriter, r *http.Request, params map[string]string) {
+	userId, err := authenticateUser(r)
+	if err != nil {
+		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	if userId == "" {
+		render.New().JSON(w, http.StatusUnauthorized, map[string]interface{}{})
+		return
+	}
+
+	o, err := persistence.UserOrder(r.Context(), params["id"], userId)
+	if err != nil {
+		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return
+	}
+	if o == nil {
+		render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": map[string]interface{}{}})
+		return
+	}
+
+	data := map[string]interface{}{
+		"order_id":         o.OrderId,
+		"order_type":       o.OrderType,
+		"base":             o.BaseAssetId,
+		"quote":            o.QuoteAssetId,
+		"side":             o.Side,
+		"price":            o.Price,
+		"remaining_amount": o.RemainingAmount,
+		"filled_amount":    o.FilledAmount,
+		"remaining_funds":  o.RemainingFunds,
+		"filled_funds":     o.FilledFunds,
+		"state":            o.State,
+		"created_at":       o.CreatedAt,
 	}
 	render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": data})
 }
