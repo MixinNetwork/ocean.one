@@ -21,8 +21,6 @@ const (
 )
 
 type Exchange struct {
-	swaps     map[string][]byte
-	pools     map[string]*PoolQueue
 	books     map[string]*engine.Book
 	codec     codec.Handle
 	snapshots map[string]bool
@@ -77,18 +75,9 @@ func (ex *Exchange) Run(ctx context.Context) {
 		ex.brokers[b.BrokerId] = b
 		go ex.PollTransfers(ctx, b.BrokerId)
 	}
-	pools, err := persistence.AllPools(ctx)
-	if err != nil {
-		log.Panicln(err)
-	}
-	for _, p := range pools {
-		ex.swaps[p.PoolId] = p.Payload()
-		ex.AttachPool(ctx, p)
-	}
 	go ex.PollMixinMessages(ctx)
 	go ex.PollMixinNetwork(ctx)
-	go ex.PollOrderActions(ctx)
-	ex.PollSwapActions(ctx)
+	ex.PollOrderActions(ctx)
 }
 
 func (ex *Exchange) PollOrderActions(ctx context.Context) {
@@ -172,9 +161,6 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 			log.Panicln(transfer)
 		}
 		data = &TransferAction{S: "MATCH", A: uuid.FromStringOrNil(trade.AskOrderId), B: uuid.FromStringOrNil(trade.BidOrderId)}
-	case persistence.TransferSourceSwapAdd:
-	case persistence.TransferSourceSwapTrade:
-	case persistence.TransferSourceSwapRemove:
 	default:
 		log.Panicln(transfer)
 	}
