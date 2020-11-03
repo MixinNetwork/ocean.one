@@ -99,6 +99,24 @@ func Authenticate(ctx context.Context, jwtToken string) (string, error) {
 	return "", nil
 }
 
+func UserOrder(ctx context.Context, orderId, userId string) (*Order, error) {
+	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{
+		SQL:    "SELECT * FROM orders WHERE order_id=@order_id AND user_id=@user_id",
+		Params: map[string]interface{}{"order_id": orderId, "user_id": userId},
+	})
+	defer it.Stop()
+
+	row, err := it.Next()
+	if err == iterator.Done {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	var o Order
+	err = row.ToStruct(&o)
+	return &o, err
+}
+
 func UserOrders(ctx context.Context, userId string, market, state string, offset time.Time, order string, limit int) ([]*Order, error) {
 	txn := Spanner(ctx).ReadOnlyTransaction()
 	defer txn.Close()
