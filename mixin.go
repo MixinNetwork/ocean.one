@@ -30,6 +30,7 @@ const (
 	MixinAssetId   = "c94ac88f-4671-3976-b60a-09064f1811e8"
 	BitcoinAssetId = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
 	USDTAssetId    = "815b0b1a-2764-3736-8faa-42d694fa620a"
+	PUSDAssetId    = "31d2ea9c-95eb-3355-b65b-ba096853bc18"
 )
 
 type Error struct {
@@ -171,13 +172,19 @@ func (ex *Exchange) getQuoteBasePair(s *Snapshot, a *OrderAction) (string, strin
 	if quote == base {
 		return "", ""
 	}
-	if quote != BitcoinAssetId && quote != USDTAssetId && quote != MixinAssetId {
+	if quote != BitcoinAssetId && quote != USDTAssetId && quote != PUSDAssetId && quote != MixinAssetId {
 		return "", ""
 	}
 	if quote == BitcoinAssetId && base == USDTAssetId {
 		return "", ""
 	}
+	if quote == BitcoinAssetId && base == PUSDAssetId {
+		return "", ""
+	}
 	if quote == MixinAssetId && base == USDTAssetId {
+		return "", ""
+	}
+	if quote == MixinAssetId && base == PUSDAssetId {
 		return "", ""
 	}
 	if quote == MixinAssetId && base == BitcoinAssetId {
