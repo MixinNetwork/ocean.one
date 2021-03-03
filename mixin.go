@@ -190,6 +190,9 @@ func (ex *Exchange) getQuoteBasePair(s *Snapshot, a *OrderAction) (string, strin
 	if quote == MixinAssetId && base == BitcoinAssetId {
 		return "", ""
 	}
+	if quote == PUSDAssetId && base == USDTAssetId {
+		return "", ""
+	}
 	return quote, base
 }
 
