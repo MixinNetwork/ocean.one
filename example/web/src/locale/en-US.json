@@ -14,6 +14,7 @@
       "20113": "Invalid phone verification code.",
       "20114": "Expired phone verification code.",
       "20115": "Invalid email.",
+      "20116": "Invalid 2FA code.",
       "20117": "Insufficient balance.",
       "20118": "Password too simple, at least 8 characters required."
     }
@@ -39,7 +40,8 @@
     },
     "password.hint": "Enter a strong password",
     "password.confirmation": "Repeat your password",
-    "placeholder.password": "Password"
+    "placeholder.password": "Password",
+    "notice.hint": "Notice: <a href='/two_factor'>connect</a> to Mixin Messenger to enable 2FA and withdrawal, or <a href='https://mixin.one/messenger'>get</a> Mixin Messenger first."
   },
   "orders": {
     "title": "My Orders",
@@ -66,7 +68,7 @@
     "disconnected": {
       "button": "Connect Mixin Messenger",
       "notice": "The Mixin Messenger connection is permanent, you can't disconnect it later.",
-      "steps": "<li>To protect account security, withdrawal can only be made to a Mixin Messenger account.</li><li>Get Mixin Messenger from the only official donwload page <a href=\"https://mixin.one\">https://mixin.one</a>.</li><li>Find the the circle button at the bottom of the Mixin Messenger app, it's the QR code scanner.</li><li>Click the button below will redirect you to the Mixin Messenger website.</li><li>Scan the QR code with the Mixin Messenger QR code scanner.</li><li>Allow the access of Ocean ONE to your Mixin profile.</li>"
+      "steps": "<li>To protect account security, enable 2FA and withdrawal can only be made to a Mixin Messenger account.</li><li>Get Mixin Messenger from the only official donwload page <a href=\"https://mixin.one/messenger\">https://mixin.one/messenger</a>.</li><li>Find the the circle button at the bottom of the Mixin Messenger app, it's the QR code scanner.</li><li>Click the button below will redirect you to the Mixin Messenger website.</li><li>Scan the QR code with the Mixin Messenger QR code scanner.</li><li>Allow the access of Ocean ONE to your Mixin profile.</li>"
     }
   },
   "home": {

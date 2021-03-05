@@ -16,7 +16,9 @@ function Account(router, api) {
   this.templateOrders = require('./orders.html');
   this.templateAssets = require('./assets.html');
   this.templateAsset = require('./asset.html');
+  this.templateTwoFactor = require('./two_factor.html');
   this.stepCode = require('./step_code.html');
+  this.step2FACode = require('./step_2fa.html');
   this.stepUser = require('./step_user.html');
   this.stepPassword = require('./step_password.html');
 }
@@ -207,6 +209,37 @@ Account.prototype = {
     });
   },
 
+  renderStep2FA: function (userId, sessionId) {
+    var self = this;
+    $('#layout-container').html(self.step2FACode({
+      receiver: 'Mixin',
+      user_id: userId,
+      session_id: sessionId
+    }));
+
+    $('#session-verify-form #code').focus();
+    $('#session-verify-form').submit(function (event) {
+      event.preventDefault();
+      var form = $(this);
+      var params = FormUtils.serialize(form);
+      self.api.account.verifySession(function (resp) {
+        $('.submit-loader', form).hide();
+        $(':submit', form).show();
+        if (resp.error) {
+          return;
+        }
+        self.router.replace('/accounts');
+      }, params);
+    });
+    $('#session-verify-form :submit').click(function (event) {
+      event.preventDefault();
+      var form = $(this).parents('form');
+      $('.submit-loader', form).show();
+      $(this).hide();
+      form.submit();
+    });
+  },
+
   renderUserStep: function (verificationId) {
     const self = this;
     $('body').attr('class', 'account layout');
@@ -328,7 +361,11 @@ Account.prototype = {
         if (resp.error) {
           return;
         }
-        self.router.replace('/accounts');
+        if (resp.data.mixin_id == undefined || resp.data.mixin_id == null) {
+          self.router.replace('/accounts');
+        } else {
+          self.renderStep2FA(resp.data.user_id, resp.data.session_id);
+        }
       }, params);
     });
     $('#enroll-phone-form :submit').click(function (event) {
@@ -351,7 +388,11 @@ Account.prototype = {
         if (resp.error) {
           return;
         }
-        self.router.replace('/accounts');
+        if (resp.data.mixin_id == undefined || resp.data.mixin_id == null) {
+          self.router.replace('/accounts');
+        } else {
+          self.renderStep2FA(resp.data.user_id, resp.data.session_id);
+        }
       }, params);
     });
     $('#enroll-email-form :submit').click(function (event) {
@@ -385,6 +426,12 @@ Account.prototype = {
         preset[i].depositEnabled = true;
         resp.data.push(preset[i]);
       }
+      for (var i = 0; i < resp.data.length; i++) {
+        resp.data[i].withdrawal_url = '/accounts/' + resp.data[i].asset_id + '/withdrawal';
+        if (self.api.account.isNotMixinUser()) {
+          resp.data[i].withdrawal_url = '/two_factor';
+        }
+      }
       resp.data.sort(function (a, b) {
         var at = parseFloat(a.price_usd) * parseFloat(a.balance);
         var bt = parseFloat(b.price_usd) * parseFloat(b.balance);
@@ -405,6 +452,7 @@ Account.prototype = {
       $('body').attr('class', 'account layout');
       $('#layout-container').html(self.templateAssets({
         assets: resp.data,
+        isNotMixinUser: self.api.account.isNotMixinUser()
       }));
       self.router.updatePageLinks();
     });
@@ -555,6 +603,12 @@ Account.prototype = {
         $(item).fadeOut().remove();
       }, id);
     });
+  },
+
+  twoFactor: function () {
+    const self = this;
+    $('body').attr('class', 'account layout');
+    $('#layout-container').html(self.templateTwoFactor());
   }
 };
 

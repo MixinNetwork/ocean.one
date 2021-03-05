@@ -35,9 +35,7 @@ Account.prototype = {
       if (resp.data) {
         self.clear();
         Cookies.set('sid', pwd);
-        window.localStorage.setItem('token.example', priv);
-        window.localStorage.setItem('uid', resp.data.user_id);
-        window.localStorage.setItem('sid', resp.data.session_id);
+        self.store(priv, resp.data);
       }
       return callback(resp);
     });
@@ -55,9 +53,7 @@ Account.prototype = {
       if (resp.data) {
         self.clear();
         Cookies.set('sid', pwd);
-        window.localStorage.setItem('token.example', priv);
-        window.localStorage.setItem('uid', resp.data.user_id);
-        window.localStorage.setItem('sid', resp.data.session_id);
+        self.store(priv, resp.data);
       }
       return callback(resp);
     });
@@ -75,14 +71,21 @@ Account.prototype = {
       if (resp.data) {
         self.clear();
         Cookies.set('sid', pwd);
-        window.localStorage.setItem('token.example', priv);
-        window.localStorage.setItem('uid', resp.data.user_id);
-        window.localStorage.setItem('sid', resp.data.session_id);
+        self.store(priv, resp.data);
       }
       if (resp.error) {
         self.api.notify('error', window.i18n.t('general.errors.'+resp.error.code));
       }
       return callback(resp);
+    });
+  },
+
+  verifySession: function (callback, params) {
+    const self = this;
+    self.api.request('POST', '/sessions/'+params.session_id, params, function (resp) {
+      if (typeof callback === 'function') {
+        return callback(resp);
+      }
     });
   },
 
@@ -181,6 +184,20 @@ Account.prototype = {
     if (d) {
       window.localStorage.setItem('market.default', d);
     }
+  },
+
+  store: function (priv, user) {
+    window.localStorage.setItem('token.example', priv);
+    window.localStorage.setItem('uid', user.user_id);
+    window.localStorage.setItem('sid', user.session_id);
+    if (user.mixin_id != null && user.mixin_id != undefined) {
+      window.localStorage.setItem('mixin.id', user.mixin_id);
+    }
+  },
+
+  isNotMixinUser: function () {
+    let mixinId = window.localStorage.getItem('mixin.id');
+    return mixinId == null || mixinId == undefined;
   }
 }
 

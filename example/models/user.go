@@ -116,7 +116,7 @@ func CreateOrResetUser(ctx context.Context, verificationId, password, sessionSec
 			return err
 		}
 
-		session, err := addSession(ctx, txn, user.UserId, sessionSecret)
+		session, err := addSession(ctx, txn, user, sessionSecret)
 		if err != nil {
 			return err
 		}

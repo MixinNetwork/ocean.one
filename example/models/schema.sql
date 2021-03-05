@@ -60,9 +60,10 @@ INTERLEAVE IN PARENT users ON DELETE CASCADE;
 
 
 CREATE TABLE sessions (
-  user_id	          STRING(36) NOT NULL,
+  user_id           STRING(36) NOT NULL,
   session_id        STRING(36) NOT NULL,
   secret            STRING(512) NOT NULL,
+  code              STRING(128),
   remote_address    STRING(1024) NOT NULL,
   active_at         TIMESTAMP NOT NULL,
   created_at        TIMESTAMP NOT NULL,

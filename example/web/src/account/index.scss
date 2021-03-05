@@ -58,6 +58,27 @@
   text-align: center;
 }
 
+.notice.twofa {
+  text-align: left;
+  max-width: 640px;
+  margin: 0 auto 24px;
+  background: rgba(238,238,238,0.6);
+  box-sizing: border-box;
+  padding: 12px;
+  h4 {
+    font-size: 18px;
+    font-weight: normal;
+    margin: 0 0 16px;
+  }
+  a {
+    color: $color-main-foreground-light;
+    text-decoration: underline;
+    &:hover {
+      color: $color-main-highlight;
+    }
+  }
+}
+
 .form.container {
   max-width: 400px;
   margin: 0 auto;

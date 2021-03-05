@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"strings"
 
 	"github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/ocean.one/example/session"
@@ -29,6 +28,5 @@ func (current *User) CreateWithdrawal(ctx context.Context, assetId string, amoun
 	if !current.MixinId.Valid {
 		return session.MixinNotConnectedError(ctx)
 	}
-	userId := strings.Split(current.MixinId.StringVal, ":")[0]
-	return current.Key.sendTransfer(ctx, userId, assetId, amount, traceId, memo)
+	return current.Key.sendTransfer(ctx, current.MixinUserId(), assetId, amount, traceId, memo)
 }

@@ -53,6 +53,9 @@ router.on({
   '/passwords/new': function () {
     new Account(router, api).resetPassword();
   },
+  '/two_factor': function () {
+    new Account(router, api).twoFactor();
+  },
   '/accounts': function () {
     new Account(router, api).assets();
   },

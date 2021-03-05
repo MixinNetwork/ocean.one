@@ -123,6 +123,11 @@ func EmailInvalidFormatError(ctx context.Context, email string) Error {
 	return createError(ctx, http.StatusAccepted, 20115, description, nil)
 }
 
+func TwoFAInvalidError(ctx context.Context) Error {
+	description := "Invalid 2FA code."
+	return createError(ctx, http.StatusAccepted, 20116, description, nil)
+}
+
 func PasswordTooSimpleError(ctx context.Context) Error {
 	description := "Password too simple, at least 8 characters required."
 	return createError(ctx, http.StatusAccepted, 20118, description, nil)
