@@ -23,6 +23,7 @@ require (
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/nyaruka/phonenumbers v1.0.66
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/stretchr/testify v1.7.0
 	github.com/ugorji/go/codec v1.2.4
 	github.com/unrolled/render v1.0.3
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83

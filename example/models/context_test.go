@@ -57,7 +57,7 @@ func setupTestContext() context.Context {
 		log.Panicln(err)
 	}
 
-	db := durable.WrapDatabase(spanner, nil)
+	db := durable.WrapDatabase(spanner)
 	ctx := session.WithDatabase(context.Background(), db)
 	return session.WithLimiter(ctx, limiter)
 }
