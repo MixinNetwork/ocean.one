@@ -263,13 +263,14 @@ func (ex *Exchange) sendTransfer(ctx context.Context, brokerId, recipientId, ass
 	defer mutex.Unlock()
 
 	broker := ex.brokers[brokerId]
-	return bot.CreateTransfer(ctx, &bot.TransferInput{
+	_, err := bot.CreateTransfer(ctx, &bot.TransferInput{
 		AssetId:     assetId,
 		RecipientId: recipientId,
 		Amount:      amount,
 		TraceId:     traceId,
 		Memo:        memo,
 	}, broker.BrokerId, broker.SessionId, broker.SessionKey, broker.DecryptedPIN, broker.PINToken)
+	return err
 }
 
 type tmap struct {
