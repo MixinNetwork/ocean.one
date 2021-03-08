@@ -18,7 +18,7 @@ type Hub struct {
 }
 
 func NewHub(spanner *spanner.Client) *Hub {
-	db := durable.WrapDatabase(spanner, nil)
+	db := durable.WrapDatabase(spanner)
 	hub := &Hub{services: make(map[string]Service)}
 	hub.context = session.WithDatabase(context.Background(), db)
 	hub.registerServices()

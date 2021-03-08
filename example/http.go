@@ -35,7 +35,6 @@ func StartServer(spanner *spanner.Client) error {
 	handler = middlewares.Limit(handler)
 	handler = middlewares.Constraint(handler)
 	handler = middlewares.Context(handler, spanner, limiter, render.New(render.Options{UnEscapeHTML: true}))
-	handler = middlewares.NewRelic(handler, setupNewRelic("http"))
 	handler = middlewares.Stats(handler, "http", config.HTTPLogRequestBody, config.BuildVersion)
 	handler = middlewares.Log(handler, logger, "http")
 	handler = handlers.ProxyHeaders(handler)

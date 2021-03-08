@@ -167,11 +167,12 @@ func keyFromRow(row *spanner.Row) (*Key, error) {
 }
 
 func (k *Key) sendTransfer(ctx context.Context, recipientId, assetId string, amount number.Decimal, traceId, memo string) error {
-	return bot.CreateTransfer(ctx, &bot.TransferInput{
+	_, err := bot.CreateTransfer(ctx, &bot.TransferInput{
 		AssetId:     assetId,
 		RecipientId: recipientId,
 		Amount:      amount,
 		TraceId:     traceId,
 		Memo:        memo,
 	}, k.UserId, k.SessionId, k.SessionKey, k.DecryptedPIN, k.PinToken)
+	return err
 }

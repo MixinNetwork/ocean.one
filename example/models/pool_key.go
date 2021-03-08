@@ -164,7 +164,7 @@ func (k *PoolKey) setupOceanKey(ctx context.Context) error {
 		return session.ServerError(ctx, err)
 	}
 
-	err = bot.CreateTransfer(ctx, &bot.TransferInput{
+	_, err = bot.CreateTransfer(ctx, &bot.TransferInput{
 		AssetId:     config.OOOAssetId,
 		RecipientId: k.UserId,
 		Amount:      number.FromString("1000"),
@@ -182,7 +182,7 @@ func (k *PoolKey) setupOceanKey(ctx context.Context) error {
 		TraceId:     getSettlementId(k.UserId, "USER|SIG|REGISTER"),
 		Memo:        base64.StdEncoding.EncodeToString(sig),
 	}
-	err = bot.CreateTransfer(ctx, input, k.UserId, k.SessionId, k.SessionKey, k.PlainPIN, k.PinToken)
+	_, err = bot.CreateTransfer(ctx, input, k.UserId, k.SessionId, k.SessionKey, k.PlainPIN, k.PinToken)
 	if err != nil {
 		return session.ServerError(ctx, err)
 	}

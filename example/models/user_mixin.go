@@ -12,7 +12,7 @@ import (
 )
 
 func (current *User) ConnectMixin(ctx context.Context, authorizationCode string) (*User, error) {
-	accessToken, scope, err := bot.OAuthGetAccessToken(ctx, config.ClientId, config.ClientSecret, authorizationCode, "")
+	accessToken, scope, _, err := bot.OAuthGetAccessToken(ctx, config.ClientId, config.ClientSecret, authorizationCode, "", "")
 	if err != nil {
 		return nil, session.ServerError(ctx, err)
 	}
