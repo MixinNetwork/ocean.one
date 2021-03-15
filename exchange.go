@@ -137,6 +137,11 @@ type TransferAction struct {
 }
 
 func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persistence.Transfer) {
+	if number.FromString(transfer.Amount).Exhausted() {
+		log.Println("processTransfer skipped", "TransferId:", transfer.TransferId)
+		return
+	}
+
 	for {
 		err := ex.processTransfer(ctx, transfer)
 		if err == nil {
