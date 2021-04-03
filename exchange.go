@@ -38,6 +38,8 @@ func QuotePrecision(assetId string) uint8 {
 		return 4
 	case PUSDAssetId:
 		return 4
+	case ERC20USDTAssetId:
+		return 4
 	default:
 		log.Panicln("QuotePrecision", assetId)
 	}
@@ -53,6 +55,8 @@ func QuoteMinimum(assetId string) number.Decimal {
 	case USDTAssetId:
 		return number.FromString("1")
 	case PUSDAssetId:
+		return number.FromString("1")
+	case ERC20USDTAssetId:
 		return number.FromString("1")
 	default:
 		log.Panicln("QuoteMinimum", assetId)

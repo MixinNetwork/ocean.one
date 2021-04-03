@@ -27,10 +27,11 @@ const (
 	MaxAmount       = 5000000000
 	MaxFunds        = MaxPrice * MaxAmount
 
-	MixinAssetId   = "c94ac88f-4671-3976-b60a-09064f1811e8"
-	BitcoinAssetId = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
-	USDTAssetId    = "815b0b1a-2764-3736-8faa-42d694fa620a"
-	PUSDAssetId    = "31d2ea9c-95eb-3355-b65b-ba096853bc18"
+	MixinAssetId     = "c94ac88f-4671-3976-b60a-09064f1811e8"
+	BitcoinAssetId   = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
+	USDTAssetId      = "815b0b1a-2764-3736-8faa-42d694fa620a"
+	PUSDAssetId      = "31d2ea9c-95eb-3355-b65b-ba096853bc18"
+	ERC20USDTAssetId = "4d8c508b-91c5-375b-92b0-ee702ed2dac5"
 )
 
 type Error struct {
@@ -172,7 +173,7 @@ func (ex *Exchange) getQuoteBasePair(s *Snapshot, a *OrderAction) (string, strin
 	if quote == base {
 		return "", ""
 	}
-	if quote != BitcoinAssetId && quote != USDTAssetId && quote != PUSDAssetId && quote != MixinAssetId {
+	if quote != BitcoinAssetId && quote != USDTAssetId && quote != PUSDAssetId && quote != ERC20USDTAssetId && quote != MixinAssetId {
 		return "", ""
 	}
 	if quote == BitcoinAssetId && base == USDTAssetId {
@@ -181,16 +182,28 @@ func (ex *Exchange) getQuoteBasePair(s *Snapshot, a *OrderAction) (string, strin
 	if quote == BitcoinAssetId && base == PUSDAssetId {
 		return "", ""
 	}
+	if quote == BitcoinAssetId && base == ERC20USDTAssetId {
+		return "", ""
+	}
 	if quote == MixinAssetId && base == USDTAssetId {
 		return "", ""
 	}
 	if quote == MixinAssetId && base == PUSDAssetId {
 		return "", ""
 	}
+	if quote == MixinAssetId && base == ERC20USDTAssetId {
+		return "", ""
+	}
 	if quote == MixinAssetId && base == BitcoinAssetId {
 		return "", ""
 	}
 	if quote == PUSDAssetId && base == USDTAssetId {
+		return "", ""
+	}
+	if quote == PUSDAssetId && base == ERC20USDTAssetId {
+		return "", ""
+	}
+	if quote == ERC20USDTAssetId && base == USDTAssetId {
 		return "", ""
 	}
 	return quote, base
