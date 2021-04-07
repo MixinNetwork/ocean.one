@@ -60,7 +60,10 @@ func Authenticate(ctx context.Context, jwtToken string) (string, error) {
 		}
 		_, ok = token.Method.(*jwt.SigningMethodECDSA)
 		if !ok {
-			return nil, nil
+			_, ok = token.Method.(*EdDSASigningMethod)
+			if !ok {
+				return nil, nil
+			}
 		}
 		id, _ := uuid.FromString(fmt.Sprint(claims["uid"]))
 		if id.String() == uuid.Nil.String() {
