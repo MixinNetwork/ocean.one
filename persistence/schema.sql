@@ -73,6 +73,7 @@ CREATE TABLE transfers (
   detail            STRING(36) NOT NULL,
   asset_id          STRING(36) NOT NULL,
   amount            STRING(128) NOT NULL,
+  fee               STRING(128) NOT NULL,
   created_at        TIMESTAMP NOT NULL,
   user_id           STRING(36) NOT NULL,
   broker_id         STRING(36) NOT NULL,

@@ -138,6 +138,7 @@ type TransferAction struct {
 	O uuid.UUID // cancelled order
 	A uuid.UUID // matched ask order
 	B uuid.UUID // matched bid order
+	F string    // fee
 }
 
 func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persistence.Transfer) {
@@ -164,7 +165,7 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 	case persistence.TransferSourceOrderCancelled:
 		data = &TransferAction{S: "CANCEL", O: uuid.FromStringOrNil(transfer.Detail)}
 	case persistence.TransferSourceOrderInvalid:
-		data = &TransferAction{S: "REFUND", O: uuid.FromStringOrNil(transfer.Detail)}
+		data = &TransferAction{S: "REFUND", O: uuid.FromStringOrNil(transfer.Detail), F: transfer.Fee}
 	case persistence.TransferSourceTradeConfirmed:
 		trade, err := persistence.ReadTransferTrade(ctx, transfer.Detail, transfer.AssetId)
 		if err != nil {
@@ -173,7 +174,7 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 		if trade == nil {
 			log.Panicln(transfer)
 		}
-		data = &TransferAction{S: "MATCH", A: uuid.FromStringOrNil(trade.AskOrderId), B: uuid.FromStringOrNil(trade.BidOrderId)}
+		data = &TransferAction{S: "MATCH", A: uuid.FromStringOrNil(trade.AskOrderId), B: uuid.FromStringOrNil(trade.BidOrderId), F: transfer.Fee}
 	default:
 		log.Panicln(transfer)
 	}

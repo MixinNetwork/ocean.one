@@ -23,6 +23,7 @@ import (
 
 const (
 	AmountPrecision = 4
+	RefundRate      = "0.999"
 	MaxPrice        = 1000000000
 	MaxAmount       = 5000000000
 	MaxFunds        = MaxPrice * MaxAmount
@@ -210,11 +211,12 @@ func (ex *Exchange) getQuoteBasePair(s *Snapshot, a *OrderAction) (string, strin
 }
 
 func (ex *Exchange) refundSnapshot(ctx context.Context, s *Snapshot) error {
-	amount := number.FromString(s.Amount).Mul(number.FromString("0.999"))
+	amount := number.FromString(s.Amount).Mul(number.FromString(RefundRate))
 	if amount.Exhausted() {
 		return nil
 	}
-	return persistence.CreateRefundTransfer(ctx, s.UserId, s.OpponentId, s.Asset.AssetId, amount, s.TraceId)
+	fee := number.FromString(s.Amount).Sub(amount)
+	return persistence.CreateRefundTransfer(ctx, s.UserId, s.OpponentId, s.Asset.AssetId, amount, fee, s.TraceId)
 }
 
 func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) (*OrderAction, error) {
