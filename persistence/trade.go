@@ -80,7 +80,7 @@ func CancelOrder(ctx context.Context, order *engine.Order) error {
 		Detail:     order.Id,
 		AssetId:    order.Base,
 		Amount:     order.RemainingAmount.Persist(),
-		Fee:        "",
+		Fee:        number.Zero().Persist(),
 		CreatedAt:  time.Now(),
 		UserId:     order.UserId,
 		BrokerId:   order.BrokerId,
