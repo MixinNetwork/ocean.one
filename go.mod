@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/logging v1.3.0
 	cloud.google.com/go/spanner v1.15.0
 	github.com/MixinNetwork/bot-api-go-client v1.3.1
-	github.com/MixinNetwork/go-number v0.0.0-20210302140654-71a9f2b7e10d
+	github.com/MixinNetwork/go-number v0.0.0-20210408143030-46a3dea46185
 	github.com/bugsnag/bugsnag-go v2.1.0+incompatible
 	github.com/bugsnag/panicwrap v1.3.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible

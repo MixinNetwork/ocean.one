@@ -47,6 +47,8 @@ github.com/MixinNetwork/bot-api-go-client v1.3.1 h1:GjGDXTEpp2Ne9lkpvy85DdWmBZbL
 github.com/MixinNetwork/bot-api-go-client v1.3.1/go.mod h1:3L+TToSuzvegr2wwIVEsryNopCaLUmoNowl4p0iEbAk=
 github.com/MixinNetwork/go-number v0.0.0-20210302140654-71a9f2b7e10d h1:vi28fNouiSHJDB1Nk5S4nkma6wtEHRW1TbDwNBjijMk=
 github.com/MixinNetwork/go-number v0.0.0-20210302140654-71a9f2b7e10d/go.mod h1:N5G0zvYjtb/H9jaUovUbL6/ehYPlrAI9qeos/ezaBLk=
+github.com/MixinNetwork/go-number v0.0.0-20210408143030-46a3dea46185 h1:OR7ikne5s69D/8s+S+r6DA/ljXfcC6epsvvsDG1iA6E=
+github.com/MixinNetwork/go-number v0.0.0-20210408143030-46a3dea46185/go.mod h1:TASJGXNi4CK9bh2AOQFpVe7r3//CBuZJTNlJYzTXRUk=
 github.com/bugsnag/bugsnag-go v2.1.0+incompatible h1:SuqsBHDutts2rZh4swHEWTexxi0F/JZ/6j1rR9BFe7I=
 github.com/bugsnag/bugsnag-go v2.1.0+incompatible/go.mod h1:2oa8nejYd4cQ/b0hMIopN0lCRxU0bueqREvZLWFrtK8=
 github.com/bugsnag/panicwrap v1.3.1 h1:pmuhHlhbUV4OOrGDvoiMjHSZzwRcL+I9cIzYKiW4lII=
@@ -177,6 +179,8 @@ github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/shopspring/decimal v1.2.1-0.20210218223250-9328d16578e0 h1:murI/1b0VfF2/miSZYMbJ/WR9v7EYcgj4uBxLo6EGdI=
 github.com/shopspring/decimal v1.2.1-0.20210218223250-9328d16578e0/go.mod h1:DKyhrW/HYNuLGql+MJL6WCR6knT2jwCFRcu2hWCYk4o=
+github.com/shopspring/decimal v1.2.1-0.20210329231237-501661573f60 h1:NAA2nvxHtmNwjoS36E+E0MT5E7/ezzDJMi6zKG/gMjY=
+github.com/shopspring/decimal v1.2.1-0.20210329231237-501661573f60/go.mod h1:DKyhrW/HYNuLGql+MJL6WCR6knT2jwCFRcu2hWCYk4o=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
