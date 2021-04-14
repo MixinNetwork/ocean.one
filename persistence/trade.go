@@ -80,6 +80,7 @@ func CancelOrder(ctx context.Context, order *engine.Order) error {
 		Detail:     order.Id,
 		AssetId:    order.Base,
 		Amount:     order.RemainingAmount.Persist(),
+		Fee:        number.Zero().Persist(),
 		CreatedAt:  time.Now(),
 		UserId:     order.UserId,
 		BrokerId:   order.BrokerId,
@@ -188,6 +189,7 @@ func handleFees(ask, bid *Trade, taker, maker *engine.Order) (*Transfer, *Transf
 		Detail:     ask.TradeId,
 		AssetId:    ask.FeeAssetId,
 		Amount:     total.Sub(askFee).Persist(),
+		Fee:        ask.FeeAmount,
 		CreatedAt:  time.Now(),
 		UserId:     ask.UserId,
 	}
@@ -197,6 +199,7 @@ func handleFees(ask, bid *Trade, taker, maker *engine.Order) (*Transfer, *Transf
 		Detail:     bid.TradeId,
 		AssetId:    bid.FeeAssetId,
 		Amount:     number.FromString(bid.Amount).Sub(bidFee).Persist(),
+		Fee:        bid.FeeAmount,
 		CreatedAt:  time.Now(),
 		UserId:     bid.UserId,
 	}

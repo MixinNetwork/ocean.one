@@ -23,6 +23,7 @@ type Transfer struct {
 	Detail     string    `spanner:"detail"`
 	AssetId    string    `spanner:"asset_id"`
 	Amount     string    `spanner:"amount"`
+	Fee        string    `spanner:"fee"`
 	CreatedAt  time.Time `spanner:"created_at"`
 	UserId     string    `spanner:"user_id"`
 	BrokerId   string    `spanner:"broker_id"`
@@ -130,7 +131,7 @@ func ReadTransferTrade(ctx context.Context, tradeId, assetId string) (*Trade, er
 	}
 }
 
-func CreateRefundTransfer(ctx context.Context, brokerId, userId, assetId string, amount number.Decimal, trace string) error {
+func CreateRefundTransfer(ctx context.Context, brokerId, userId, assetId string, amount, fee number.Decimal, trace string) error {
 	if amount.Exhausted() {
 		return nil
 	}
@@ -140,6 +141,7 @@ func CreateRefundTransfer(ctx context.Context, brokerId, userId, assetId string,
 		Detail:     trace,
 		AssetId:    assetId,
 		Amount:     amount.Persist(),
+		Fee:        fee.Persist(),
 		CreatedAt:  time.Now(),
 		UserId:     userId,
 		BrokerId:   brokerId,
