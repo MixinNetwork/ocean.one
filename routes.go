@@ -173,13 +173,15 @@ func (impl *R) marketTrades(w http.ResponseWriter, r *http.Request, params map[s
 	data := make([]map[string]interface{}, 0)
 	for _, t := range trades {
 		data = append(data, map[string]interface{}{
-			"trade_id":   t.TradeId,
-			"base":       t.BaseAssetId,
-			"quote":      t.QuoteAssetId,
-			"side":       t.Side,
-			"price":      t.Price,
-			"amount":     t.Amount,
-			"created_at": t.CreatedAt,
+			"trade_id":     t.TradeId,
+			"base":         t.BaseAssetId,
+			"quote":        t.QuoteAssetId,
+			"bid_order_id": t.BidOrderId,
+			"ask_order_id": t.AskOrderId,
+			"side":         t.Side,
+			"price":        t.Price,
+			"amount":       t.Amount,
+			"created_at":   t.CreatedAt,
 		})
 	}
 	render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": data})

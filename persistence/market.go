@@ -59,7 +59,7 @@ func MarketTrades(ctx context.Context, market string, offset time.Time, order st
 	query = fmt.Sprintf("%s LIMIT %d", query, limit)
 	params := map[string]interface{}{"base": base, "quote": quote, "offset": offset, "liquidity": TradeLiquidityMaker}
 
-	iit := txn.Query(ctx, spanner.Statement{query, params})
+	iit := txn.Query(ctx, spanner.Statement{SQL: query, Params: params})
 	defer iit.Stop()
 
 	var tradeIds []string
