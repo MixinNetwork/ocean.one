@@ -21,7 +21,7 @@ import (
 	"github.com/MixinNetwork/ocean.one/example/config"
 	"github.com/MixinNetwork/ocean.one/example/durable"
 	"github.com/MixinNetwork/ocean.one/example/session"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"google.golang.org/api/iterator"
 )
 

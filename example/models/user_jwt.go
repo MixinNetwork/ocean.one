@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/MixinNetwork/ocean.one/example/session"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 )
 
 func AuthenticateWithToken(ctx context.Context, jwtToken string) (*User, error) {

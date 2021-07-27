@@ -16,8 +16,8 @@ import (
 	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/MixinNetwork/ocean.one/persistence"
 	"github.com/bugsnag/bugsnag-go/errors"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/dimfeld/httptreemux"
+	"github.com/golang-jwt/jwt"
 	"github.com/unrolled/render"
 )
 

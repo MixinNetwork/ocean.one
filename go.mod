@@ -9,7 +9,6 @@ require (
 	github.com/MixinNetwork/go-number v0.0.0-20210408143030-46a3dea46185
 	github.com/bugsnag/bugsnag-go v2.1.0+incompatible
 	github.com/bugsnag/panicwrap v1.3.1 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/emirpasic/gods v1.12.0
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
@@ -18,6 +17,7 @@ require (
 	github.com/facebookgo/stats v0.0.0-20151006221625-1b76add642e4 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/gofrs/uuid v4.0.0+incompatible
+	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/websocket v1.4.3-0.20200912193213-c3dd95aea977
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
