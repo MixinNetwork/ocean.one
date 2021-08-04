@@ -12,6 +12,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 	"cloud.google.com/go/spanner"
 	"github.com/MixinNetwork/bot-api-go-client"
 	"github.com/MixinNetwork/ocean.one/config"
+	"github.com/golang-jwt/jwt"
 	"google.golang.org/api/iterator"
 )
 
@@ -71,6 +73,40 @@ func AllBrokers(ctx context.Context, decryptPIN bool) ([]*Broker, error) {
 		}
 		brokers = append(brokers, &broker)
 	}
+}
+
+func AllBrokersWithToken(ctx context.Context, decryptPIN bool) ([]map[string]string, error) {
+	brokers, err := AllBrokers(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []map[string]string
+	for _, b := range brokers {
+		sum := sha256.Sum256([]byte("GET/assets"))
+		token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
+			"uid": b.BrokerId,
+			"sid": b.SessionId,
+			"scp": "ASSETS:READ",
+			"exp": time.Now().Add(time.Hour * 24).Unix(),
+			"sig": hex.EncodeToString(sum[:]),
+		})
+
+		block, _ := pem.Decode([]byte(b.SessionKey))
+		privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		tokenString, err := token.SignedString(privateKey)
+		if err != nil {
+			return nil, err
+		}
+		data = append(data, map[string]string{
+			"broker_id": b.BrokerId,
+			"token":     tokenString,
+		})
+	}
+	return data, nil
 }
 
 func AddBroker(ctx context.Context) (*Broker, error) {

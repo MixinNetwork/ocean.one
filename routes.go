@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
@@ -8,10 +9,13 @@ import (
 	"encoding/pem"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/MixinNetwork/bot-api-go-client"
+	"github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/ocean.one/cache"
 	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/MixinNetwork/ocean.one/persistence"
@@ -25,6 +29,7 @@ type R struct{}
 
 func NewRouter() *httptreemux.TreeMux {
 	router, impl := httptreemux.New(), &R{}
+	router.GET("/assets", impl.assets)
 	router.GET("/brokers", impl.brokers)
 	router.GET("/markets/:id/ticker", impl.marketTicker)
 	router.GET("/markets/:id/book", impl.marketBook)
@@ -36,38 +41,81 @@ func NewRouter() *httptreemux.TreeMux {
 	return router
 }
 
-func (impl *R) brokers(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	brokers, err := persistence.AllBrokers(r.Context(), false)
+func (impl *R) assets(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	brokers, err := persistence.AllBrokersWithToken(r.Context(), false)
 	if err != nil {
 		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		return
 	}
-	data := make([]map[string]interface{}, 0)
-	for _, b := range brokers {
-		sum := sha256.Sum256([]byte("GET/assets"))
-		token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
-			"uid": b.BrokerId,
-			"sid": b.SessionId,
-			"scp": "ASSETS:READ",
-			"exp": time.Now().Add(time.Hour * 24).Unix(),
-			"sig": hex.EncodeToString(sum[:]),
-		})
 
-		block, _ := pem.Decode([]byte(b.SessionKey))
-		privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-		if err != nil {
-			render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-			return
+	c := make(chan []*bot.Asset)
+	for _, broker := range brokers {
+		go func(broker map[string]string) {
+			for {
+				result, err := bot.AssetList(context.Background(), broker["token"])
+				sessenError, _ := err.(bot.Error)
+				if sessenError.Code == 500 {
+					time.Sleep(100 * time.Millisecond)
+					continue
+				}
+				c <- result
+				break
+			}
+		}(broker)
+	}
+
+	assetMap := make(map[string]*bot.Asset)
+	for i := 0; i < len(brokers); i++ {
+		for _, item := range <-c {
+			if assetMap[item.AssetId] == nil {
+				assetMap[item.AssetId] = item
+				continue
+			}
+
+			balance := number.FromString(assetMap[item.AssetId].Balance).Add(number.FromString(item.Balance))
+			assetMap[item.AssetId].Balance = balance.Persist()
 		}
-		tokenString, err := token.SignedString(privateKey)
-		if err != nil {
-			render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-			return
-		}
-		data = append(data, map[string]interface{}{
-			"broker_id": b.BrokerId,
-			"token":     tokenString,
+	}
+
+	var data []map[string]string
+	for _, asset := range assetMap {
+		data = append(data, map[string]string{
+			"asset_id":  asset.AssetId,
+			"chain_id":  asset.ChainId,
+			"symbol":    asset.Symbol,
+			"name":      asset.Name,
+			"icon_url":  asset.IconURL,
+			"price_btc": asset.PriceBTC,
+			"price_usd": asset.PriceUSD,
+			"balance":   asset.Balance,
 		})
+	}
+	sort.Slice(data, func(i, j int) bool {
+		balancei := number.FromString(data[i]["price_usd"]).Mul(number.FromString(data[i]["balance"]))
+		balancej := number.FromString(data[j]["price_usd"]).Mul(number.FromString(data[j]["balance"]))
+		if balancei.Cmp(balancej) > 0 {
+			return true
+		}
+		if data[i]["asset_id"] == data[i]["chain_id"] {
+			return true
+		}
+		if data[j]["asset_id"] == data[j]["chain_id"] {
+			return true
+		}
+		if number.FromString(data[i]["price_usd"]).Cmp(number.FromString(data[j]["price_usd"])) > 0 {
+			return true
+		}
+		return number.FromString(data[i]["balance"]).Cmp(number.FromString(data[j]["balance"])) > 0
+	})
+
+	render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": data})
+}
+
+func (impl *R) brokers(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	data, err := persistence.AllBrokersWithToken(r.Context(), false)
+	if err != nil {
+		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		return
 	}
 	render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": data})
 }
