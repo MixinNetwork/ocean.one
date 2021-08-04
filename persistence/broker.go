@@ -81,7 +81,7 @@ func AllBrokersWithToken(ctx context.Context, decryptPIN bool) ([]map[string]str
 		return nil, err
 	}
 
-	data := make([]map[string]string, 0)
+	var data []map[string]string
 	for _, b := range brokers {
 		sum := sha256.Sum256([]byte("GET/assets"))
 		token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{

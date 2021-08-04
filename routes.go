@@ -53,7 +53,8 @@ func (impl *R) assets(w http.ResponseWriter, r *http.Request, _ map[string]strin
 		go func(broker map[string]string) {
 			for {
 				result, err := bot.AssetList(context.Background(), broker["token"])
-				if err != nil {
+				sessenError, _ := err.(bot.Error)
+				if sessenError.Code == 500 {
 					time.Sleep(100 * time.Millisecond)
 					continue
 				}
@@ -65,8 +66,7 @@ func (impl *R) assets(w http.ResponseWriter, r *http.Request, _ map[string]strin
 
 	assetMap := make(map[string]*bot.Asset)
 	for i := 0; i < len(brokers); i++ {
-		list := <-c
-		for _, item := range list {
+		for _, item := range <-c {
 			if assetMap[item.AssetId] == nil {
 				assetMap[item.AssetId] = item
 				continue
