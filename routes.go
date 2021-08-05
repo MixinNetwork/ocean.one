@@ -91,21 +91,15 @@ func (impl *R) assets(w http.ResponseWriter, r *http.Request, _ map[string]strin
 		})
 	}
 	sort.Slice(data, func(i, j int) bool {
-		balancei := number.FromString(data[i]["price_usd"]).Mul(number.FromString(data[i]["balance"]))
-		balancej := number.FromString(data[j]["price_usd"]).Mul(number.FromString(data[j]["balance"]))
-		if balancei.Cmp(balancej) > 0 {
-			return true
+		valuei := number.FromString(data[i]["price_usd"]).Mul(number.FromString(data[i]["balance"]))
+		valuej := number.FromString(data[j]["price_usd"]).Mul(number.FromString(data[j]["balance"]))
+		if valuei.Cmp(valuej) != 0 {
+			return valuei.Cmp(valuej) > 0
 		}
-		if data[i]["asset_id"] == data[i]["chain_id"] {
-			return true
+		if number.FromString(data[i]["price_usd"]).Cmp(number.FromString(data[j]["price_usd"])) != 0 {
+			return number.FromString(data[i]["price_usd"]).Cmp(number.FromString(data[j]["price_usd"])) > 0
 		}
-		if data[j]["asset_id"] == data[j]["chain_id"] {
-			return true
-		}
-		if number.FromString(data[i]["price_usd"]).Cmp(number.FromString(data[j]["price_usd"])) > 0 {
-			return true
-		}
-		return number.FromString(data[i]["balance"]).Cmp(number.FromString(data[j]["balance"])) > 0
+		return number.FromString(data[i]["balance"]).Cmp(number.FromString(data[j]["balance"])) >= 0
 	})
 
 	render.New().JSON(w, http.StatusOK, map[string]interface{}{"data": data})
