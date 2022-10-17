@@ -29,5 +29,4 @@ func (service *KeyService) Run(ctx context.Context) error {
 		}
 		log.Println(key)
 	}
-	return nil
 }

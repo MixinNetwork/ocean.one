@@ -74,7 +74,7 @@ func (logger *Logger) Debug(v ...interface{}) {
 	logger.impl.Log(logging.Entry{
 		Severity:    logging.Debug,
 		HTTPRequest: logger.request,
-		Payload:     fmt.Sprint(v),
+		Payload:     fmt.Sprint(v...),
 	})
 }
 
@@ -98,7 +98,7 @@ func (logger *Logger) Info(v ...interface{}) {
 	logger.impl.Log(logging.Entry{
 		Severity:    logging.Info,
 		HTTPRequest: logger.request,
-		Payload:     fmt.Sprint(v),
+		Payload:     fmt.Sprint(v...),
 	})
 }
 
@@ -122,7 +122,7 @@ func (logger *Logger) Error(v ...interface{}) {
 	logger.impl.Log(logging.Entry{
 		Severity:    logging.Error,
 		HTTPRequest: logger.request,
-		Payload:     fmt.Sprint(v),
+		Payload:     fmt.Sprint(v...),
 	})
 }
 
@@ -140,13 +140,13 @@ func (logger *Logger) Errorf(format string, v ...interface{}) {
 
 func (logger *Logger) Panicln(v ...interface{}) {
 	if logger.impl == nil {
-		log.Panicln(v)
+		log.Panicln(v...)
 		return
 	}
 	logger.impl.Log(logging.Entry{
 		Severity:    logging.Critical,
 		HTTPRequest: logger.request,
-		Payload:     fmt.Sprint(v),
+		Payload:     fmt.Sprint(v...),
 	})
-	log.Panicln(v)
+	log.Panicln(v...)
 }

@@ -206,7 +206,7 @@ func (k *PoolKey) setupPIN(ctx context.Context) error {
 	if err != nil {
 		return session.ServerError(ctx, err)
 	}
-	encryptedPIN, err := bot.EncryptPIN(ctx, pin, k.PinToken, k.SessionId, k.SessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := bot.EncryptPIN(pin, k.PinToken, k.SessionId, k.SessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return session.ServerError(ctx, err)
 	}

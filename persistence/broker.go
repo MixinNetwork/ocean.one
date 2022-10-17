@@ -44,7 +44,7 @@ func AllBrokers(ctx context.Context, decryptPIN bool) ([]*Broker, error) {
 	defer it.Stop()
 
 	brokers := []*Broker{
-		&Broker{
+		{
 			BrokerId:     config.ClientId,
 			SessionId:    config.SessionId,
 			SessionKey:   config.SessionKey,
@@ -210,7 +210,7 @@ func (b *Broker) setupPIN(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	encryptedPIN, err := bot.EncryptPIN(ctx, pin, b.PINToken, b.SessionId, b.SessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := bot.EncryptPIN(pin, b.PINToken, b.SessionId, b.SessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return err
 	}

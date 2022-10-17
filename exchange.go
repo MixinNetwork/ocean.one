@@ -295,3 +295,11 @@ func (ex *Exchange) PollMixinMessages(ctx context.Context) {
 func (ex *Exchange) OnMessage(ctx context.Context, msg bot.MessageView, userId string) error {
 	return nil
 }
+
+func (ex *Exchange) OnAckReceipt(ctx context.Context, msg bot.MessageView, userId string) error {
+	return nil
+}
+
+func (ex *Exchange) SyncAck() bool {
+	return false
+}
