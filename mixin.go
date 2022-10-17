@@ -22,11 +22,10 @@ import (
 )
 
 const (
-	AmountPrecision = 4
+	AmountPrecision = 8
 	RefundRate      = "0.999"
 	MaxPrice        = 1000000000
-	MaxAmount       = 5000000000
-	MaxFunds        = MaxPrice * MaxAmount
+	MaxAmount       = 50000000000000
 
 	MixinAssetId     = "c94ac88f-4671-3976-b60a-09064f1811e8"
 	BitcoinAssetId   = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
@@ -129,7 +128,8 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 
 	assetDecimal := number.FromString(s.Amount)
 	if action.S == engine.PageSideBid {
-		maxFunds := number.NewDecimal(MaxFunds, int32(fundsPrecision))
+		maxAmount := number.NewDecimal(MaxAmount, AmountPrecision)
+		maxFunds := maxPrice.Mul(maxAmount)
 		if assetDecimal.Cmp(maxFunds) > 0 {
 			return ex.refundSnapshot(ctx, s)
 		}

@@ -49,15 +49,15 @@ func QuotePrecision(assetId string) uint8 {
 func QuoteMinimum(assetId string) number.Decimal {
 	switch assetId {
 	case MixinAssetId:
-		return number.FromString("0.0001")
+		return number.FromString("0.00000001")
 	case BitcoinAssetId:
-		return number.FromString("0.0001")
+		return number.FromString("0.00000001")
 	case USDTAssetId:
-		return number.FromString("1")
+		return number.FromString("0.0001")
 	case PUSDAssetId:
-		return number.FromString("1")
+		return number.FromString("0.0001")
 	case ERC20USDTAssetId:
-		return number.FromString("1")
+		return number.FromString("0.0001")
 	default:
 		log.Panicln("QuoteMinimum", assetId)
 	}
