@@ -25,7 +25,7 @@ type Entry struct {
 type Page struct {
 	Side    string
 	points  *redblacktree.Tree
-	entries map[int64]*Entry
+	entries map[string]*Entry
 }
 
 func NewPage(side string) *Page {
@@ -35,7 +35,7 @@ func NewPage(side string) *Page {
 	return &Page{
 		Side:    side,
 		points:  redblacktree.NewWith(entryCompare),
-		entries: make(map[int64]*Entry),
+		entries: make(map[string]*Entry),
 	}
 }
 
@@ -43,7 +43,7 @@ func (page *Page) Put(order *Order) {
 	if page.Side != order.Side {
 		log.Panicln(page, order)
 	}
-	entry, found := page.entries[order.Price.Value()]
+	entry, found := page.entries[order.Price.Persist()]
 	if !found {
 		entry = &Entry{
 			Side:   order.Side,
@@ -53,7 +53,7 @@ func (page *Page) Put(order *Order) {
 			list:   arraylist.New(),
 			orders: make(map[string]*Order),
 		}
-		page.entries[entry.Price.Value()] = entry
+		page.entries[entry.Price.Persist()] = entry
 		page.points.Put(entry, true)
 	}
 	if entry.Price.Cmp(order.Price) != 0 || entry.Side != order.Side {
@@ -75,7 +75,7 @@ func (page *Page) Remove(o *Order) *Order {
 	if page.Side != o.Side {
 		return nil
 	}
-	entry, found := page.entries[o.Price.Value()]
+	entry, found := page.entries[o.Price.Persist()]
 	if !found {
 		return nil
 	}

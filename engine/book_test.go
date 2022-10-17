@@ -90,15 +90,15 @@ func TestBook(t *testing.T) {
 	}
 	book.AttachOrderEvent(ctx, bo1_3, OrderActionCreate)
 	time.Sleep(100 * time.Millisecond)
-	assert.Equal("6000", book.bids.entries[10000].Funds.Persist())
-	assert.Equal(3, book.bids.entries[10000].list.Size())
+	assert.Equal("6000", book.bids.entries["100"].Funds.Persist())
+	assert.Equal(3, book.bids.entries["100"].list.Size())
 
 	book.AttachOrderEvent(ctx, bo1_2, OrderActionCancel)
 	time.Sleep(100 * time.Millisecond)
 	assert.Len(cancelled, 1)
 	assert.Equal(bo1_2.Id, cancelled[0].Id)
-	assert.Equal("4000", book.bids.entries[10000].Funds.Persist())
-	assert.Equal(2, book.bids.entries[10000].list.Size())
+	assert.Equal("4000", book.bids.entries["100"].Funds.Persist())
+	assert.Equal(2, book.bids.entries["100"].list.Size())
 
 	id, _ = uuid.NewV4()
 	bo2_1 := &Order{
@@ -130,8 +130,8 @@ func TestBook(t *testing.T) {
 
 		assert.Len(cancelled, 1)
 		assert.Equal(bo1_2.Id, cancelled[0].Id)
-		assert.Equal("2000", book.bids.entries[10000].Funds.Persist())
-		assert.Equal(1, book.bids.entries[10000].list.Size())
+		assert.Equal("2000", book.bids.entries["100"].Funds.Persist())
+		assert.Equal(1, book.bids.entries["100"].list.Size())
 		assert.Len(book.asks.entries, 0)
 		assert.Len(matched, 3)
 		m0 := matched[0]
@@ -176,8 +176,8 @@ func TestBook(t *testing.T) {
 
 	assert.Len(cancelled, 1)
 	assert.Equal(bo1_2.Id, cancelled[0].Id)
-	assert.Equal("0", book.bids.entries[10000].Funds.Persist())
-	assert.Equal(0, book.bids.entries[10000].list.Size())
+	assert.Equal("0", book.bids.entries["100"].Funds.Persist())
+	assert.Equal(0, book.bids.entries["100"].list.Size())
 	assert.Len(book.asks.entries, 1)
 	assert.Len(matched, 4)
 	m3 := matched[3]
@@ -216,14 +216,14 @@ func TestBook(t *testing.T) {
 	book.AttachOrderEvent(ctx, bo2_2, OrderActionCreate)
 	time.Sleep(100 * time.Millisecond)
 
-	assert.Equal("0", book.bids.entries[10000].Funds.Persist())
-	assert.Equal(0, book.bids.entries[10000].list.Size())
-	assert.Equal("0", book.bids.entries[20000].Funds.Persist())
-	assert.Equal(0, book.bids.entries[20000].list.Size())
-	assert.Equal("0", book.asks.entries[10000].Amount.Persist())
-	assert.Equal(0, book.asks.entries[10000].list.Size())
-	assert.Equal("0", book.asks.entries[20000].Amount.Persist())
-	assert.Equal(0, book.asks.entries[20000].list.Size())
+	assert.Equal("0", book.bids.entries["100"].Funds.Persist())
+	assert.Equal(0, book.bids.entries["100"].list.Size())
+	assert.Equal("0", book.bids.entries["200"].Funds.Persist())
+	assert.Equal(0, book.bids.entries["200"].list.Size())
+	assert.Equal("0", book.asks.entries["100"].Amount.Persist())
+	assert.Equal(0, book.asks.entries["100"].list.Size())
+	assert.Equal("0", book.asks.entries["200"].Amount.Persist())
+	assert.Equal(0, book.asks.entries["200"].list.Size())
 	assert.Len(cancelled, 2)
 	assert.Equal(bo1_2.Id, cancelled[0].Id)
 	assert.Equal(bo2_2.Id, cancelled[1].Id)
