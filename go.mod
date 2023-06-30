@@ -7,7 +7,6 @@ require (
 	cloud.google.com/go/spanner v1.47.0
 	github.com/MixinNetwork/bot-api-go-client v1.7.3
 	github.com/MixinNetwork/go-number v0.1.0
-	github.com/bugsnag/bugsnag-go v2.2.0+incompatible
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/emirpasic/gods v1.18.1
 	github.com/facebookgo/grace v0.0.0-20180706040059-75cf19382434
@@ -33,7 +32,6 @@ require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/MixinNetwork/mixin v0.15.1 // indirect
 	github.com/MixinNetwork/mobilecoin-account v0.0.4 // indirect
-	github.com/bugsnag/panicwrap v1.3.4 // indirect
 	github.com/bwesterb/go-ristretto v1.2.3 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -52,10 +50,8 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.5 // indirect
 	github.com/googleapis/gax-go/v2 v2.11.0 // indirect
-	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/klauspost/compress v1.16.6 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect

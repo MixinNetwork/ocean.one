@@ -6,7 +6,6 @@ import (
 
 	"github.com/MixinNetwork/ocean.one/example/session"
 	"github.com/MixinNetwork/ocean.one/example/views"
-	"github.com/bugsnag/bugsnag-go/errors"
 	"github.com/dimfeld/httptreemux"
 )
 
@@ -18,7 +17,7 @@ func RegisterHanders(router *httptreemux.TreeMux) {
 		views.RenderErrorResponse(w, r, session.NotFoundError(r.Context()))
 	}
 	router.PanicHandler = func(w http.ResponseWriter, r *http.Request, rcv interface{}) {
-		err := fmt.Errorf(string(errors.New(rcv, 2).Stack()))
+		err := fmt.Errorf("PANIC (%v) => %v", *r, rcv)
 		views.RenderErrorResponse(w, r, session.ServerError(r.Context(), err))
 	}
 }

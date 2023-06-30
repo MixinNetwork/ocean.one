@@ -9,7 +9,6 @@ import (
 	"github.com/MixinNetwork/ocean.one/example/controllers"
 	"github.com/MixinNetwork/ocean.one/example/durable"
 	"github.com/MixinNetwork/ocean.one/example/middlewares"
-	"github.com/bugsnag/bugsnag-go"
 	"github.com/dimfeld/httptreemux"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/gorilla/handlers"
@@ -38,7 +37,6 @@ func StartServer(spanner *spanner.Client) error {
 	handler = middlewares.Stats(handler, "http", config.HTTPLogRequestBody, config.BuildVersion)
 	handler = middlewares.Log(handler, logger, "http")
 	handler = handlers.ProxyHeaders(handler)
-	handler = bugsnag.Handler(handler)
 
 	return gracehttp.Serve(&http.Server{Addr: fmt.Sprintf(":%d", config.HTTPListenPort), Handler: handler})
 }

@@ -10,7 +10,6 @@ import (
 
 	"github.com/MixinNetwork/ocean.one/example/session"
 	"github.com/MixinNetwork/ocean.one/example/views"
-	"github.com/bugsnag/bugsnag-go"
 )
 
 func getRareRoutePattern(r *http.Request) string {
@@ -40,12 +39,12 @@ func checkLimiter(r *http.Request) error {
 
 	key := "limiter:general:ip:" + remoteAddr
 	if count, err := limiter.Available(key, time.Second*5, 100000, true); err != nil {
-		bugsnag.Notify(err, r)
+		return err
 	} else if count < 1 {
 		return errors.New("general rate limit error 100000r/5s")
 	}
 	if count, err := limiter.Available(key, time.Hour, 10000000, true); err != nil {
-		bugsnag.Notify(err, r)
+		return err
 	} else if count < 1 {
 		return errors.New("general rate limit error 10000000r/h")
 	}
@@ -54,12 +53,12 @@ func checkLimiter(r *http.Request) error {
 		keys := []string{"limiter:rare:ip:" + remoteAddr + ":" + pattern}
 		for _, key := range keys {
 			if count, err := limiter.Available(key, 10*time.Minute, 10, true); err != nil {
-				bugsnag.Notify(err, r)
+				return err
 			} else if count < 1 {
 				return errors.New("rare rate limit error 10r/10m")
 			}
 			if count, err := limiter.Available(key, 24*time.Hour, 30, true); err != nil {
-				bugsnag.Notify(err, r)
+				return err
 			} else if count < 1 {
 				return errors.New("rare rate limit error 30r/d")
 			}
@@ -75,7 +74,6 @@ func Limit(handler http.Handler) http.Handler {
 			return
 		}
 		if err := checkLimiter(r); err != nil {
-			bugsnag.Notify(err, r)
 			views.RenderErrorResponse(w, r, session.TooManyRequestsError(r.Context()))
 		} else {
 			handler.ServeHTTP(w, r)

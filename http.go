@@ -10,7 +10,6 @@ import (
 	"github.com/MixinNetwork/ocean.one/cache"
 	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/MixinNetwork/ocean.one/persistence"
-	"github.com/bugsnag/bugsnag-go"
 	"github.com/dimfeld/httptreemux"
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/handlers"
@@ -25,7 +24,7 @@ type RequestHandler struct {
 }
 
 func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer bugsnag.Recover(r, bugsnag.ErrorClass{Name: "cache.ServeHTTP"})
+	defer recover()
 
 	if r.URL.Path == "/_hc" {
 		render.New().JSON(w, http.StatusOK, map[string]interface{}{})
@@ -107,7 +106,6 @@ func StartHTTP(ctx context.Context) error {
 	handler := handleContext(rh, ctx)
 	handler = handleCORS(handler)
 	handler = handlers.ProxyHeaders(handler)
-	handler = bugsnag.Handler(handler)
 
 	server := &http.Server{Addr: ":7000", Handler: handler}
 	return server.ListenAndServe()

@@ -58,8 +58,6 @@ const (
 )
 
 const (
-	BugsnagAPIKey = ""
-
 	Name            = ""
 	NewRelicAPIKey  = ""
 	NewRelicEnabled = false

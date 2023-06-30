@@ -1,7 +1,6 @@
 package durable
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,14 +19,7 @@ type Logger struct {
 }
 
 func NewLoggerClient(project string, syslog bool) (*LoggerClient, error) {
-	if syslog {
-		return &LoggerClient{}, nil
-	}
-	client, err := logging.NewClient(context.Background(), project)
-	if err != nil {
-		return nil, err
-	}
-	return &LoggerClient{impl: client}, nil
+	return &LoggerClient{}, nil
 }
 
 func (client *LoggerClient) Close() error {

@@ -18,7 +18,6 @@ import (
 	"github.com/MixinNetwork/ocean.one/cache"
 	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/MixinNetwork/ocean.one/persistence"
-	"github.com/bugsnag/bugsnag-go/errors"
 	"github.com/dimfeld/httptreemux"
 	"github.com/golang-jwt/jwt"
 	"github.com/unrolled/render"
@@ -316,7 +315,7 @@ func registerHanders(router *httptreemux.TreeMux) {
 		render.New().JSON(w, http.StatusNotFound, map[string]interface{}{})
 	}
 	router.PanicHandler = func(w http.ResponseWriter, r *http.Request, rcv interface{}) {
-		err := fmt.Errorf(string(errors.New(rcv, 2).Stack()))
+		err := fmt.Errorf("PANIC (%v) => %v", *r, rcv)
 		render.New().JSON(w, http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 }

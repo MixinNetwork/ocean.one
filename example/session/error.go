@@ -3,13 +3,10 @@ package session
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"runtime"
-
-	"github.com/bugsnag/bugsnag-go"
 )
 
 type Error struct {
@@ -131,37 +128,12 @@ func PasswordTooSimpleError(ctx context.Context) Error {
 func createError(ctx context.Context, status, code int, description string, err error) Error {
 	pc, file, line, _ := runtime.Caller(2)
 	funcName := runtime.FuncForPC(pc).Name()
-	trace := fmt.Sprintf("[ERROR %d] %s\n%s:%d", code, description, file, line)
+	trace := fmt.Sprintf("[ERROR %d] %s\n%s:%d:%s", code, description, file, line, funcName)
 	if err != nil {
 		if sessionError, ok := err.(Error); ok {
 			trace = trace + "\n" + sessionError.trace
 		} else {
 			trace = trace + "\n" + err.Error()
-		}
-	}
-
-	if ctx != nil {
-		class := bugsnag.ErrorClass{fmt.Sprintf("%s$%d", funcName, code)}
-		rawData := []interface{}{bugsnag.SeverityError, class}
-		meta := bugsnag.MetaData{}
-		if claims := AuthorizationInfo(ctx); claims != nil {
-			userId := fmt.Sprint(claims["uid"])
-			if _, found := claims["uid"]; !found {
-				userId = fmt.Sprint(claims["sub"])
-			}
-			meta["claims"] = claims
-			rawData = append(rawData, bugsnag.User{Id: userId})
-		}
-		if r := Request(ctx); r != nil {
-			rawData = append(rawData, r)
-			if RequestBody(ctx) != "" {
-				meta["body"] = map[string]interface{}{"data": RequestBody(ctx)}
-			}
-		}
-		rawData = append(rawData, meta)
-		bugsnag.Notify(errors.New(trace), rawData...)
-		if logger := Logger(ctx); logger != nil {
-			logger.Error(trace)
 		}
 	}
 
