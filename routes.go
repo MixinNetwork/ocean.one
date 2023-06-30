@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
@@ -51,16 +50,8 @@ func (impl *R) assets(w http.ResponseWriter, r *http.Request, _ map[string]strin
 	c := make(chan []*bot.Asset)
 	for _, broker := range brokers {
 		go func(broker map[string]string) {
-			for {
-				result, err := bot.AssetList(context.Background(), broker["token"])
-				sessenError, _ := err.(bot.Error)
-				if sessenError.Code == 500 {
-					time.Sleep(100 * time.Millisecond)
-					continue
-				}
-				c <- result
-				break
-			}
+			result, _ := bot.AssetList(r.Context(), broker["token"])
+			c <- result
 		}(broker)
 	}
 
@@ -131,7 +122,7 @@ func (impl *R) tokens(w http.ResponseWriter, r *http.Request, _ map[string]strin
 	token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
 		"uid": config.ClientId,
 		"sid": config.SessionId,
-		"scp": "SNAPSHOTS:READ",
+		"scp": "PROFILE:READ SNAPSHOTS:READ",
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 		"sig": hex.EncodeToString(sum[:]),
 	})

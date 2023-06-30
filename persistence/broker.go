@@ -87,7 +87,7 @@ func AllBrokersWithToken(ctx context.Context, decryptPIN bool) ([]map[string]str
 		token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
 			"uid": b.BrokerId,
 			"sid": b.SessionId,
-			"scp": "ASSETS:READ",
+			"scp": "PROFILE:READ ASSETS:READ",
 			"exp": time.Now().Add(time.Hour * 24).Unix(),
 			"sig": hex.EncodeToString(sum[:]),
 		})
