@@ -83,7 +83,7 @@ func readFavoriteMarkets(ctx context.Context, current *User) (map[string]bool, e
 func validateMarket(base, quote string) bool {
 	var bases []string
 	switch quote {
-	case "815b0b1a-2764-3736-8faa-42d694fa620a":
+	case "4d8c508b-91c5-375b-92b0-ee702ed2dac5":
 		bases = usdtMarkets
 	case "c6d0c728-2624-429b-8e0d-d9d19b6592fa":
 		bases = btcMarkets

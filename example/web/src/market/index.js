@@ -55,7 +55,7 @@ Market.prototype = {
   do: function (inputs) {
     const self = this;
 
-    if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
+    if (self.quote.asset_id === '4d8c508b-91c5-375b-92b0-ee702ed2dac5') {
       self.quote.step = '0.0001';
     } else {
       self.quote.step = '0.00000001';
@@ -361,7 +361,7 @@ Market.prototype = {
     for (var i = 0; i < markets.length; i++) {
       var m = markets[i];
       m.change_amount = new BigNumber(m.price).minus(new BigNumber(m.price).div(new BigNumber(m.change).plus(1))).toFixed(8).replace(/\.?0+$/,"");
-      if (m.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
+      if (m.quote.asset_id === '4d8c508b-91c5-375b-92b0-ee702ed2dac5') {
         m.change_amount = new BigNumber(m.change_amount).toFixed(4).replace(/\.?0+$/,"");
       }
       m.direction = m.change < 0 ? 'down' : 'up';
@@ -480,7 +480,7 @@ Market.prototype = {
     if (data.type === 'LIMIT') {
       let price = new BigNumber(data.price);
       var quoteMaxPrice = maxPrice;
-      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+      if (data.quote === "4d8c508b-91c5-375b-92b0-ee702ed2dac5") {
         quoteMaxPrice = maxPrice.times(10000);
       }
       if (price.gt(quoteMaxPrice)) {
@@ -492,7 +492,7 @@ Market.prototype = {
     if (data.side === 'BID') {
       let funds = new BigNumber(data.funds);
       var minFunds = '0.0001';
-      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+      if (data.quote === "4d8c508b-91c5-375b-92b0-ee702ed2dac5") {
         minFunds = '1';
       }
       if (funds.lt(minFunds)) {
@@ -500,7 +500,7 @@ Market.prototype = {
         return false;
       }
       var quoteMaxFunds = maxFunds;
-      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+      if (data.quote === "4d8c508b-91c5-375b-92b0-ee702ed2dac5") {
         quoteMaxFunds = maxFunds.times(10000);
       }
       if (funds.gt(quoteMaxFunds)) {
@@ -512,7 +512,7 @@ Market.prototype = {
     if (data.side === 'ASK') {
       let amount = new BigNumber(data.amount);
       var minFunds = '0.0001';
-      if (data.quote === "815b0b1a-2764-3736-8faa-42d694fa620a") {
+      if (data.quote === "4d8c508b-91c5-375b-92b0-ee702ed2dac5") {
         minFunds = '1';
       }
       if (data.type === 'LIMIT' && amount.times(data.price).lt(minFunds)) {
@@ -768,7 +768,7 @@ Market.prototype = {
       return;
     }
     $('.trade.history .spinner-container').remove();
-    if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
+    if (self.quote.asset_id === '4d8c508b-91c5-375b-92b0-ee702ed2dac5') {
       o.price = new BigNumber(o.price).toFixed(4);
     } else {
       o.price = new BigNumber(o.price).toFixed(8);
@@ -801,7 +801,7 @@ Market.prototype = {
     }
 
     o.sideClass = o.side.toLowerCase()
-    if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
+    if (self.quote.asset_id === '4d8c508b-91c5-375b-92b0-ee702ed2dac5') {
       o.price = new BigNumber(o.price).toFixed(4);
     } else {
       o.price = new BigNumber(o.price).toFixed(8);
@@ -852,7 +852,7 @@ Market.prototype = {
     const amount = new BigNumber(o.amount);
 
     o.sideClass = o.side.toLowerCase()
-    if (self.quote.asset_id === '815b0b1a-2764-3736-8faa-42d694fa620a') {
+    if (self.quote.asset_id === '4d8c508b-91c5-375b-92b0-ee702ed2dac5') {
       o.price = new BigNumber(o.price).toFixed(4);
     } else {
       o.price = new BigNumber(o.price).toFixed(8);

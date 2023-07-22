@@ -40,7 +40,7 @@ func (m *Market) BaseSymbol() string {
 func AllMarkets() []*Market {
 	var markets []*Market
 	for _, b := range usdtMarkets {
-		markets = append(markets, &Market{Quote: "815b0b1a-2764-3736-8faa-42d694fa620a", Base: b})
+		markets = append(markets, &Market{Quote: "4d8c508b-91c5-375b-92b0-ee702ed2dac5", Base: b})
 	}
 	for _, b := range btcMarkets {
 		markets = append(markets, &Market{Quote: "c6d0c728-2624-429b-8e0d-d9d19b6592fa", Base: b})
@@ -212,7 +212,7 @@ func marketFromRow(row *spanner.Row) (*Market, error) {
 }
 
 var symbolsMap = map[string]string{
-	"815b0b1a-2764-3736-8faa-42d694fa620a": "USDT",
+	"4d8c508b-91c5-375b-92b0-ee702ed2dac5": "USDT",
 	"c6d0c728-2624-429b-8e0d-d9d19b6592fa": "BTC",
 	"fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0": "BCH",
 	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d": "EOS",
