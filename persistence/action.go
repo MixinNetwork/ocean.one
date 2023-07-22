@@ -180,7 +180,7 @@ func CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time,
 		if state.State != OrderStatePending || state.OrderType != engine.OrderTypeLimit {
 			return nil
 		}
-		if state.UserId != userId && state.UserId != config.ClientId {
+		if userId != state.UserId && userId != config.ClientId {
 			return nil
 		}
 		actionMutation, err := spanner.InsertStruct("actions", action)
