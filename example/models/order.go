@@ -12,12 +12,6 @@ import (
 	"github.com/ugorji/go/codec"
 )
 
-const (
-	MixinAssetId   = "c94ac88f-4671-3976-b60a-09064f1811e8"
-	BitcoinAssetId = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
-	USDTAssetId    = "815b0b1a-2764-3736-8faa-42d694fa620a"
-)
-
 type OrderAction struct {
 	TraceId string `json:"trace_id"`
 	Quote   string `json:"quote"`
@@ -48,14 +42,12 @@ func (current *User) CreateOrder(ctx context.Context, o *OrderAction) error {
 	if o.Quote == config.OOOAssetId || o.Base == config.OOOAssetId {
 		return session.ForbiddenError(ctx)
 	}
-	if !validateQuoteBase(o.Quote, o.Base) {
+	if !config.VerifyQuoteBase(o.Quote, o.Base) {
 		return session.ForbiddenError(ctx)
 	}
 
-	price := number.FromString(o.Price).RoundFloor(8)
-	if o.Quote == USDTAssetId {
-		price = price.RoundFloor(4)
-	}
+	precision := int32(config.QuotePrecision(o.Quote))
+	price := number.FromString(o.Price).RoundFloor(precision)
 	switch o.Type {
 	case engine.OrderTypeLimit:
 		o.Type = "L"
@@ -123,23 +115,4 @@ func (current *User) CancelOrder(ctx context.Context, id string) error {
 	}
 
 	return current.Key.sendTransfer(ctx, config.RandomBrokerId(), config.OOOAssetId, number.FromString("0.00000001"), uuid.NewV4().String(), base64.StdEncoding.EncodeToString(memo))
-}
-
-func validateQuoteBase(quote, base string) bool {
-	if quote == base {
-		return false
-	}
-	if quote != BitcoinAssetId && quote != USDTAssetId && quote != MixinAssetId {
-		return false
-	}
-	if quote == BitcoinAssetId && base == USDTAssetId {
-		return false
-	}
-	if quote == MixinAssetId && base == USDTAssetId {
-		return false
-	}
-	if quote == MixinAssetId && base == BitcoinAssetId {
-		return false
-	}
-	return true
 }

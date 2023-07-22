@@ -26,12 +26,6 @@ const (
 	RefundRate      = "0.999"
 	MaxPrice        = 1000000000
 	MaxAmount       = 50000000000000
-
-	MixinAssetId     = "c94ac88f-4671-3976-b60a-09064f1811e8"
-	BitcoinAssetId   = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
-	USDTAssetId      = "815b0b1a-2764-3736-8faa-42d694fa620a"
-	PUSDAssetId      = "31d2ea9c-95eb-3355-b65b-ba096853bc18"
-	ERC20USDTAssetId = "4d8c508b-91c5-375b-92b0-ee702ed2dac5"
 )
 
 type Error struct {
@@ -109,11 +103,11 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 	}
 
 	priceDecimal := number.FromString(action.P)
-	maxPrice := number.NewDecimal(MaxPrice, int32(QuotePrecision(quote)))
+	maxPrice := number.NewDecimal(MaxPrice, int32(config.QuotePrecision(quote)))
 	if priceDecimal.Cmp(maxPrice) > 0 {
 		return ex.refundSnapshot(ctx, s)
 	}
-	price := priceDecimal.Integer(QuotePrecision(quote))
+	price := priceDecimal.Integer(config.QuotePrecision(quote))
 	if action.T == engine.OrderTypeLimit {
 		if price.IsZero() {
 			return ex.refundSnapshot(ctx, s)
@@ -122,7 +116,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 		return ex.refundSnapshot(ctx, s)
 	}
 
-	fundsPrecision := AmountPrecision + QuotePrecision(quote)
+	fundsPrecision := AmountPrecision + config.QuotePrecision(quote)
 	funds := number.NewInteger(0, fundsPrecision)
 	amount := number.NewInteger(0, AmountPrecision)
 
@@ -134,7 +128,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 			return ex.refundSnapshot(ctx, s)
 		}
 		funds = assetDecimal.Integer(fundsPrecision)
-		if funds.Decimal().Cmp(QuoteMinimum(quote)) < 0 {
+		if funds.Decimal().Cmp(config.QuoteMinimum(quote)) < 0 {
 			return ex.refundSnapshot(ctx, s)
 		}
 	} else {
@@ -143,7 +137,7 @@ func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 			return ex.refundSnapshot(ctx, s)
 		}
 		amount = assetDecimal.Integer(AmountPrecision)
-		if action.T == engine.OrderTypeLimit && price.Mul(amount).Decimal().Cmp(QuoteMinimum(quote)) < 0 {
+		if action.T == engine.OrderTypeLimit && price.Mul(amount).Decimal().Cmp(config.QuoteMinimum(quote)) < 0 {
 			return ex.refundSnapshot(ctx, s)
 		}
 	}
@@ -171,43 +165,10 @@ func (ex *Exchange) getQuoteBasePair(s *Snapshot, a *OrderAction) (string, strin
 	} else {
 		return "", ""
 	}
-	if quote == base {
-		return "", ""
+	if config.VerifyQuoteBase(quote, base) {
+		return quote, base
 	}
-	if quote != BitcoinAssetId && quote != USDTAssetId && quote != PUSDAssetId && quote != ERC20USDTAssetId && quote != MixinAssetId {
-		return "", ""
-	}
-	if quote == BitcoinAssetId && base == USDTAssetId {
-		return "", ""
-	}
-	if quote == BitcoinAssetId && base == PUSDAssetId {
-		return "", ""
-	}
-	if quote == BitcoinAssetId && base == ERC20USDTAssetId {
-		return "", ""
-	}
-	if quote == MixinAssetId && base == USDTAssetId {
-		return "", ""
-	}
-	if quote == MixinAssetId && base == PUSDAssetId {
-		return "", ""
-	}
-	if quote == MixinAssetId && base == ERC20USDTAssetId {
-		return "", ""
-	}
-	if quote == MixinAssetId && base == BitcoinAssetId {
-		return "", ""
-	}
-	if quote == PUSDAssetId && base == USDTAssetId {
-		return "", ""
-	}
-	if quote == PUSDAssetId && base == ERC20USDTAssetId {
-		return "", ""
-	}
-	if quote == ERC20USDTAssetId && base == USDTAssetId {
-		return "", ""
-	}
-	return quote, base
+	return "", ""
 }
 
 func (ex *Exchange) refundSnapshot(ctx context.Context, s *Snapshot) error {

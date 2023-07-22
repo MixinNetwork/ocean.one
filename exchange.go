@@ -28,42 +28,6 @@ type Exchange struct {
 	mutexes   *tmap
 }
 
-func QuotePrecision(assetId string) uint8 {
-	switch assetId {
-	case MixinAssetId:
-		return 8
-	case BitcoinAssetId:
-		return 8
-	case USDTAssetId:
-		return 4
-	case PUSDAssetId:
-		return 4
-	case ERC20USDTAssetId:
-		return 4
-	default:
-		log.Panicln("QuotePrecision", assetId)
-	}
-	return 0
-}
-
-func QuoteMinimum(assetId string) number.Decimal {
-	switch assetId {
-	case MixinAssetId:
-		return number.FromString("0.00000001")
-	case BitcoinAssetId:
-		return number.FromString("0.00000001")
-	case USDTAssetId:
-		return number.FromString("0.0001")
-	case PUSDAssetId:
-		return number.FromString("0.0001")
-	case ERC20USDTAssetId:
-		return number.FromString("0.0001")
-	default:
-		log.Panicln("QuoteMinimum", assetId)
-	}
-	return number.Zero()
-}
-
 func NewExchange() *Exchange {
 	return &Exchange{
 		codec:     new(codec.MsgpackHandle),
@@ -222,7 +186,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 		go book.Run(ctx)
 		ex.books[market] = book
 	}
-	pricePrecision := QuotePrecision(order.QuoteAssetId)
+	pricePrecision := config.QuotePrecision(order.QuoteAssetId)
 	fundsPrecision := pricePrecision + AmountPrecision
 	price := number.FromString(order.Price).Integer(pricePrecision)
 	remainingAmount := number.FromString(order.RemainingAmount).Integer(AmountPrecision)
