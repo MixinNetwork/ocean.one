@@ -62,6 +62,10 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 			continue
 		}
 		for _, a := range actions {
+			err := ex.adminSendCancelOrderTransactionForOmniUSDT(ctx, a)
+			if err != nil {
+				panic(err)
+			}
 			ex.ensureProcessOrderAction(ctx, a)
 			checkpoint = a.CreatedAt
 		}
