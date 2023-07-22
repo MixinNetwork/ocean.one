@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
+	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/MixinNetwork/ocean.one/engine"
 	"google.golang.org/api/iterator"
 )
@@ -176,7 +177,10 @@ func CancelOrderAction(ctx context.Context, orderId string, createdAt time.Time,
 		if err != nil || state == nil {
 			return err
 		}
-		if state.State != OrderStatePending || state.UserId != userId || state.OrderType != engine.OrderTypeLimit {
+		if state.State != OrderStatePending || state.OrderType != engine.OrderTypeLimit {
+			return nil
+		}
+		if state.UserId != userId && state.UserId != config.ClientId {
 			return nil
 		}
 		actionMutation, err := spanner.InsertStruct("actions", action)
