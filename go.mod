@@ -1,11 +1,11 @@
 module github.com/MixinNetwork/ocean.one
 
-go 1.20
+go 1.21
 
 require (
-	cloud.google.com/go/logging v1.7.0
-	cloud.google.com/go/spanner v1.47.0
-	github.com/MixinNetwork/bot-api-go-client v1.7.3
+	cloud.google.com/go/logging v1.8.1
+	cloud.google.com/go/spanner v1.48.0
+	github.com/MixinNetwork/bot-api-go-client v1.8.1
 	github.com/MixinNetwork/go-number v0.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/emirpasic/gods v1.18.1
@@ -15,23 +15,23 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/websocket v1.5.0
-	github.com/nyaruka/phonenumbers v1.1.7
+	github.com/nyaruka/phonenumbers v1.1.8
 	github.com/stretchr/testify v1.8.4
 	github.com/ugorji/go/codec v1.2.11
 	github.com/unrolled/render v1.6.0
-	golang.org/x/crypto v0.11.0
-	google.golang.org/api v0.132.0
+	golang.org/x/crypto v0.12.0
+	google.golang.org/api v0.138.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
 
 require (
-	cloud.google.com/go v0.110.6 // indirect
-	cloud.google.com/go/compute v1.22.0 // indirect
+	cloud.google.com/go v0.110.7 // indirect
+	cloud.google.com/go/compute v1.23.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/longrunning v0.5.1 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
-	github.com/MixinNetwork/mixin v0.15.2 // indirect
-	github.com/MixinNetwork/mobilecoin-account v0.0.4 // indirect
+	github.com/MixinNetwork/mixin v0.16.5 // indirect
+	github.com/MixinNetwork/mobilecoin-account v0.0.5 // indirect
 	github.com/MixinNetwork/msgpack/v4 v4.4.0 // indirect
 	github.com/bwesterb/go-ristretto v1.2.3 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
@@ -50,7 +50,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/s2a-go v0.1.4 // indirect
+	github.com/google/s2a-go v0.1.5 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.5 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
@@ -63,18 +63,17 @@ require (
 	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	github.com/zeebo/blake3 v0.2.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1 // indirect
-	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/oauth2 v0.10.0 // indirect
+	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/oauth2 v0.11.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230720185612-659f7aaaa771 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230720185612-659f7aaaa771 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230720185612-659f7aaaa771 // indirect
-	google.golang.org/grpc v1.56.2 // indirect
+	google.golang.org/genproto v0.0.0-20230821184602-ccc8af3d0e93 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230821184602-ccc8af3d0e93 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230821184602-ccc8af3d0e93 // indirect
+	google.golang.org/grpc v1.57.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
