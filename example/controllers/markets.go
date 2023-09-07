@@ -11,7 +11,7 @@ import (
 	"github.com/MixinNetwork/ocean.one/example/session"
 	"github.com/MixinNetwork/ocean.one/example/views"
 	"github.com/dimfeld/httptreemux"
-	"github.com/gofrs/uuid"
+	"github.com/gofrs/uuid/v5"
 )
 
 type marketsImpl struct{}

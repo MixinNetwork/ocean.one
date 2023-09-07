@@ -3,7 +3,7 @@ package uuid
 import (
 	"log"
 
-	_uuid "github.com/gofrs/uuid"
+	_uuid "github.com/gofrs/uuid/v5"
 )
 
 var Nil = _uuid.Nil

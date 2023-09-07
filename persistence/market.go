@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
-	"github.com/gofrs/uuid"
+	"github.com/gofrs/uuid/v5"
 	"google.golang.org/api/iterator"
 )
 

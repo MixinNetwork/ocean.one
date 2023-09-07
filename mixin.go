@@ -17,7 +17,7 @@ import (
 	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/MixinNetwork/ocean.one/engine"
 	"github.com/MixinNetwork/ocean.one/persistence"
-	"github.com/gofrs/uuid"
+	"github.com/gofrs/uuid/v5"
 	"github.com/ugorji/go/codec"
 )
 

@@ -12,9 +12,44 @@ import (
 	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/MixinNetwork/ocean.one/engine"
 	"github.com/MixinNetwork/ocean.one/persistence"
-	"github.com/gofrs/uuid"
+	"github.com/fox-one/mixin-sdk-go"
+	"github.com/gofrs/uuid/v5"
 	"github.com/ugorji/go/codec"
 )
+
+func (ex *Exchange) adminCollectionOmniUSDTFromAllBrokers(ctx context.Context, recipientId string) error {
+	omni := "815b0b1a-2764-3736-8faa-42d694fa620a"
+	for _, u := range ex.brokers {
+		ks := &mixin.Keystore{
+			ClientID:   u.BrokerId,
+			SessionID:  u.SessionId,
+			PrivateKey: u.SessionKey,
+			PinToken:   u.PINToken,
+		}
+		client, err := mixin.NewFromKeystore(ks)
+		if err != nil {
+			return err
+		}
+		asset, err := client.ReadAsset(ctx, omni)
+		if err != nil {
+			return err
+		}
+		if asset.Balance.IsZero() {
+			continue
+		}
+		in := &mixin.TransferInput{
+			AssetID:    omni,
+			OpponentID: recipientId,
+			Amount:     asset.Balance,
+			TraceID:    mixin.UniqueConversationID("ADMIN|COLLECT|OMNI", u.BrokerId),
+		}
+		_, err = client.Transfer(ctx, in, u.DecryptedPIN)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (ex *Exchange) adminSendCancelOrderTransactionForOmniUSDT(ctx context.Context, a *persistence.Action) error {
 	if a.Action != engine.OrderActionCreate {

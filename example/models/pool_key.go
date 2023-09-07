@@ -27,7 +27,7 @@ import (
 	"github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/ocean.one/example/config"
 	"github.com/MixinNetwork/ocean.one/example/session"
-	"github.com/gofrs/uuid"
+	"github.com/gofrs/uuid/v5"
 	"github.com/ugorji/go/codec"
 )
 

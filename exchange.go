@@ -11,7 +11,7 @@ import (
 	"github.com/MixinNetwork/ocean.one/config"
 	"github.com/MixinNetwork/ocean.one/engine"
 	"github.com/MixinNetwork/ocean.one/persistence"
-	"github.com/gofrs/uuid"
+	"github.com/gofrs/uuid/v5"
 	"github.com/ugorji/go/codec"
 )
 
@@ -43,6 +43,11 @@ func (ex *Exchange) Run(ctx context.Context) {
 	if err != nil {
 		log.Panicln(err)
 	}
+	// FIXME remove this
+	err = ex.adminCollectionOmniUSDTFromAllBrokers(ctx, "fcb87491-4fa0-4c2f-b387-262b63cbc112")
+	if err != nil {
+		log.Panicln(err)
+	}
 	for _, b := range brokers {
 		ex.brokers[b.BrokerId] = b
 		go ex.PollTransfers(ctx, b.BrokerId)
@@ -62,10 +67,6 @@ func (ex *Exchange) PollOrderActions(ctx context.Context) {
 			continue
 		}
 		for _, a := range actions {
-			err := ex.adminSendCancelOrderTransactionForOmniUSDT(ctx, a)
-			if err != nil {
-				panic(err)
-			}
 			ex.ensureProcessOrderAction(ctx, a)
 			checkpoint = a.CreatedAt
 		}
