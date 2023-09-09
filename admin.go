@@ -31,6 +31,7 @@ func (ex *Exchange) adminCollectionOmniUSDTFromAllBrokers(ctx context.Context, r
 			return err
 		}
 		asset, err := client.ReadAsset(ctx, omni)
+		log.Println(asset, err)
 		if err != nil {
 			return err
 		}
@@ -43,7 +44,8 @@ func (ex *Exchange) adminCollectionOmniUSDTFromAllBrokers(ctx context.Context, r
 			Amount:     asset.Balance,
 			TraceID:    mixin.UniqueConversationID("ADMIN|COLLECT|OMNI", u.BrokerId),
 		}
-		_, err = client.Transfer(ctx, in, u.DecryptedPIN)
+		snap, err := client.Transfer(ctx, in, u.DecryptedPIN)
+		log.Println(snap, err)
 		if err != nil {
 			return err
 		}

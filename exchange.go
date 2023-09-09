@@ -43,11 +43,6 @@ func (ex *Exchange) Run(ctx context.Context) {
 	if err != nil {
 		log.Panicln(err)
 	}
-	// FIXME remove this
-	err = ex.adminCollectionOmniUSDTFromAllBrokers(ctx, "fcb87491-4fa0-4c2f-b387-262b63cbc112")
-	if err != nil {
-		log.Panicln(err)
-	}
 	for _, b := range brokers {
 		ex.brokers[b.BrokerId] = b
 		go ex.PollTransfers(ctx, b.BrokerId)

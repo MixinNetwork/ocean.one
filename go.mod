@@ -21,7 +21,7 @@ require (
 	github.com/ugorji/go/codec v1.2.11
 	github.com/unrolled/render v1.6.0
 	golang.org/x/crypto v0.13.0
-	google.golang.org/api v0.138.0
+	google.golang.org/api v0.139.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
 
